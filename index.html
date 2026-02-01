@@ -37,7 +37,7 @@
         .hp-bar { transition: width 0.6s ease-out; }
         
         .nav-btn {
-            @apply px-4 py-2 text-xs font-bold transition-all border border-transparent flex items-center gap-2;
+            @apply px-4 py-2 text-[10px] font-bold transition-all border border-transparent flex items-center gap-1;
         }
         .nav-btn.active {
             @apply border-orange-500/50 text-orange-500 bg-orange-950/20;
@@ -76,6 +76,10 @@
         .booster-card {
             @apply border border-orange-900/30 bg-black/40 p-3 rounded hover:border-orange-500/50 transition-all cursor-not-allowed opacity-60;
         }
+        
+        .task-card {
+            @apply p-4 border border-white/5 bg-white/5 rounded hover:border-orange-500/30 transition-all;
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -91,12 +95,14 @@
                 <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-13-33.jpg" alt="EROL Logo" class="logo-img">
                 <div>
                     <h1 class="orbitron text-2xl font-bold text-orange-600 tracking-tighter uppercase">Mars Habitat OS</h1>
-                    <div class="flex gap-4 mt-1">
-                        <button onclick="switchPage('arena')" id="nav-arena" class="nav-btn active">BATTLE ARENA</button>
-                        <button onclick="switchPage('roster')" id="nav-roster" class="nav-btn">COLONY ROSTER</button>
-                        <button onclick="switchPage('about')" id="nav-about" class="nav-btn">MISSION BRIEF</button>
+                    <div class="flex flex-wrap gap-2 mt-1">
+                        <button onclick="switchPage('arena')" id="nav-arena" class="nav-btn active">ARENA</button>
+                        <button onclick="switchPage('roster')" id="nav-roster" class="nav-btn">ROSTER</button>
+                        <button onclick="switchPage('sectors')" id="nav-sectors" class="nav-btn">SECTORS</button>
+                        <button onclick="switchPage('tasks')" id="nav-tasks" class="nav-btn">TASKS</button>
+                        <button onclick="switchPage('about')" id="nav-about" class="nav-btn">MISSION</button>
                         <button id="audioToggle" onclick="toggleMusic()" class="nav-btn text-orange-300">
-                            <span id="audioIcon">🔈</span> <span id="audioText">PLAY MUSIC</span>
+                            <span id="audioIcon">🔈</span> <span id="audioText">MUSIC</span>
                         </button>
                     </div>
                 </div>
@@ -118,6 +124,7 @@
 
     <main id="content-area" class="max-w-7xl mx-auto p-4 md:p-6">
         
+        <!-- ARENA PAGE -->
         <div id="page-arena" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-3 space-y-6">
                 <div class="mars-glass p-4 border-l-4 border-orange-600">
@@ -126,6 +133,14 @@
                     </h3>
                     <div id="pointsList" class="space-y-4"></div>
                 </div>
+
+                <div class="mars-glass p-4">
+                    <h3 class="orbitron text-[10px] text-orange-500 mb-3 uppercase tracking-widest">Recent Conquests</h3>
+                    <div id="recentWinners" class="space-y-2 text-[10px]">
+                        <div class="flex justify-between border-b border-white/5 pb-1 opacity-50 italic text-gray-500">No recent history...</div>
+                    </div>
+                </div>
+
                 <div class="mars-glass p-4 bg-orange-900/5">
                     <h3 class="orbitron text-[10px] text-orange-500/50 mb-2 uppercase">Tactical Alert</h3>
                     <div id="battlePhaseInfo" class="text-sm italic text-gray-400">Awaiting dispatch...</div>
@@ -161,6 +176,7 @@
             </div>
         </div>
 
+        <!-- ROSTER PAGE -->
         <div id="page-roster" class="hidden space-y-6">
             <div id="rosterMain">
                 <div class="mars-glass p-6 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -198,8 +214,8 @@
                                 <div id="detailPoints" class="orbitron text-sm"></div>
                             </div>
                             <div class="p-3 bg-orange-900/10 border border-orange-900/20">
-                                <div class="text-[8px] opacity-50 uppercase">Win Rate</div>
-                                <div id="detailWinRate" class="orbitron text-sm text-green-400">74%</div>
+                                <div class="text-[8px] opacity-50 uppercase">Battles Fought</div>
+                                <div id="detailBattles" class="orbitron text-sm text-orange-400">0</div>
                             </div>
                         </div>
                     </div>
@@ -224,19 +240,55 @@
                                 </div>
                                 <p class="text-[10px] text-gray-400">Increase damage output of your tier by 15%.</p>
                             </div>
-                            <div class="booster-card">
-                                <div class="flex justify-between font-bold text-xs mb-1">
-                                    <span>QUICK REPAIR</span>
-                                    <span class="text-orange-400">400 $EROL</span>
-                                </div>
-                                <p class="text-[10px] text-gray-400">Instantly heal 10% HP if tier falls below 50%.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTORS PAGE -->
+        <div id="page-sectors" class="hidden space-y-8">
+            <div class="mars-glass p-8">
+                <h2 class="orbitron text-2xl text-orange-500 mb-2">SECTOR WEIGHT & PASSIVE INCOME</h2>
+                <p class="text-xs text-gray-400 mb-8">Combined $EROL holdings in each sector determines passive point generation every 6 hours.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="mars-glass p-6 border-t-2 border-yellow-500">
+                        <div class="orbitron text-yellow-500 text-sm mb-4">MAXIMUM SECTOR</div>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="text-[10px] opacity-50 uppercase">Total Sector Holding</div>
+                                <div id="sector-weight-maximum" class="orbitron text-xl">CALCULATING...</div>
                             </div>
-                            <div class="booster-card">
-                                <div class="flex justify-between font-bold text-xs mb-1">
-                                    <span>DOUBLE LOOT</span>
-                                    <span class="text-orange-400">1000 $EROL</span>
-                                </div>
-                                <p class="text-[10px] text-gray-400">2x Point generation during active battle phase.</p>
+                            <div>
+                                <div class="text-[10px] opacity-50 uppercase">Current Passive Rate</div>
+                                <div class="text-sm font-bold text-green-400">25 PTS / 6H</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mars-glass p-6 border-t-2 border-cyan-500">
+                        <div class="orbitron text-cyan-500 text-sm mb-4">EXPLORER SECTOR</div>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="text-[10px] opacity-50 uppercase">Total Sector Holding</div>
+                                <div id="sector-weight-explorer" class="orbitron text-xl">CALCULATING...</div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] opacity-50 uppercase">Current Passive Rate</div>
+                                <div class="text-sm font-bold text-green-400">15 PTS / 6H</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mars-glass p-6 border-t-2 border-lime-500">
+                        <div class="orbitron text-lime-500 text-sm mb-4">SCOUT SECTOR</div>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="text-[10px] opacity-50 uppercase">Total Sector Holding</div>
+                                <div id="sector-weight-scout" class="orbitron text-xl">CALCULATING...</div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] opacity-50 uppercase">Current Passive Rate</div>
+                                <div class="text-sm font-bold text-green-400">10 PTS / 6H</div>
                             </div>
                         </div>
                     </div>
@@ -244,13 +296,84 @@
             </div>
         </div>
 
+        <!-- TASKS PAGE -->
+        <div id="page-tasks" class="hidden space-y-6">
+            <div class="mars-glass p-8">
+                <h2 class="orbitron text-2xl text-orange-500 mb-2">HABITAT TASKS</h2>
+                <p class="text-xs text-gray-400 mb-8">Complete tactical objectives to earn extra points.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="task-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="orbitron text-sm text-white">ARENA OBSERVER</h3>
+                                <p class="text-[11px] text-gray-400">Watch 2 full battle simulations to verify combat data.</p>
+                            </div>
+                            <span class="text-orange-500 text-xs font-bold">100 PTS</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="text-[10px] flex justify-between">
+                                <span>Progress: <span id="watchTaskProgress">0</span>/2 Battles</span>
+                                <span id="watchTaskStatus" class="text-orange-500/50">INCOMPLETE</span>
+                            </div>
+                            <div class="h-1 bg-white/10 rounded-full overflow-hidden">
+                                <div id="watchTaskBar" class="h-full bg-orange-600 transition-all" style="width:0%"></div>
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="text" id="watchTaskWallet" placeholder="PASTE WALLET ADDRESS..." class="flex-grow bg-black border border-white/10 p-2 text-[10px] text-orange-500 focus:outline-none focus:border-orange-500">
+                                <button onclick="claimWatchTask()" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">CLAIM</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task-card opacity-60">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="orbitron text-sm text-white">SECTOR SUPPORTER</h3>
+                                <p class="text-[11px] text-gray-400">Hold over 5,000 $EROL for 48 consecutive hours.</p>
+                            </div>
+                            <span class="text-orange-500 text-xs font-bold">500 PTS</span>
+                        </div>
+                        <div class="text-[10px] text-orange-500 uppercase tracking-widest mt-auto">Locked: Coming Soon</div>
+                    </div>
+
+                    <div class="task-card opacity-60">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="orbitron text-sm text-white">SOCIAL RECON</h3>
+                                <p class="text-[11px] text-gray-400">Share your sector standings on X (formerly Twitter).</p>
+                            </div>
+                            <span class="text-orange-500 text-xs font-bold">50 PTS</span>
+                        </div>
+                        <div class="text-[10px] text-orange-500 uppercase tracking-widest mt-auto">Locked: Coming Soon</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABOUT PAGE -->
         <div id="page-about" class="hidden space-y-8 max-w-4xl mx-auto">
             <div class="mars-glass p-8">
                 <h2 class="orbitron text-3xl text-orange-500 mb-6">MISSION BRIEFING</h2>
                 <div class="space-y-6 text-sm leading-relaxed text-gray-300">
                     <section>
-                        <h3 class="orbitron text-orange-400 text-xs mb-2">OVERVIEW</h3>
-                        <p>EROL is a Mars-themed battle simulation where token holders are divided into three elite sectors. The simulation runs autonomously, rewarding sectors that maintain dominance on the Martian surface.</p>
+                        <h3 class="orbitron text-orange-400 text-xs mb-2">THE MARS HABITAT</h3>
+                        <p>In the year 2084, the EROL Musk Colony serves as the last bastion of human innovation on the red planet. Divided into three tactical sectors—Maximum, Explorer, and Scout—colonists must simulate surface conflicts to determine resource allocation and habitat priority.</p>
+                    </section>
+                    
+                    <section>
+                        <h3 class="orbitron text-orange-400 text-xs mb-2">BATTLE PROTOCOLS</h3>
+                        <ul class="list-disc list-inside space-y-2 text-xs opacity-80">
+                            <li>Simulations trigger automatically every 60 seconds of rest.</li>
+                            <li>Units from the top 150 wallet holders are deployed based on their $EROL weight.</li>
+                            <li>Sectors earn 100 points for every battle won.</li>
+                            <li>Passive income is distributed every 6 hours based on the total $EROL weight of a sector.</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h3 class="orbitron text-orange-400 text-xs mb-2">POINT SYSTEM (XP)</h3>
+                        <p>Points ($XP) are the lifeblood of the habitat. They signify a wallet holder's contribution to the colony's defense. High-point holders will gain access to Titan Shields, Solar Flares, and eventually, Governance over the Martian treasury.</p>
                     </section>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-orange-900/30">
@@ -273,11 +396,8 @@
     </main>
 
     <script>
-        // Supabase Configuration
         const SUPABASE_URL = 'https://swveqrjuczfvqjhzzrxy.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3dmVxcmp1Y3pmdnFqaHp6cnh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5NjYzNzgsImV4cCI6MjA4NTU0MjM3OH0.Fnk9gACUeoFW9Af4tny81IqSb5j19k4jsEMCDaG-DHY';
-        
-        // Use a different variable name for the instance to avoid SyntaxError with global 'supabase' library
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const API_KEY = 'rs_1caf6cdfedd13407191c09b4';
@@ -287,6 +407,8 @@
         let allHolders = { maximum: [], explorer: [], scout: [] };
         let points = { maximum: 0, explorer: 0, scout: 0 };
         let individualPoints = {}; 
+        let battleCounts = {};
+        let lastWinners = [];
         let hp = { maximum: 100, explorer: 100, scout: 100 };
         let gameState = 'REST';
         let timeRemaining = 60; 
@@ -299,24 +421,21 @@
         let isMusicPlaying = false;
         let winnerText = "";
         let winColor = "";
+        let watchedBattlesCount = 0;
 
-        // UI references
         let canvas, ctx, starCanvas, sctx, bgMusic, victoryVideo, audioCtx;
 
-        // Functions defined in global scope for HTML onclick access
         function switchPage(page) {
             currentPage = page;
-            const pages = ['arena', 'roster', 'about'];
+            const pages = ['arena', 'roster', 'about', 'tasks', 'sectors'];
             pages.forEach(p => {
                 const el = document.getElementById(`page-${p}`);
                 const nav = document.getElementById(`nav-${p}`);
                 if (el) el.classList.toggle('hidden', p !== page);
                 if (nav) nav.classList.toggle('active', p === page);
             });
-            if(page === 'roster') { 
-                hideWalletDetail(); 
-                renderFullRoster(); 
-            }
+            if(page === 'roster') { hideWalletDetail(); renderFullRoster(); }
+            if(page === 'sectors') { updateSectorsWeightUI(); }
         }
 
         function hideWalletDetail() {
@@ -334,43 +453,55 @@
                     if (audioCtx.state === 'suspended') await audioCtx.resume();
                     await bgMusic.play();
                     if (icon) icon.innerText = '🔊'; 
-                    if (text) text.innerText = 'MUTE MUSIC'; 
+                    if (text) text.innerText = 'MUTE'; 
                     isMusicPlaying = true;
                 } catch (e) { console.error("Audio error:", e); }
             } else {
                 bgMusic.pause(); 
                 if (icon) icon.innerText = '🔈'; 
-                if (text) text.innerText = 'PLAY MUSIC'; 
+                if (text) text.innerText = 'MUSIC'; 
                 isMusicPlaying = false;
             }
         }
 
-        // Supabase Initialization & Realtime Listeners
         async function initSupabase() {
-            // Fetch Sector Points
             const { data: sectorData } = await supabaseClient.from('sector_points').select('*');
-            if (sectorData) {
-                sectorData.forEach(s => { points[s.sector_name] = s.points; });
-                updatePointsUI();
-            }
+            if (sectorData) { sectorData.forEach(s => { points[s.sector_name] = s.points; }); updatePointsUI(); }
 
-            // Fetch Individual Points
             const { data: userData } = await supabaseClient.from('player_stats').select('*');
             if (userData) {
-                userData.forEach(p => { individualPoints[p.wallet_address] = p.points; });
+                userData.forEach(p => { 
+                    individualPoints[p.wallet_address] = p.points; 
+                    battleCounts[p.wallet_address] = p.battles_fought || 0;
+                });
             }
 
-            // Listen for Sector updates
+            const { data: logsData } = await supabaseClient.from('battle_logs').select('*').limit(3).order('created_at', { ascending: false });
+            if (logsData) {
+                logsData.forEach(log => {
+                    if(log.message.includes("VICTORIOUS")) {
+                        const winner = log.message.split(" ")[0].toLowerCase();
+                        if(!lastWinners.includes(winner)) lastWinners.push(winner);
+                    }
+                });
+                updateWinnersUI();
+            }
+
             supabaseClient.channel('public:sector_points')
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sector_points' }, payload => {
                     points[payload.new.sector_name] = payload.new.points;
                     updatePointsUI();
                 }).subscribe();
 
-            // Listen for Battle Logs
             supabaseClient.channel('public:battle_logs')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'battle_logs' }, payload => {
                     addLogUI(payload.new.message, payload.new.css_class);
+                    if(payload.new.message.includes("VICTORIOUS")) {
+                        const winner = payload.new.message.split(" ")[0].toLowerCase();
+                        lastWinners.unshift(winner);
+                        if(lastWinners.length > 5) lastWinners.pop();
+                        updateWinnersUI();
+                    }
                 }).subscribe();
         }
 
@@ -378,17 +509,62 @@
             await supabaseClient.rpc('increment_sector_points', { s_name: sector, inc: amount });
         }
 
-        async function updatePlayerPoints(wallet, amount) {
+        async function updatePlayerPoints(wallet, amount, isBattle = false) {
             const newPoints = (individualPoints[wallet] || 0) + amount;
+            const newBattles = (battleCounts[wallet] || 0) + (isBattle ? 1 : 0);
             await supabaseClient.from('player_stats').upsert(
-                { wallet_address: wallet, points: newPoints },
+                { wallet_address: wallet, points: newPoints, battles_fought: newBattles },
                 { onConflict: 'wallet_address' }
             );
             individualPoints[wallet] = newPoints;
+            battleCounts[wallet] = newBattles;
         }
 
         async function broadcastLog(msg, css = "") {
             await supabaseClient.from('battle_logs').insert([{ message: msg, css_class: css }]);
+        }
+
+        function updateWinnersUI() {
+            const el = document.getElementById('recentWinners');
+            if(!el) return;
+            el.innerHTML = lastWinners.map(w => `
+                <div class="flex justify-between border-b border-white/5 pb-1">
+                    <span style="color:var(--tier-${w})">${w.toUpperCase()}</span>
+                    <span class="opacity-50">CONQUEST</span>
+                </div>
+            `).join('') || '<div class="opacity-50 italic">No recent history...</div>';
+        }
+
+        function updateSectorsWeightUI() {
+            ['maximum', 'explorer', 'scout'].forEach(tier => {
+                const total = allHolders[tier].reduce((acc, h) => acc + (parseFloat(h.TokenHolderQuantity || h.balance) / 1e18), 0);
+                const el = document.getElementById(`sector-weight-${tier}`);
+                if(el) el.innerText = total.toLocaleString(undefined, {maximumFractionDigits:0}) + " $EROL";
+            });
+        }
+
+        async function claimWatchTask() {
+            if (watchedBattlesCount < 2) return alert("Task Incomplete: You must watch 2 full battles first.");
+            const wallet = document.getElementById('watchTaskWallet').value.trim().toLowerCase();
+            if (!wallet) return alert("Please enter your wallet address.");
+            const isHolder = [...allHolders.maximum, ...allHolders.explorer, ...allHolders.scout].some(h => (h.TokenHolderAddress || h.address).toLowerCase() === wallet);
+            if (!isHolder) return alert("Access Denied: Wallet address must be within the top 150 colony roster.");
+            await updatePlayerPoints(wallet, 100);
+            alert("Success! 100 Points added to your mission log.");
+            watchedBattlesCount = 0;
+            updateTaskUI();
+        }
+
+        function updateTaskUI() {
+            const prog = document.getElementById('watchTaskProgress');
+            const bar = document.getElementById('watchTaskBar');
+            const stat = document.getElementById('watchTaskStatus');
+            if (prog) prog.innerText = watchedBattlesCount;
+            if (bar) bar.style.width = (watchedBattlesCount / 2 * 100) + "%";
+            if (stat) {
+                stat.innerText = watchedBattlesCount >= 2 ? "READY TO CLAIM" : "INCOMPLETE";
+                stat.classList.toggle('text-green-400', watchedBattlesCount >= 2);
+            }
         }
 
         // Gameplay Classes
@@ -405,7 +581,7 @@
                 ctx.closePath(); ctx.fill();
                 ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
                 if (this.isFiring > 0 && this.target) {
-                    ctx.beginPath(); ctx.strokeStyle = this.color; ctx.lineWidth = this.isFiring / 2;
+                    ctx.beginPath(); ctx.strokeStyle = this.color; ctx.lineWidth = this.isFiring / 4;
                     ctx.moveTo(this.x, this.y + 15); ctx.lineTo(this.target.x, this.target.y);
                     ctx.stroke(); this.isFiring--;
                 }
@@ -432,10 +608,7 @@
                     playBombSound();
                     Object.keys(hp).forEach(t => { if (t.toUpperCase() !== this.ownerTier) hp[t] = Math.max(0, hp[t] - 5); });
                     const container = document.getElementById('arenaContainer');
-                    if (container) {
-                        container.classList.add('shake');
-                        setTimeout(() => container.classList.remove('shake'), 400);
-                    }
+                    if (container) { container.classList.add('shake'); setTimeout(() => container.classList.remove('shake'), 400); }
                 } else { playLaserSound(); }
                 updateHPUI();
             }
@@ -452,9 +625,8 @@
                 this.x = x; this.y = y; this.color = color; this.size = size; this.life = 1.0;
             }
             draw() {
-                ctx.save(); ctx.globalAlpha = this.life;
-                ctx.strokeStyle = this.color; ctx.beginPath();
-                ctx.arc(this.x, this.y, (1 - this.life) * this.size, 0, Math.PI * 2);
+                ctx.save(); ctx.globalAlpha = this.life; ctx.strokeStyle = this.color;
+                ctx.beginPath(); ctx.arc(this.x, this.y, (1 - this.life) * this.size, 0, Math.PI * 2);
                 ctx.stroke(); ctx.restore(); this.life -= 0.05;
             }
         }
@@ -472,7 +644,7 @@
                 if (hp[this.tier.toLowerCase()] <= 0) return;
                 if (Math.abs(this.x - this.targetX) < 5 && Math.abs(this.y - this.targetY) < 5) {
                     this.targetX = 50 + Math.random() * (canvas.width - 100);
-                    this.targetY = 150 + Math.random() * (canvas.height - 250);
+                    this.targetY = 100 + Math.random() * (canvas.height - 200);
                 }
                 this.x += (this.targetX - this.x) > 0 ? this.speed : -this.speed;
                 this.y += (this.targetY - this.y) > 0 ? this.speed : -this.speed;
@@ -493,54 +665,36 @@
             }
         }
 
-        // Logic Functions
         function playLaserSound() {
             if (!audioCtx || audioCtx.state === 'suspended') return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         }
 
         function playBombSound() {
             if (!audioCtx || audioCtx.state === 'suspended') return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            const noise = audioCtx.createBufferSource();
-            const bufferSize = audioCtx.sampleRate * 0.2;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-            noise.buffer = buffer;
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); const noise = audioCtx.createBufferSource();
+            const bufferSize = audioCtx.sampleRate * 0.2; const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            noise.buffer = buffer; osc.type = 'sine'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-            noise.connect(gain); osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); noise.start(); osc.stop(audioCtx.currentTime + 0.4); noise.stop(audioCtx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+            noise.connect(gain); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); noise.start(); osc.stop(audioCtx.currentTime + 0.4); noise.stop(audioCtx.currentTime + 0.4);
         }
 
         function updateHPUI() {
             ['maximum', 'explorer', 'scout'].forEach(t => {
-                const percent = Math.ceil(hp[t]);
-                const el = document.getElementById(`hp-${t}`);
-                const val = document.getElementById(`hp-val-${t}`);
-                if(el) el.style.width = percent + "%";
-                if(val) val.innerText = percent + "%";
+                const percent = Math.ceil(hp[t]); const el = document.getElementById(`hp-${t}`); const val = document.getElementById(`hp-val-${t}`);
+                if(el) el.style.width = percent + "%"; if(val) val.innerText = percent + "%";
             });
         }
 
         function updatePointsUI() {
-            const list = document.getElementById('pointsList');
-            const summary = document.getElementById('pointsSummary');
-            if(!list || !summary) return;
-            list.innerHTML = ''; summary.innerHTML = '';
+            const list = document.getElementById('pointsList'); const summary = document.getElementById('pointsSummary');
+            if(!list || !summary) return; list.innerHTML = ''; summary.innerHTML = '';
             ['maximum', 'explorer', 'scout'].forEach(t => {
                 list.innerHTML += `<div class="flex justify-between items-center"><span class="text-[10px] flex items-center gap-1" style="color:var(--tier-${t})"><img src="${SPRITE_URL}" class="w-2 h-2"> ${t.toUpperCase()}</span><span class="orbitron text-white">${points[t]}</span></div>`;
                 summary.innerHTML += `<div class="text-center"><div class="text-[8px] opacity-50 uppercase flex items-center justify-center gap-1"><img src="${SPRITE_URL}" class="w-1.5 h-1.5"> ${t}</div><div class="orbitron text-xs" style="color:var(--tier-${t})">${points[t]}</div></div>`;
@@ -548,12 +702,9 @@
         }
 
         function addLogUI(msg, classes = "") {
-            const log = document.getElementById('battleLog');
-            if(!log) return;
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${classes}`;
-            entry.innerHTML = `<span class="opacity-30 mr-2">></span> ${msg}`;
-            log.prepend(entry);
+            const log = document.getElementById('battleLog'); if(!log) return;
+            const entry = document.createElement('div'); entry.className = `log-entry ${classes}`;
+            entry.innerHTML = `<span class="opacity-30 mr-2">></span> ${msg}`; log.prepend(entry);
             if (log.children.length > 30) log.removeChild(log.lastChild);
         }
 
@@ -565,20 +716,15 @@
         }
 
         function initStars() {
-            stars = [];
-            for(let i=0; i<150; i++) stars.push({ x: Math.random() * starCanvas.width, y: Math.random() * starCanvas.height, s: Math.random() * 1.5 });
+            stars = []; for(let i=0; i<150; i++) stars.push({ x: Math.random() * starCanvas.width, y: Math.random() * starCanvas.height, s: Math.random() * 1.5 });
         }
 
         async function fetchData() {
             try {
                 const res = await fetch(`https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api?module=token&action=tokenholderlist&contractaddress=${CONTRACT_ADDRESS}&page=1&offset=155&apikey=${API_KEY}`);
-                const data = await res.json();
-                const raw = data.result.slice(2);
-                allHolders.maximum = raw.slice(0, 50);
-                allHolders.explorer = raw.slice(50, 100);
-                allHolders.scout = raw.slice(100, 150);
-                updatePointsUI();
-                addLogUI("Habitat registry loaded. Mission ready.", "text-blue-400");
+                const data = await res.json(); const raw = data.result.slice(2);
+                allHolders.maximum = raw.slice(0, 50); allHolders.explorer = raw.slice(50, 100); allHolders.scout = raw.slice(100, 150);
+                updatePointsUI(); updateSectorsWeightUI(); addLogUI("Habitat registry loaded. Mission ready.", "text-blue-400");
             } catch (e) { addLogUI("Link error.", "text-red-500"); }
         }
 
@@ -590,27 +736,23 @@
             document.getElementById('detailSector').style.color = `var(--tier-${tier})`;
             document.getElementById('detailBalance').innerText = balance + " $EROL";
             document.getElementById('detailPoints').innerText = pts + " PTS";
+            document.getElementById('detailBattles').innerText = battleCounts[addr.toLowerCase()] || 0;
         }
 
         function renderFullRoster() {
-            const list = document.getElementById('fullRosterList');
-            if(!list) return;
-            list.innerHTML = '';
+            const list = document.getElementById('fullRosterList'); if(!list) return; list.innerHTML = '';
             const query = document.getElementById('walletSearch').value.toLowerCase();
             ['maximum', 'explorer', 'scout'].forEach(tier => {
-                const tierDiv = document.createElement('div');
-                tierDiv.className = "space-y-2";
+                const tierDiv = document.createElement('div'); tierDiv.className = "space-y-2";
                 tierDiv.innerHTML = `<h3 class="orbitron text-[10px] border-b border-white/10 pb-1 uppercase flex items-center gap-2" style="color:var(--tier-${tier})"><img src="${SPRITE_URL}" class="w-3 h-3"> ${tier} Sector</h3>`;
                 allHolders[tier].forEach(h => {
-                    const addr = h.TokenHolderAddress || h.address;
-                    if (query && !addr.toLowerCase().includes(query)) return;
+                    const addr = h.TokenHolderAddress || h.address; if (query && !addr.toLowerCase().includes(query)) return;
                     const balance = (parseFloat(h.TokenHolderQuantity || h.balance) / 1e18).toLocaleString(undefined, {maximumFractionDigits:0});
-                    const bonus = individualPoints[addr] || 0;
-                    const totalPts = points[tier] + bonus;
+                    const bonus = individualPoints[addr.toLowerCase()] || 0;
                     const item = document.createElement('div');
                     item.className = `p-2 bg-white/5 text-[10px] cursor-pointer hover:bg-white/10 transition-colors ${addr.toLowerCase().includes(query) && query ? 'border border-orange-500 bg-orange-500/10' : ''}`;
-                    item.onclick = () => showWalletDetail(addr, tier, balance, totalPts);
-                    item.innerHTML = `<div class="truncate font-bold">${addr}</div><div class="flex justify-between opacity-50"><span>${balance} EROL</span><span>${totalPts} PTS</span></div>`;
+                    item.onclick = () => showWalletDetail(addr, tier, balance, bonus);
+                    item.innerHTML = `<div class="truncate font-bold">${addr}</div><div class="flex justify-between opacity-50"><span>${balance} EROL</span><span>${bonus} XP</span></div>`;
                     tierDiv.appendChild(item);
                 });
                 list.appendChild(tierDiv);
@@ -618,10 +760,8 @@
         }
 
         function startBattle() {
-            gameState = 'BATTLE'; timeRemaining = 9999; 
-            hp = { maximum: 100, explorer: 100, scout: 100 };
-            updateHPUI();
-            players = []; projectiles = []; particles = [];
+            gameState = 'BATTLE'; timeRemaining = 9999; hp = { maximum: 100, explorer: 100, scout: 100 };
+            updateHPUI(); players = []; spaceships = []; projectiles = []; particles = [];
             const colors = { maximum: '#ffd700', explorer: '#00f2ff', scout: '#adff2f' };
             spaceships = [
                 new Spaceship('MAXIMUM', 100, colors.maximum),
@@ -631,21 +771,18 @@
             ['maximum', 'explorer', 'scout'].forEach(t => {
                 const sample = [...allHolders[t]].sort(() => 0.5 - Math.random()).slice(0, 10);
                 sample.forEach(h => {
-                    const wallet = h.TokenHolderAddress || h.address;
+                    const wallet = (h.TokenHolderAddress || h.address).toLowerCase();
                     players.push(new Stickman(t.toUpperCase(), wallet, Math.random()*canvas.width, Math.random()*canvas.height, colors[t]));
-                    updatePlayerPoints(wallet, 10);
+                    updatePlayerPoints(wallet, 10, true);
                 });
             });
-            broadcastLog("!! SCRAMBLE !! Units deployed. +10 PTS to combatants.", "text-orange-500 font-bold");
+            broadcastLog("!! SCRAMBLE !! Units deployed.", "text-orange-500 font-bold");
             document.getElementById('battlePhaseInfo').innerText = "Surface Conflict Active";
         }
 
         function triggerAttack() {
             const aliveTiers = Object.keys(hp).filter(t => hp[t] > 0);
-            if (aliveTiers.length <= 1) {
-                if(gameState === 'BATTLE') endBattle(aliveTiers[0] || 'maximum');
-                return;
-            }
+            if (aliveTiers.length <= 1) { if(gameState === 'BATTLE') endBattle(aliveTiers[0] || 'maximum'); return; }
             const attackerTier = aliveTiers[Math.floor(Math.random() * aliveTiers.length)];
             const targetTier = aliveTiers.filter(t => t !== attackerTier)[Math.floor(Math.random() * (aliveTiers.length - 1))];
             const attackerList = players.filter(p => p.tier === attackerTier.toUpperCase());
@@ -653,97 +790,67 @@
             if (!attackerList.length || !targetList.length) return;
             const attacker = attackerList[Math.floor(Math.random() * attackerList.length)];
             const victim = targetList[Math.floor(Math.random() * targetList.length)];
-
             const mode = Math.random();
             if (mode > 0.8) { 
                 const ship = spaceships.find(s => s.tier === attackerTier.toUpperCase());
                 if (ship) { ship.isFiring = 20; ship.target = victim; hp[targetTier] -= 3; playLaserSound(); }
             } else if (mode > 0.6) { 
-                const type = Math.random() > 0.5 ? 'rocket' : 'bomb';
-                projectiles.push(new Projectile(type, attacker.x, attacker.y, victim.x, victim.y, attacker.color, attackerTier.toUpperCase()));
-            } else { 
-                attacker.isFiring = 10; attacker.target = victim; hp[targetTier] -= 1.5; playLaserSound();
-            }
+                projectiles.push(new Projectile(Math.random() > 0.5 ? 'rocket' : 'bomb', attacker.x, attacker.y, victim.x, victim.y, attacker.color, attackerTier.toUpperCase()));
+            } else { attacker.isFiring = 10; attacker.target = victim; hp[targetTier] -= 1.5; playLaserSound(); }
             updateHPUI();
         }
 
         async function endBattle(winner) {
-            updateSupabasePoints(winner, 100);
-            broadcastLog(`${winner.toUpperCase()} VICTORIOUS. Sector Secured.`, "bg-orange-600 text-black px-2 font-bold mt-2");
-            gameState = 'VICTORY_TRANS';
-            winnerText = `${winner.toUpperCase()} DOMINANCE`;
+            updateSupabasePoints(winner, 100); broadcastLog(`${winner.toUpperCase()} VICTORIOUS.`, "bg-orange-600 text-black px-2 font-bold mt-2");
+            gameState = 'VICTORY_TRANS'; winnerText = `${winner.toUpperCase()} DOMINANCE`;
             winColor = winner === 'maximum' ? '#ffd700' : (winner === 'explorer' ? '#00f2ff' : '#adff2f');
-            
-            victoryVideo.currentTime = 0;
-            victoryVideo.play().catch(e => console.log("Video wait"));
-            
-            setTimeout(() => {
-                victoryVideo.pause();
-                gameState = 'REST'; timeRemaining = 60;
-                document.getElementById('battlePhaseInfo').innerText = "Regrouping...";
-            }, 6000);
+            watchedBattlesCount = Math.min(watchedBattlesCount + 1, 2); updateTaskUI();
+            victoryVideo.currentTime = 0; victoryVideo.play().catch(e => console.log("Video wait"));
+            setTimeout(() => { victoryVideo.pause(); gameState = 'REST'; timeRemaining = 60; document.getElementById('battlePhaseInfo').innerText = "Regrouping..."; }, 6000);
         }
 
         function gameLoop() {
             if (!ctx) return;
             sctx.clearRect(0,0,starCanvas.width, starCanvas.height);
-            sctx.fillStyle = '#fff';
-            stars.forEach(p => { sctx.globalAlpha = Math.random() * 0.5 + 0.3; sctx.fillRect(p.x, p.y, p.s, p.s); });
-            ctx.fillStyle = 'rgba(5, 5, 7, 1)';
-            ctx.fillRect(0,0,canvas.width, canvas.height);
+            sctx.fillStyle = '#fff'; stars.forEach(p => { sctx.globalAlpha = Math.random() * 0.5 + 0.3; sctx.fillRect(p.x, p.y, p.s, p.s); });
+            
+            ctx.fillStyle = 'rgba(5, 5, 7, 1)'; ctx.fillRect(0,0,canvas.width, canvas.height);
 
-            if (gameState === 'BATTLE') {
-                if (Math.random() > 0.92) triggerAttack();
+            if (gameState === 'BATTLE' || gameState === 'REST') {
+                if (gameState === 'BATTLE' && Math.random() > 0.92) triggerAttack();
+                // We draw ships and players even in REST if they exist
                 spaceships.forEach(s => s.draw());
                 players.forEach(p => { p.update(); p.draw(); });
                 projectiles.forEach((p, i) => { p.update(); p.draw(); if (p.life <= 0) projectiles.splice(i, 1); });
                 particles.forEach((p, i) => { p.draw(); if (p.life <= 0) particles.splice(i, 1); });
-            } else if (gameState === 'VICTORY_TRANS') {
+            } 
+            
+            if (gameState === 'VICTORY_TRANS') {
                 ctx.drawImage(victoryVideo, 0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
-                ctx.font = 'bold 30px Orbitron';
-                ctx.fillStyle = winColor; ctx.textAlign = 'center';
-                ctx.fillText(winnerText, canvas.width/2, canvas.height - 50);
-                ctx.font = '12px Share Tech Mono'; ctx.fillStyle = '#fff';
-                ctx.fillText("+100 SECTOR POINTS GRANTED", canvas.width/2, canvas.height - 25);
-            } else {
-                ctx.fillStyle = 'rgba(255, 77, 0, 0.1)';
-                ctx.font = '12px Orbitron'; ctx.textAlign = 'center';
+                ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+                ctx.font = 'bold 30px Orbitron'; ctx.fillStyle = winColor; ctx.textAlign = 'center'; ctx.fillText(winnerText, canvas.width/2, canvas.height - 50);
+                ctx.font = '12px Share Tech Mono'; ctx.fillStyle = '#fff'; ctx.fillText("+100 SECTOR POINTS GRANTED", canvas.width/2, canvas.height - 25);
+            } else if (gameState === 'REST') {
+                ctx.fillStyle = 'rgba(255, 77, 0, 0.2)'; ctx.font = '12px Orbitron'; ctx.textAlign = 'center';
                 ctx.fillText("COOLING WEAPONS SYSTEMS...", canvas.width/2, canvas.height/2);
             }
             requestAnimationFrame(gameLoop);
         }
 
-        // Initialization
         window.onload = () => {
-            canvas = document.getElementById('battleCanvas');
-            ctx = canvas.getContext('2d');
-            starCanvas = document.getElementById('starfield');
-            sctx = starCanvas.getContext('2d');
-            bgMusic = document.getElementById('bgMusic');
-            victoryVideo = document.getElementById('victoryVideo');
+            canvas = document.getElementById('battleCanvas'); ctx = canvas.getContext('2d');
+            starCanvas = document.getElementById('starfield'); sctx = starCanvas.getContext('2d');
+            bgMusic = document.getElementById('bgMusic'); victoryVideo = document.getElementById('victoryVideo');
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-            resize(); 
-            initSupabase(); 
-            fetchData(); 
-            gameLoop(); 
-            
+            resize(); initSupabase(); fetchData(); gameLoop(); 
             setInterval(() => {
-                if (gameState === 'REST') {
-                    timeRemaining--;
-                    if (timeRemaining <= 0) startBattle();
-                }
-                const m = Math.floor(timeRemaining / 60); const s = timeRemaining % 60;
+                if (gameState === 'REST') { timeRemaining--; if (timeRemaining <= 0) startBattle(); }
                 const timerEl = document.getElementById('globalTimer');
-                if (timerEl) { timerEl.innerText = (gameState === 'BATTLE' || gameState === 'VICTORY_TRANS') ? 'LIVE' : `${m}:${s.toString().padStart(2, '0')}`; }
+                if (timerEl) { timerEl.innerText = (gameState === 'BATTLE' || gameState === 'VICTORY_TRANS') ? 'LIVE' : `0:${timeRemaining.toString().padStart(2, '0')}`; }
             }, 1000);
-
             const searchInput = document.getElementById('walletSearch');
             if(searchInput) searchInput.addEventListener('input', renderFullRoster); 
         };
-
         window.onresize = resize;
     </script>
 </body>
