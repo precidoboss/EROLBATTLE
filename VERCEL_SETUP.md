@@ -8,8 +8,8 @@ Quick steps to keep secrets out of the client and run safe on Vercel:
 2) Add Environment Variables in Vercel (Project → Settings → Environment Variables)
    - SUPABASE_KEY  (if you need to use on client, better to use an ANON public key with limited permissions)
    - API_KEY (used only by the serverless proxy created at `/api/tokenholders`)
-
-3) Serverless proxy (recommended) — already added
+- SUPABASE_SERVICE_KEY (server-only service role key used by `/api/purchase` to insert purchase records)
+- SUPABASE_URL (your Supabase project URL, e.g. https://xyz.supabase.co)
    - `api/tokenholders.js` is a Vercel Serverless Function included in this repo.
    - It reads `process.env.API_KEY` and proxies the RouteScan call so the API key never reaches the browser.
    - Ensure `API_KEY` is set in Vercel for Production/Preview as required.

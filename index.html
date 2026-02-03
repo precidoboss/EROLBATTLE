@@ -123,6 +123,7 @@
                         <button onclick="switchPage('arena')" id="nav-arena" class="nav-btn active">ARENA</button>
                         <button onclick="switchPage('roster')" id="nav-roster" class="nav-btn">ROSTER</button>
                         <button onclick="switchPage('sectors')" id="nav-sectors" class="nav-btn">SECTORS</button>
+                        <button onclick="switchPage('market')" id="nav-market" class="nav-btn">MARKET</button>
                         <button onclick="switchPage('tasks')" id="nav-tasks" class="nav-btn">TASKS</button>
                         <button onclick="switchPage('about')" id="nav-about" class="nav-btn">MISSION</button>
                         <button id="audioToggle" onclick="toggleMusic()" class="nav-btn text-orange-300">
@@ -325,6 +326,37 @@
             <div class="mars-glass p-8">
                 <h2 class="orbitron text-2xl text-orange-500 mb-2">HABITAT TASKS</h2>
                 <p class="text-xs text-gray-400 mb-8">Complete tactical objectives to earn extra points.</p>
+        
+        <!-- MARKET PAGE -->
+        <div id="page-market" class="hidden space-y-6">
+            <div class="mars-glass p-8 max-w-3xl mx-auto">
+                <h2 class="orbitron text-2xl text-orange-500 mb-2">MARKETPLACE</h2>
+                <p class="text-xs text-gray-400 mb-4">Buy boosters for any wallet by paying with $EROL to the community address and submitting the transaction link.</p>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="text-[10px] opacity-60">Select Booster</label>
+                        <select id="marketBooster" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500">
+                            <option value="titan_shield" data-price="500">TITAN SHIELD — 500 $EROL</option>
+                            <option value="solar_flare" data-price="750">SOLAR FLARE — 750 $EROL</option>
+                            <option value="scout_pack" data-price="50">SCOUT PACK — 50 $EROL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] opacity-60">Target Wallet (to receive the booster)</label>
+                        <input id="marketTarget" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500" placeholder="0x..." />
+                    </div>
+                    <div>
+                        <label class="text-[10px] opacity-60">Transaction Link (Explorer URL)</label>
+                        <input id="marketTxLink" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500" placeholder="https://.../tx/0x..." />
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <div class="text-[10px]">Pay to: <span class="font-bold">0x46914D5DC59598801e435AF2a08928Da87C60dF0</span></div>
+                        <button onclick="submitPurchase()" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">SUBMIT PURCHASE</button>
+                    </div>
+                    <div id="marketMsg" class="text-sm text-green-400"></div>
+                </div>
+            </div>
+        </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="task-card">
@@ -371,6 +403,36 @@
                         </div>
                         <div class="text-[10px] text-orange-500 uppercase tracking-widest mt-auto">Locked: Coming Soon</div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARKET PAGE -->
+        <div id="page-market" class="hidden space-y-6">
+            <div class="mars-glass p-8 max-w-3xl mx-auto">
+                <h2 class="orbitron text-2xl text-orange-500 mb-2">MARKETPLACE</h2>
+                <p class="text-xs text-gray-400 mb-4">Buy boosters for any wallet by paying with $EROL to the community address and submitting the transaction link. Payment address: <span class="font-bold">0x46914D5DC59598801e435AF2a08928Da87C60dF0</span></p>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="text-[10px] opacity-60">Select Booster</label>
+                        <select id="marketBooster" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500">
+                            <option value="titan_shield" data-price="500">TITAN SHIELD — 500 $EROL</option>
+                            <option value="solar_flare" data-price="750">SOLAR FLARE — 750 $EROL</option>
+                            <option value="scout_pack" data-price="50">SCOUT PACK — 50 $EROL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] opacity-60">Target Wallet (to receive the booster)</label>
+                        <input id="marketTarget" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500" placeholder="0x..." />
+                    </div>
+                    <div>
+                        <label class="text-[10px] opacity-60">Transaction Link (Explorer URL)</label>
+                        <input id="marketTxLink" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500" placeholder="https://.../tx/0x..." />
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <button onclick="submitPurchase()" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">SUBMIT PURCHASE</button>
+                    </div>
+                    <div id="marketMsg" class="text-sm text-green-400"></div>
                 </div>
             </div>
         </div>
@@ -422,7 +484,7 @@
     <script>
         // Attempt to load runtime env from /env.js (generated at build). This file should set `window.__ENV = { SUPABASE_KEY: '...', API_KEY: '...' }`.
         // On Vercel you can generate it during build using the env vars (see README instructions below).
-        (function(){ try { var _s = document.createElement('script'); _s.src = '/env.js'; _s.defer = true; document.head.appendChild(_s); } catch(e){} })();
+        (function(){ try { var _s = document.createElement('script'); _s.src = '/env.js'; _s.async = true; _s.onerror = function(){ console.info('/env.js not found, skipping runtime injection'); }; document.head.appendChild(_s); } catch(e){} })();
 
         const SUPABASE_URL = 'https://swveqrjuczfvqjhzzrxy.supabase.co';
         // Load secrets from runtime-injected env (set on Vercel). Do NOT commit secrets into the repo.
@@ -449,7 +511,7 @@
         let projectiles = []; 
         let particles = [];
         let stars = [];
-        let currentPage = 'arena';
+        /* currentPage is declared earlier to avoid TDZ errors */
         let isMusicPlaying = false;
         let winnerText = "";
         let winColor = "";
@@ -457,9 +519,10 @@
 
         let canvas, ctx, starCanvas, sctx, bgMusic, victoryVideo, audioCtx;
 
+        let currentPage = 'arena';
         function switchPage(page) {
             currentPage = page;
-            const pages = ['arena', 'roster', 'about', 'tasks', 'sectors'];
+            const pages = ['arena', 'roster', 'market', 'about', 'tasks', 'sectors'];
             pages.forEach(p => {
                 const el = document.getElementById(`page-${p}`);
                 const nav = document.getElementById(`nav-${p}`);
@@ -468,6 +531,7 @@
             });
             if(page === 'roster') { hideWalletDetail(); renderFullRoster(); }
             if(page === 'sectors') { updateSectorsWeightUI(); }
+            if(page === 'market') { renderMarket(); }
         }
 
         function hideWalletDetail() {
@@ -497,6 +561,7 @@
         }
 
         async function initSupabase() {
+            if (!supabaseClient) { console.warn('Supabase client not initialized, skipping initSupabase'); return; }
             const { data: sectorData } = await supabaseClient.from('sector_points').select('*');
             if (sectorData) { sectorData.forEach(s => { points[s.sector_name] = s.points; }); updatePointsUI(); }
 
@@ -538,10 +603,15 @@
         }
 
         async function updateSupabasePoints(sector, amount) {
+            if (!supabaseClient) { console.warn('Supabase client not initialized - skip updateSupabasePoints'); return; }
             await supabaseClient.rpc('increment_sector_points', { s_name: sector, inc: amount });
         }
 
         async function updatePlayerPoints(wallet, amount, isBattle = false) {
+            if (!supabaseClient) { console.warn('Supabase client not initialized - skip updatePlayerPoints');
+                individualPoints[wallet] = (individualPoints[wallet] || 0) + amount;
+                if (isBattle) battleCounts[wallet] = (battleCounts[wallet] || 0) + 1;
+                return; }
             const newPoints = (individualPoints[wallet] || 0) + amount;
             const newBattles = (battleCounts[wallet] || 0) + (isBattle ? 1 : 0);
             await supabaseClient.from('player_stats').upsert(
@@ -553,6 +623,7 @@
         }
 
         async function broadcastLog(msg, css = "") {
+            if (!supabaseClient) { console.warn('Supabase client not initialized - skip broadcastLog'); addLogUI(msg, css); return; }
             await supabaseClient.from('battle_logs').insert([{ message: msg, css_class: css }]);
         }
 
@@ -612,6 +683,38 @@
                 stat.innerText = watchedBattlesCount >= 2 ? "READY TO CLAIM" : "INCOMPLETE";
                 stat.classList.toggle('text-green-400', watchedBattlesCount >= 2);
             }
+        }
+
+        // Marketplace helpers
+        const BOOSTERS = [
+            { id: 'titan_shield', name: 'TITAN SHIELD', price: 500 },
+            { id: 'solar_flare', name: 'SOLAR FLARE', price: 750 },
+            { id: 'scout_pack', name: 'SCOUT PACK', price: 50 }
+        ];
+
+        function renderMarket() {
+            const sel = document.getElementById('marketBooster'); if (!sel) return;
+            sel.innerHTML = '';
+            BOOSTERS.forEach(b => {
+                const opt = document.createElement('option'); opt.value = b.id; opt.textContent = `${b.name} — ${b.price} $EROL`; opt.dataset.price = b.price; sel.appendChild(opt);
+            });
+            const msg = document.getElementById('marketMsg'); if (msg) msg.innerText = '';
+        }
+
+        async function submitPurchase() {
+            const booster = (document.getElementById('marketBooster') || {}).value;
+            const target = (document.getElementById('marketTarget') || {}).value || '';
+            const tx = (document.getElementById('marketTxLink') || {}).value || '';
+            if (!booster || !target || !tx) return alert('Please provide booster, target wallet, and transaction link.');
+            try {
+                const res = await fetch('/api/purchase', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ booster, target: target.toLowerCase(), txLink: tx }) });
+                const data = await res.json();
+                if (!res.ok) return alert('Purchase failed: ' + (data.error || data.message || JSON.stringify(data)));
+                document.getElementById('marketMsg').innerText = 'Purchase submitted — it will be verified and processed.';
+                addLogUI(`Purchase submitted for ${target} (${booster})`, 'text-green-400');
+                document.getElementById('marketTarget').value = '';
+                document.getElementById('marketTxLink').value = '';
+            } catch (e) { alert('Network error: ' + e.message); }
         }
 
         // Gameplay Classes
