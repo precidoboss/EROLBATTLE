@@ -6,6 +6,7 @@
     <title>EROL | Mars Habitat & Battle Ground</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='100%' height='100%' fill='%23ff4d00'/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -120,13 +121,13 @@
                 <div>
                     <h1 class="orbitron text-2xl font-bold text-orange-600 tracking-tighter uppercase">Mars Habitat OS</h1>
                     <div class="flex flex-wrap gap-2 mt-1">
-                        <button onclick="switchPage('arena')" id="nav-arena" class="nav-btn active">ARENA</button>
-                        <button onclick="switchPage('roster')" id="nav-roster" class="nav-btn">ROSTER</button>
-                        <button onclick="switchPage('sectors')" id="nav-sectors" class="nav-btn">SECTORS</button>
-                        <button onclick="switchPage('market')" id="nav-market" class="nav-btn">MARKET</button>
-                        <button onclick="switchPage('tasks')" id="nav-tasks" class="nav-btn">TASKS</button>
-                        <button onclick="switchPage('about')" id="nav-about" class="nav-btn">MISSION</button>
-                        <button id="audioToggle" onclick="toggleMusic()" class="nav-btn text-orange-300">
+                        <button id="nav-arena" class="nav-btn active">ARENA</button>
+                        <button id="nav-roster" class="nav-btn">ROSTER</button>
+                        <button id="nav-sectors" class="nav-btn">SECTORS</button>
+                        <button id="nav-market" class="nav-btn">MARKET</button>
+                        <button id="nav-tasks" class="nav-btn">TASKS</button>
+                        <button id="nav-about" class="nav-btn">MISSION</button>
+                        <button id="audioToggle" class="nav-btn text-orange-300">
                             <span id="audioIcon">🔈</span> <span id="audioText">MUSIC</span>
                         </button>
                     </div>
@@ -217,7 +218,7 @@
             </div>
 
             <div id="walletDetail" class="hidden space-y-6">
-                <button onclick="hideWalletDetail()" class="text-xs text-orange-500 hover:text-orange-400 mb-4 flex items-center gap-2">
+                <button id="backToDb" class="text-xs text-orange-500 hover:text-orange-400 mb-4 flex items-center gap-2">
                     ← RETURN TO DATABASE
                 </button>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -351,7 +352,7 @@
                     </div>
                     <div class="flex gap-2 items-center">
                         <div class="text-[10px]">Pay to: <span class="font-bold">0x46914D5DC59598801e435AF2a08928Da87C60dF0</span></div>
-                        <button onclick="submitPurchase()" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">SUBMIT PURCHASE</button>
+                        <button id="submitPurchaseBtn" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">SUBMIT PURCHASE</button>
                     </div>
                     <div id="marketMsg" class="text-sm text-green-400"></div>
                 </div>
@@ -377,7 +378,7 @@
                             </div>
                             <div class="flex gap-2">
                                 <input type="text" id="watchTaskWallet" placeholder="PASTE WALLET ADDRESS..." class="flex-grow bg-black border border-white/10 p-2 text-[10px] text-orange-500 focus:outline-none focus:border-orange-500">
-                                <button onclick="claimWatchTask()" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">CLAIM</button>
+                                <button id="claimWatchBtn" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">CLAIM</button>
                             </div>
                         </div>
                     </div>
@@ -430,7 +431,7 @@
                         <input id="marketTxLink" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500" placeholder="https://.../tx/0x..." />
                     </div>
                     <div class="flex gap-2 items-center">
-                        <button onclick="submitPurchase()" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">SUBMIT PURCHASE</button>
+                        <button id="submitPurchaseBtn2" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">SUBMIT PURCHASE</button>
                     </div>
                     <div id="marketMsg" class="text-sm text-green-400"></div>
                 </div>
@@ -489,8 +490,12 @@
         const SUPABASE_URL = 'https://swveqrjuczfvqjhzzrxy.supabase.co';
         // Load secrets from runtime-injected env (set on Vercel). Do NOT commit secrets into the repo.
         const SUPABASE_KEY = (window.__ENV && window.__ENV.SUPABASE_KEY) || '';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        if (!SUPABASE_KEY) console.warn('SUPABASE_KEY missing. Set SUPABASE_KEY in Vercel and inject it into window.__ENV at build/runtime.');
+        let supabaseClient = null;
+        if (SUPABASE_KEY) {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } else {
+            console.warn('SUPABASE_KEY missing. Supabase client will not be initialized.');
+        }
 
         // API keys should be injected at build/runtime via Vercel environment variables.
         const API_KEY = (window.__ENV && window.__ENV.API_KEY) || '';
@@ -1030,7 +1035,18 @@
                 if (timerEl) { timerEl.innerText = (gameState === 'BATTLE' || gameState === 'VICTORY_TRANS') ? 'LIVE' : `0:${timeRemaining.toString().padStart(2, '0')}`; }
             }, 1000);
             const searchInput = document.getElementById('walletSearch');
-            if(searchInput) searchInput.addEventListener('input', renderFullRoster); 
+            if(searchInput) searchInput.addEventListener('input', renderFullRoster);
+
+            // Attach navigation and UI button handlers (avoid inline onclicks to prevent TDZ errors)
+            const navMapping = { 'nav-arena':'arena','nav-roster':'roster','nav-sectors':'sectors','nav-market':'market','nav-tasks':'tasks','nav-about':'about' };
+            Object.keys(navMapping).forEach(id => {
+                const el = document.getElementById(id); if (!el) return; el.addEventListener('click', () => switchPage(navMapping[id]));
+            });
+            const audioBtn = document.getElementById('audioToggle'); if (audioBtn) audioBtn.addEventListener('click', toggleMusic);
+            const backBtn = document.getElementById('backToDb'); if (backBtn) backBtn.addEventListener('click', hideWalletDetail);
+            const claimBtn = document.getElementById('claimWatchBtn'); if (claimBtn) claimBtn.addEventListener('click', claimWatchTask);
+            // multiple submit buttons (if present) use same class handler
+            ['submitPurchaseBtn','submitPurchaseBtn2'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', submitPurchase); });
         };
         window.onresize = resize;
     </script>

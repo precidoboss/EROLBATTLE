@@ -10,6 +10,15 @@ Quick steps to keep secrets out of the client and run safe on Vercel:
    - API_KEY (used only by the serverless proxy created at `/api/tokenholders`)
 - SUPABASE_SERVICE_KEY (server-only service role key used by `/api/purchase` to insert purchase records)
 - SUPABASE_URL (your Supabase project URL, e.g. https://xyz.supabase.co)
+- EROL_CONTRACT (optional; overrides on-chain EROL token contract address used for verification)
+- COMMUNITY_ADDRESS (optional; overrides the community receiving address; defaults to 0x46914D5D...)
+- RPC_URL (optional; JSON-RPC endpoint for Avalanche C-Chain; defaults to https://api.avax.network/ext/bc/C/rpc)
+
+Automatic verification behavior:
+- The serverless `/api/purchase` endpoint will automatically verify that the provided transaction hash includes an **ERC-20 Transfer** from the EROL token contract to `COMMUNITY_ADDRESS` with an **exact** token amount equal to `booster.price` (multiplied by 10^18 — token uses 18 decimals).
+- If verification succeeds, the purchase is stored and marked `processed=true`.
+- If verification fails (wrong recipient, wrong token, wrong amount, or tx not mined), the attempt is recorded with `processed=false` and the API returns an error explaining the mismatch.
+
    - `api/tokenholders.js` is a Vercel Serverless Function included in this repo.
    - It reads `process.env.API_KEY` and proxies the RouteScan call so the API key never reaches the browser.
    - Ensure `API_KEY` is set in Vercel for Production/Preview as required.
