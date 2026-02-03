@@ -37,10 +37,22 @@
         .hp-bar { transition: width 0.6s ease-out; }
         
         .nav-btn {
-            @apply px-4 py-2 text-[10px] font-bold transition-all border border-transparent flex items-center gap-1;
+            padding: 0.5rem 1rem;
+            font-size: 10px;
+            font-weight: 700;
+            transition: all .2s;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
         }
         .nav-btn.active {
-            @apply border-orange-500/50 text-orange-500 bg-orange-950/20;
+            border-color: rgba(249,115,22,0.5);
+            color: #f97316;
+            background: rgba(249,115,22,0.08);
         }
 
         #starfield {
@@ -74,18 +86,30 @@
         }
 
         .booster-card {
-            @apply border border-orange-900/30 bg-black/40 p-3 rounded hover:border-orange-500/50 transition-all cursor-not-allowed opacity-60;
+            border: 1px solid rgba(255,77,0,0.18);
+            background: rgba(0,0,0,0.4);
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            transition: all .2s;
+            cursor: not-allowed;
+            opacity: 0.6;
         }
+        .booster-card:hover { border-color: rgba(249,115,22,0.5); }
         
         .task-card {
-            @apply p-4 border border-white/5 bg-white/5 rounded hover:border-orange-500/30 transition-all;
+            padding: 1rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.05);
+            border-radius: 0.375rem;
+            transition: all .2s;
         }
+        .task-card:hover { border-color: rgba(249,115,22,0.18); }
     </style>
 </head>
 <body class="min-h-screen">
     <canvas id="starfield"></canvas>
 
-    <video id="victoryVideo" preload="auto" playsinline style="display:none">
+    <video id="victoryVideo" preload="auto" playsinline crossorigin="anonymous" style="display:none">
         <source src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/IMG_1575.MP4" type="video/mp4">
     </video>
 
@@ -118,7 +142,7 @@
         </header>
     </div>
 
-    <audio id="bgMusic" loop>
+    <audio id="bgMusic" loop crossorigin="anonymous">
         <source src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/SnapTik-dot-Kim-63f2e16eeed14b1ab245183587780ec2.mp3" type="audio/mpeg">
     </audio>
 
@@ -129,7 +153,7 @@
             <div class="lg:col-span-3 space-y-6">
                 <div class="mars-glass p-4 border-l-4 border-orange-600">
                     <h3 class="orbitron text-xs text-orange-500 mb-4 tracking-widest uppercase flex items-center gap-2">
-                        <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-13-33.jpg" class="w-4 h-4"> Live Standings
+                        <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-13-33.jpg" class="w-4 h-4" alt="" aria-hidden="true"> Live Standings
                     </h3>
                     <div id="pointsList" class="space-y-4"></div>
                 </div>
@@ -377,15 +401,15 @@
                     </section>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-orange-900/30">
-                        <a href="https://twitter.com/ErolMuskAvax" target="_blank" class="mars-glass p-4 text-center hover:bg-orange-600 hover:text-black transition-all">
+                        <a href="https://twitter.com/ErolMuskAvax" target="_blank" rel="noopener noreferrer" class="mars-glass p-4 text-center hover:bg-orange-600 hover:text-black transition-all">
                             <div class="text-[10px] uppercase opacity-50 mb-1">Project</div>
                             <div class="font-bold">@ErolMuskAvax</div>
                         </a>
-                        <a href="https://twitter.com/Precidobos" target="_blank" class="mars-glass p-4 text-center hover:bg-orange-600 hover:text-black transition-all">
+                        <a href="https://twitter.com/Precidobos" target="_blank" rel="noopener noreferrer" class="mars-glass p-4 text-center hover:bg-orange-600 hover:text-black transition-all">
                             <div class="text-[10px] uppercase opacity-50 mb-1">Developer</div>
                             <div class="font-bold">@Precidobos</div>
                         </a>
-                        <a href="https://erolmusk.com" target="_blank" class="mars-glass p-4 text-center hover:bg-orange-600 hover:text-black transition-all">
+                        <a href="https://erolmusk.com" target="_blank" rel="noopener noreferrer" class="mars-glass p-4 text-center hover:bg-orange-600 hover:text-black transition-all">
                             <div class="text-[10px] uppercase opacity-50 mb-1">Website</div>
                             <div class="font-bold">erolmusk.com</div>
                         </a>
@@ -396,13 +420,21 @@
     </main>
 
     <script>
-        const SUPABASE_URL = 'https://swveqrjuczfvqjhzzrxy.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3dmVxcmp1Y3pmdnFqaHp6cnh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5NjYzNzgsImV4cCI6MjA4NTU0MjM3OH0.Fnk9gACUeoFW9Af4tny81IqSb5j19k4jsEMCDaG-DHY';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Attempt to load runtime env from /env.js (generated at build). This file should set `window.__ENV = { SUPABASE_KEY: '...', API_KEY: '...' }`.
+        // On Vercel you can generate it during build using the env vars (see README instructions below).
+        (function(){ try { var _s = document.createElement('script'); _s.src = '/env.js'; _s.defer = true; document.head.appendChild(_s); } catch(e){} })();
 
-        const API_KEY = 'rs_1caf6cdfedd13407191c09b4';
+        const SUPABASE_URL = 'https://swveqrjuczfvqjhzzrxy.supabase.co';
+        // Load secrets from runtime-injected env (set on Vercel). Do NOT commit secrets into the repo.
+        const SUPABASE_KEY = (window.__ENV && window.__ENV.SUPABASE_KEY) || '';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        if (!SUPABASE_KEY) console.warn('SUPABASE_KEY missing. Set SUPABASE_KEY in Vercel and inject it into window.__ENV at build/runtime.');
+
+        // API keys should be injected at build/runtime via Vercel environment variables.
+        const API_KEY = (window.__ENV && window.__ENV.API_KEY) || '';
         const CONTRACT_ADDRESS = '0xCaC4904E1DB1589Aa17A2Ec742F5a6bCF4c4D037';
         const SPRITE_URL = 'https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-13-33.jpg';
+        if (!API_KEY) console.warn('API_KEY missing. Set API_KEY in Vercel and inject it into window.__ENV at build/runtime.');
         
         let allHolders = { maximum: [], explorer: [], scout: [] };
         let points = { maximum: 0, explorer: 0, scout: 0 };
@@ -527,12 +559,27 @@
         function updateWinnersUI() {
             const el = document.getElementById('recentWinners');
             if(!el) return;
-            el.innerHTML = lastWinners.map(w => `
-                <div class="flex justify-between border-b border-white/5 pb-1">
-                    <span style="color:var(--tier-${w})">${w.toUpperCase()}</span>
-                    <span class="opacity-50">CONQUEST</span>
-                </div>
-            `).join('') || '<div class="opacity-50 italic">No recent history...</div>';
+            el.innerHTML = '';
+            if (!lastWinners.length) {
+                const none = document.createElement('div');
+                none.className = 'opacity-50 italic';
+                none.textContent = 'No recent history...';
+                el.appendChild(none);
+                return;
+            }
+            lastWinners.forEach(w => {
+                const row = document.createElement('div');
+                row.className = 'flex justify-between border-b border-white/5 pb-1';
+                const span1 = document.createElement('span');
+                span1.style.color = `var(--tier-${w})`;
+                span1.textContent = w.toUpperCase();
+                const span2 = document.createElement('span');
+                span2.className = 'opacity-50';
+                span2.textContent = 'CONQUEST';
+                row.appendChild(span1);
+                row.appendChild(span2);
+                el.appendChild(row);
+            });
         }
 
         function updateSectorsWeightUI() {
@@ -696,15 +743,34 @@
             const list = document.getElementById('pointsList'); const summary = document.getElementById('pointsSummary');
             if(!list || !summary) return; list.innerHTML = ''; summary.innerHTML = '';
             ['maximum', 'explorer', 'scout'].forEach(t => {
-                list.innerHTML += `<div class="flex justify-between items-center"><span class="text-[10px] flex items-center gap-1" style="color:var(--tier-${t})"><img src="${SPRITE_URL}" class="w-2 h-2"> ${t.toUpperCase()}</span><span class="orbitron text-white">${points[t]}</span></div>`;
-                summary.innerHTML += `<div class="text-center"><div class="text-[8px] opacity-50 uppercase flex items-center justify-center gap-1"><img src="${SPRITE_URL}" class="w-1.5 h-1.5"> ${t}</div><div class="orbitron text-xs" style="color:var(--tier-${t})">${points[t]}</div></div>`;
+                const row = document.createElement('div');
+                row.className = 'flex justify-between items-center';
+                const left = document.createElement('span');
+                left.className = 'text-[10px] flex items-center gap-1';
+                left.style.color = `var(--tier-${t})`;
+                const img = document.createElement('img'); img.src = SPRITE_URL; img.className = 'w-2 h-2'; img.alt = ''; img.setAttribute('aria-hidden','true');
+                left.appendChild(img);
+                left.appendChild(document.createTextNode(' ' + t.toUpperCase()));
+                const right = document.createElement('span'); right.className = 'orbitron text-white'; right.textContent = points[t];
+                row.appendChild(left); row.appendChild(right); list.appendChild(row);
+
+                const sbox = document.createElement('div'); sbox.className = 'text-center';
+                const s1 = document.createElement('div'); s1.className = 'text-[8px] opacity-50 uppercase flex items-center justify-center gap-1';
+                const sImage = document.createElement('img'); sImage.src = SPRITE_URL; sImage.className = 'w-1.5 h-1.5'; sImage.alt = ''; sImage.setAttribute('aria-hidden','true'); s1.appendChild(sImage); s1.appendChild(document.createTextNode(' ' + t));
+                const s2 = document.createElement('div'); s2.className = 'orbitron text-xs'; s2.style.color = `var(--tier-${t})`; s2.textContent = points[t];
+                sbox.appendChild(s1); sbox.appendChild(s2); summary.appendChild(sbox);
             });
         }
 
         function addLogUI(msg, classes = "") {
             const log = document.getElementById('battleLog'); if(!log) return;
-            const entry = document.createElement('div'); entry.className = `log-entry ${classes}`;
-            entry.innerHTML = `<span class="opacity-30 mr-2">></span> ${msg}`; log.prepend(entry);
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            if (classes) classes.split(' ').forEach(c => { if (c) entry.classList.add(c); });
+            const icon = document.createElement('span'); icon.className = 'opacity-30 mr-2'; icon.textContent = '>';
+            const text = document.createElement('span'); text.textContent = ' ' + msg;
+            entry.appendChild(icon); entry.appendChild(text);
+            log.prepend(entry);
             if (log.children.length > 30) log.removeChild(log.lastChild);
         }
 
@@ -721,8 +787,9 @@
 
         async function fetchData() {
             try {
-                const res = await fetch(`https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api?module=token&action=tokenholderlist&contractaddress=${CONTRACT_ADDRESS}&page=1&offset=155&apikey=${API_KEY}`);
-                const data = await res.json(); const raw = data.result.slice(2);
+                // Use serverless proxy to avoid exposing API_KEY in client bundle or network calls
+                const res = await fetch('/api/tokenholders');
+                const data = await res.json(); const raw = (data && data.result) ? data.result.slice(2) : [];
                 allHolders.maximum = raw.slice(0, 50); allHolders.explorer = raw.slice(50, 100); allHolders.scout = raw.slice(100, 150);
                 updatePointsUI(); updateSectorsWeightUI(); addLogUI("Habitat registry loaded. Mission ready.", "text-blue-400");
             } catch (e) { addLogUI("Link error.", "text-red-500"); }
@@ -743,16 +810,27 @@
             const list = document.getElementById('fullRosterList'); if(!list) return; list.innerHTML = '';
             const query = document.getElementById('walletSearch').value.toLowerCase();
             ['maximum', 'explorer', 'scout'].forEach(tier => {
-                const tierDiv = document.createElement('div'); tierDiv.className = "space-y-2";
-                tierDiv.innerHTML = `<h3 class="orbitron text-[10px] border-b border-white/10 pb-1 uppercase flex items-center gap-2" style="color:var(--tier-${tier})"><img src="${SPRITE_URL}" class="w-3 h-3"> ${tier} Sector</h3>`;
-                allHolders[tier].forEach(h => {
-                    const addr = h.TokenHolderAddress || h.address; if (query && !addr.toLowerCase().includes(query)) return;
+                const tierDiv = document.createElement('div'); tierDiv.className = 'space-y-2';
+                const header = document.createElement('h3');
+                header.className = 'orbitron text-[10px] border-b border-white/10 pb-1 uppercase flex items-center gap-2';
+                header.style.color = `var(--tier-${tier})`;
+                const himg = document.createElement('img'); himg.src = SPRITE_URL; himg.className = 'w-3 h-3'; himg.alt = ''; himg.setAttribute('aria-hidden','true'); header.appendChild(himg);
+                header.appendChild(document.createTextNode(' ' + tier + ' Sector'));
+                tierDiv.appendChild(header);
+                (allHolders[tier] || []).forEach(h => {
+                    const addr = (h.TokenHolderAddress || h.address || '').toLowerCase(); if (query && !addr.includes(query)) return;
                     const balance = (parseFloat(h.TokenHolderQuantity || h.balance) / 1e18).toLocaleString(undefined, {maximumFractionDigits:0});
-                    const bonus = individualPoints[addr.toLowerCase()] || 0;
+                    const bonus = individualPoints[addr] || 0;
                     const item = document.createElement('div');
-                    item.className = `p-2 bg-white/5 text-[10px] cursor-pointer hover:bg-white/10 transition-colors ${addr.toLowerCase().includes(query) && query ? 'border border-orange-500 bg-orange-500/10' : ''}`;
+                    item.className = 'p-2 bg-white/5 text-[10px] cursor-pointer hover:bg-white/10 transition-colors';
+                    if (addr.includes(query) && query) { item.classList.add('border','border-orange-500'); item.style.background = 'rgba(249,115,22,0.06)'; }
                     item.onclick = () => showWalletDetail(addr, tier, balance, bonus);
-                    item.innerHTML = `<div class="truncate font-bold">${addr}</div><div class="flex justify-between opacity-50"><span>${balance} EROL</span><span>${bonus} XP</span></div>`;
+                    const addrDiv = document.createElement('div'); addrDiv.className = 'truncate font-bold'; addrDiv.textContent = addr;
+                    const meta = document.createElement('div'); meta.className = 'flex justify-between opacity-50';
+                    const balSpan = document.createElement('span'); balSpan.textContent = balance + ' EROL';
+                    const bonusSpan = document.createElement('span'); bonusSpan.textContent = bonus + ' XP';
+                    meta.appendChild(balSpan); meta.appendChild(bonusSpan);
+                    item.appendChild(addrDiv); item.appendChild(meta);
                     tierDiv.appendChild(item);
                 });
                 list.appendChild(tierDiv);
