@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EROL | Mars Habitat & Battle Ground</title>
+    <title>Erol's Martian Gambit | Martian Chain</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='100%' height='100%' fill='%23ff4d00'/></svg>">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,8 +15,6 @@
             --habitat-bg: #060608;
             --panel-bg: rgba(20, 20, 25, 0.95);
             --tier-max: #ffd700;
-            --tier-explorer: #00f2ff;
-            --tier-scout: #adff2f;
         }
 
         body {
@@ -24,6 +23,8 @@
             font-family: 'Share Tech Mono', monospace;
             overflow-x: hidden;
             margin: 0;
+            background-image: radial-gradient(circle at 2px 2px, rgba(255, 77, 0, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
         }
 
         .orbitron { font-family: 'Orbitron', sans-serif; }
@@ -35,1020 +36,581 @@
             box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
 
-        .hp-bar { transition: width 0.6s ease-out; }
-        
-        .nav-btn {
-            padding: 0.5rem 1rem;
-            font-size: 10px;
-            font-weight: 700;
-            transition: all .2s;
+        .btn-mars {
+            background: var(--mars-red);
+            color: black;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
             border: 1px solid transparent;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
+        }
+
+        .btn-mars:hover:not(:disabled) {
             background: transparent;
-            color: inherit;
+            color: var(--mars-red);
+            border-color: var(--mars-red);
+            box-shadow: 0 0 20px rgba(255, 77, 0, 0.4);
+        }
+
+        .btn-mars:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .input-mars {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 77, 0, 0.3);
+            color: #fff;
+        }
+
+        .scanline {
+            width: 100%; height: 2px;
+            background: rgba(255, 77, 0, 0.1);
+            position: absolute;
+            animation: scan 8s linear infinite;
+            z-index: 10; pointer-events: none;
+        }
+
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        .move-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-        }
-        .nav-btn.active {
-            border-color: rgba(249,115,22,0.5);
-            color: #f97316;
-            background: rgba(249,115,22,0.08);
+            border: 1px solid rgba(255, 77, 0, 0.1);
         }
 
-        #starfield {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; pointer-events: none;
+        .move-card:hover {
+            border-color: var(--mars-red);
+            background: rgba(255, 77, 0, 0.05);
+            transform: translateY(-5px);
         }
 
-        .header-banner {
-            background: url('https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-21-55.jpg');
-            background-size: cover;
-            background-position: center;
+        .move-card.selected {
+            border-color: var(--mars-red);
+            background: rgba(255, 77, 0, 0.2);
+            box-shadow: 0 0 30px rgba(255, 77, 0, 0.2);
         }
 
-        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-        }
+        .glitch-text { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
         ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: var(--mars-red); }
-
-        .logo-img {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-            border: 1px solid rgba(255, 77, 0, 0.3);
-            border-radius: 4px;
-        }
-
-        .booster-card {
-            border: 1px solid rgba(255,77,0,0.18);
-            background: rgba(0,0,0,0.4);
-            padding: 0.75rem;
-            border-radius: 0.375rem;
-            transition: all .2s;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .booster-card:hover { border-color: rgba(249,115,22,0.5); }
-        
-        .task-card {
-            padding: 1rem;
-            border: 1px solid rgba(255,255,255,0.05);
-            background: rgba(255,255,255,0.05);
-            border-radius: 0.375rem;
-            transition: all .2s;
-        }
-        .task-card:hover { border-color: rgba(249,115,22,0.18); }
     </style>
 </head>
 <body class="min-h-screen">
-    <canvas id="starfield"></canvas>
+    <div class="scanline"></div>
 
-    <video id="victoryVideo" preload="auto" playsinline crossorigin="anonymous" style="display:none">
-        <source src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/IMG_1575.MP4" type="video/mp4">
-    </video>
-
-    <div class="header-banner border-b border-orange-900/50">
-        <header class="max-w-7xl mx-auto p-4 md:p-8 flex flex-col md:flex-row justify-between items-center bg-black/60 backdrop-blur-sm gap-4">
-            <div class="flex items-center gap-4">
-                <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-13-33.jpg" alt="EROL Logo" class="logo-img">
-                <div>
-                    <h1 class="orbitron text-2xl font-bold text-orange-600 tracking-tighter uppercase">Mars Habitat OS</h1>
-                    <div class="flex flex-wrap gap-2 mt-1">
-                        <button id="nav-arena" class="nav-btn active">ARENA</button>
-                        <button id="nav-roster" class="nav-btn">ROSTER</button>
-                        <button id="nav-sectors" class="nav-btn">SECTORS</button>
-                        <button id="nav-market" class="nav-btn">MARKET</button>
-                        <button id="nav-tasks" class="nav-btn">TASKS</button>
-                        <button id="nav-about" class="nav-btn">MISSION</button>
-                        <button id="audioToggle" class="nav-btn text-orange-300">
-                            <span id="audioIcon">🔈</span> <span id="audioText">MUSIC</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="flex items-center gap-6">
-                <div class="text-right">
-                    <div class="text-[10px] text-orange-500/50 uppercase">Global Sync</div>
-                    <div id="globalTimer" class="orbitron text-lg text-orange-400">CONNECTING...</div>
-                </div>
-                <div class="hidden md:block h-10 w-[1px] bg-orange-900/50"></div>
-                <div id="pointsSummary" class="flex gap-4 items-center"></div>
-            </div>
-        </header>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center hidden bg-black">
+        <div class="w-12 h-12 border-2 border-orange-900 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+        <p id="loadingText" class="orbitron text-xs tracking-widest text-orange-500 uppercase">Syncing Martian Core...</p>
     </div>
 
-    <audio id="bgMusic" loop crossorigin="anonymous">
-        <source src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/SnapTik-dot-Kim-63f2e16eeed14b1ab245183587780ec2.mp3" type="audio/mpeg">
-    </audio>
-
-    <main id="content-area" class="max-w-7xl mx-auto p-4 md:p-6">
-        
-        <!-- ARENA PAGE -->
-        <div id="page-arena" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div class="lg:col-span-3 space-y-6">
-                <div class="mars-glass p-4 border-l-4 border-orange-600">
-                    <h3 class="orbitron text-xs text-orange-500 mb-4 tracking-widest uppercase flex items-center gap-2">
-                        <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-13-33.jpg" class="w-4 h-4" alt="" aria-hidden="true"> Live Standings
-                    </h3>
-                    <div id="pointsList" class="space-y-4"></div>
+    <!-- Navbar -->
+    <nav class="mars-glass border-b border-orange-500/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('lobby')">
+                <div class="w-8 h-8 bg-orange-600 flex items-center justify-center rounded-sm">
+                    <i class="fas fa-radiation text-black text-sm"></i>
                 </div>
-
-                <div class="mars-glass p-4">
-                    <h3 class="orbitron text-[10px] text-orange-500 mb-3 uppercase tracking-widest">Recent Conquests</h3>
-                    <div id="recentWinners" class="space-y-2 text-[10px]">
-                        <div class="flex justify-between border-b border-white/5 pb-1 opacity-50 italic text-gray-500">No recent history...</div>
-                    </div>
-                </div>
-
-                <div class="mars-glass p-4 bg-orange-900/5">
-                    <h3 class="orbitron text-[10px] text-orange-500/50 mb-2 uppercase">Tactical Alert</h3>
-                    <div id="battlePhaseInfo" class="text-sm italic text-gray-400">Awaiting dispatch...</div>
-                </div>
+                <span class="orbitron font-bold text-lg tracking-tighter text-white uppercase italic">EROL<span class="text-orange-500 font-normal">GAMBIT</span></span>
             </div>
-
-            <div class="lg:col-span-6">
-                <div id="arenaContainer" class="mars-glass relative overflow-hidden flex flex-col h-[600px] border-orange-500/20">
-                    <canvas id="battleCanvas" class="w-full flex-grow bg-[#050507]"></canvas>
-                    
-                    <div class="p-4 grid grid-cols-3 gap-4 bg-black/80 border-t border-orange-900/30">
-                        <div class="space-y-1">
-                            <div class="flex justify-between text-[10px]"><span style="color:var(--tier-max)">MAXIMUM</span><span id="hp-val-maximum">100%</span></div>
-                            <div class="h-1.5 bg-gray-900 rounded-full"><div id="hp-maximum" class="hp-bar h-full bg-yellow-500" style="width: 100%"></div></div>
-                        </div>
-                        <div class="space-y-1">
-                            <div class="flex justify-between text-[10px]"><span style="color:var(--tier-explorer)">EXPLORER</span><span id="hp-val-explorer">100%</span></div>
-                            <div class="h-1.5 bg-gray-900 rounded-full"><div id="hp-explorer" class="hp-bar h-full bg-cyan-500" style="width: 100%"></div></div>
-                        </div>
-                        <div class="space-y-1">
-                            <div class="flex justify-between text-[10px]"><span style="color:var(--tier-scout)">SCOUT</span><span id="hp-val-scout">100%</span></div>
-                            <div class="h-1.5 bg-gray-900 rounded-full"><div id="hp-scout" class="hp-bar h-full bg-lime-500" style="width: 100%"></div></div>
-                        </div>
-                    </div>
+            
+            <div class="flex items-center gap-4">
+                <div id="connectionStatus" class="hidden px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-sm text-[10px] orbitron text-orange-500 items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></span>
+                    UPLINK_SECURE
                 </div>
-            </div>
-
-            <div class="lg:col-span-3">
-                <div class="mars-glass flex flex-col h-[600px]">
-                    <div class="p-3 border-b border-orange-900/30 orbitron text-xs text-orange-500 bg-orange-900/10">MISSION LOG</div>
-                    <div id="battleLog" class="p-4 space-y-3 overflow-y-auto flex-grow text-[11px] font-mono leading-relaxed"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ROSTER PAGE -->
-        <div id="page-roster" class="hidden space-y-6">
-            <div id="rosterMain">
-                <div class="mars-glass p-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h2 class="orbitron text-xl text-orange-500">COLONY DATABASE</h2>
-                        <p class="text-xs text-gray-500">Search wallet for points and holdings.</p>
-                    </div>
-                    <div class="relative w-full md:w-96">
-                        <input type="text" id="walletSearch" placeholder="SEARCH WALLET..." class="w-full bg-black border border-orange-900/50 p-3 text-orange-500 text-xs focus:outline-none focus:border-orange-500">
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6" id="fullRosterList"></div>
-            </div>
-
-            <div id="walletDetail" class="hidden space-y-6">
-                <button id="backToDb" class="text-xs text-orange-500 hover:text-orange-400 mb-4 flex items-center gap-2">
-                    ← RETURN TO DATABASE
+                <button id="connectBtn" class="btn-mars px-4 py-1.5 text-xs rounded-sm orbitron">
+                    Connect_System
                 </button>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="mars-glass p-6 lg:col-span-1">
-                        <div class="text-[10px] text-orange-500/50 uppercase mb-2">Wallet Address</div>
-                        <div id="detailAddress" class="text-xs font-bold break-all mb-6"></div>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="p-3 bg-orange-900/10 border border-orange-900/20">
-                                <div class="text-[8px] opacity-50 uppercase">Sector</div>
-                                <div id="detailSector" class="orbitron text-sm"></div>
-                            </div>
-                            <div class="p-3 bg-orange-900/10 border border-orange-900/20">
-                                <div class="text-[8px] opacity-50 uppercase">EROL Held</div>
-                                <div id="detailBalance" class="orbitron text-sm"></div>
-                            </div>
-                            <div class="p-3 bg-orange-900/10 border border-orange-900/20">
-                                <div class="text-[8px] opacity-50 uppercase">Points</div>
-                                <div id="detailPoints" class="orbitron text-sm"></div>
-                            </div>
-                            <div class="p-3 bg-orange-900/10 border border-orange-900/20">
-                                <div class="text-[8px] opacity-50 uppercase">Battles Fought</div>
-                                <div id="detailBattles" class="orbitron text-sm text-orange-400">0</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="lg:col-span-2 mars-glass p-6">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="orbitron text-lg text-orange-500">BATTLE BOOSTERS</h3>
-                            <span class="text-[10px] bg-orange-600 text-black px-2 py-1 font-bold">COMING SOON</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="booster-card">
-                                <div class="flex justify-between font-bold text-xs mb-1">
-                                    <span>TITAN SHIELD</span>
-                                    <span class="text-orange-400">500 $EROL</span>
-                                </div>
-                                <p class="text-[10px] text-gray-400">Reduces incoming sector damage by 20% for 3 rounds.</p>
-                            </div>
-                            <div class="booster-card">
-                                <div class="flex justify-between font-bold text-xs mb-1">
-                                    <span>SOLAR FLARE</span>
-                                    <span class="text-orange-400">750 $EROL</span>
-                                </div>
-                                <p class="text-[10px] text-gray-400">Increase damage output of your tier by 15%.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
+    </nav>
 
-        <!-- SECTORS PAGE -->
-        <div id="page-sectors" class="hidden space-y-8">
-            <div class="mars-glass p-8">
-                <h2 class="orbitron text-2xl text-orange-500 mb-2">SECTOR WEIGHT & PASSIVE INCOME</h2>
-                <p class="text-xs text-gray-400 mb-8">Combined $EROL holdings in each sector determines passive point generation every 6 hours.</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="mars-glass p-6 border-t-2 border-yellow-500">
-                        <div class="orbitron text-yellow-500 text-sm mb-4">MAXIMUM SECTOR</div>
-                        <div class="space-y-4">
-                            <div>
-                                <div class="text-[10px] opacity-50 uppercase">Total Sector Holding</div>
-                                <div id="sector-weight-maximum" class="orbitron text-xl">CALCULATING...</div>
-                            </div>
-                            <div>
-                                <div class="text-[10px] opacity-50 uppercase">Current Passive Rate</div>
-                                <div class="text-sm font-bold text-green-400">25 PTS / 6H</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mars-glass p-6 border-t-2 border-cyan-500">
-                        <div class="orbitron text-cyan-500 text-sm mb-4">EXPLORER SECTOR</div>
-                        <div class="space-y-4">
-                            <div>
-                                <div class="text-[10px] opacity-50 uppercase">Total Sector Holding</div>
-                                <div id="sector-weight-explorer" class="orbitron text-xl">CALCULATING...</div>
-                            </div>
-                            <div>
-                                <div class="text-[10px] opacity-50 uppercase">Current Passive Rate</div>
-                                <div class="text-sm font-bold text-green-400">15 PTS / 6H</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mars-glass p-6 border-t-2 border-lime-500">
-                        <div class="orbitron text-lime-500 text-sm mb-4">SCOUT SECTOR</div>
-                        <div class="space-y-4">
-                            <div>
-                                <div class="text-[10px] opacity-50 uppercase">Total Sector Holding</div>
-                                <div id="sector-weight-scout" class="orbitron text-xl">CALCULATING...</div>
-                            </div>
-                            <div>
-                                <div class="text-[10px] opacity-50 uppercase">Current Passive Rate</div>
-                                <div class="text-sm font-bold text-green-400">10 PTS / 6H</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TASKS PAGE -->
-        <div id="page-tasks" class="hidden space-y-6">
-            <div class="mars-glass p-8">
-                <h2 class="orbitron text-2xl text-orange-500 mb-2">HABITAT TASKS</h2>
-                <p class="text-xs text-gray-400 mb-8">Complete tactical objectives to earn extra points.</p>
+    <main class="max-w-7xl mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
         
-        <!-- MARKET PAGE -->
-        <div id="page-market" class="hidden space-y-6">
-            <div class="mars-glass p-8 max-w-3xl mx-auto">
-                <h2 class="orbitron text-2xl text-orange-500 mb-2">MARKETPLACE</h2>
-                <p class="text-xs text-gray-400 mb-4">Buy boosters for any wallet by paying with $EROL to the community address and submitting the transaction link.</p>
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <label class="text-[10px] opacity-60">Select Booster</label>
-                        <select id="marketBooster" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500">
-                            <option value="titan_shield" data-price="500">TITAN SHIELD — 500 $EROL</option>
-                            <option value="solar_flare" data-price="750">SOLAR FLARE — 750 $EROL</option>
-                            <option value="scout_pack" data-price="50">SCOUT PACK — 50 $EROL</option>
-                        </select>
+        <!-- Left Sidebar (Always Visible) -->
+        <div class="lg:col-span-3 space-y-6">
+            <div id="miniProfile" class="mars-glass p-6 hidden">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-orange-500/20 border border-orange-500/50 flex items-center justify-center text-orange-500">
+                        <i class="fas fa-user-astronaut text-xl"></i>
                     </div>
                     <div>
-                        <label class="text-[10px] opacity-60">Target Wallet (to receive the booster)</label>
-                        <input id="marketTarget" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500" placeholder="0x..." />
+                        <p id="navUserName" class="orbitron font-bold text-sm text-white">COMMANDER</p>
+                        <p class="text-[9px] text-orange-500/60 uppercase">Tier: Explorer</p>
                     </div>
-                    <div>
-                        <label class="text-[10px] opacity-60">Transaction Link (Explorer URL)</label>
-                        <input id="marketTxLink" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500" placeholder="https://.../tx/0x..." />
+                </div>
+
+                <div class="space-y-3">
+                    <div class="bg-black/50 p-4 border-l-2 border-orange-500 cursor-pointer" onclick="fetchBalance()">
+                        <p class="text-[10px] text-orange-500/40 uppercase mb-1">EROL_RESERVES</p>
+                        <div class="flex items-baseline gap-2">
+                            <span id="navBalance" class="text-xl font-bold text-white">0.00</span>
+                        </div>
                     </div>
-                    <div class="flex gap-2 items-center">
-                        <div class="text-[10px]">Pay to: <span class="font-bold">0x46914D5DC59598801e435AF2a08928Da87C60dF0</span></div>
-                        <button id="submitPurchaseBtn" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">SUBMIT PURCHASE</button>
-                    </div>
-                    <div id="marketMsg" class="text-sm text-green-400"></div>
+                    <button onclick="switchView('profile')" class="w-full text-left text-[10px] text-orange-500/50 hover:text-orange-500 transition-colors py-2 uppercase">
+                        [ Command_Center ]
+                    </button>
                 </div>
             </div>
-        </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="task-card">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 class="orbitron text-sm text-white">ARENA OBSERVER</h3>
-                                <p class="text-[11px] text-gray-400">Watch 2 full battle simulations to verify combat data.</p>
-                            </div>
-                            <span class="text-orange-500 text-xs font-bold">100 PTS</span>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="text-[10px] flex justify-between">
-                                <span>Progress: <span id="watchTaskProgress">0</span>/2 Battles</span>
-                                <span id="watchTaskStatus" class="text-orange-500/50">INCOMPLETE</span>
-                            </div>
-                            <div class="h-1 bg-white/10 rounded-full overflow-hidden">
-                                <div id="watchTaskBar" class="h-full bg-orange-600 transition-all" style="width:0%"></div>
-                            </div>
-                            <div class="flex gap-2">
-                                <input type="text" id="watchTaskWallet" placeholder="PASTE WALLET ADDRESS..." class="flex-grow bg-black border border-white/10 p-2 text-[10px] text-orange-500 focus:outline-none focus:border-orange-500">
-                                <button id="claimWatchBtn" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">CLAIM</button>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="task-card opacity-60">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 class="orbitron text-sm text-white">SECTOR SUPPORTER</h3>
-                                <p class="text-[11px] text-gray-400">Hold over 5,000 $EROL for 48 consecutive hours.</p>
-                            </div>
-                            <span class="text-orange-500 text-xs font-bold">500 PTS</span>
-                        </div>
-                        <div class="text-[10px] text-orange-500 uppercase tracking-widest mt-auto">Locked: Coming Soon</div>
-                    </div>
-
-                    <div class="task-card opacity-60">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 class="orbitron text-sm text-white">SOCIAL RECON</h3>
-                                <p class="text-[11px] text-gray-400">Share your sector standings on X (formerly Twitter).</p>
-                            </div>
-                            <span class="text-orange-500 text-xs font-bold">50 PTS</span>
-                        </div>
-                        <div class="text-[10px] text-orange-500 uppercase tracking-widest mt-auto">Locked: Coming Soon</div>
-                    </div>
+            <!-- Comms -->
+            <div class="mars-glass p-4 flex flex-col h-[400px]">
+                <div class="flex items-center gap-2 mb-4 border-b border-orange-500/20 pb-2">
+                    <i class="fas fa-satellite-dish text-[10px] text-orange-500"></i>
+                    <span class="text-[10px] orbitron uppercase text-orange-500/80">Comms_Uplink</span>
+                </div>
+                <div id="chatBox" class="flex-grow overflow-y-auto space-y-3 mb-4 text-[12px] font-mono">
+                    <p class="opacity-20 text-center italic mt-10 uppercase text-[9px]">Scanning frequencies...</p>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="chatInput" placeholder="TRANSMIT..." class="flex-grow input-mars px-3 py-2 text-xs uppercase" />
+                    <button id="sendChat" class="bg-orange-500/10 hover:bg-orange-500 hover:text-black border border-orange-500/30 px-3 transition-all">
+                        <i class="fas fa-chevron-right text-xs"></i>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- MARKET PAGE -->
-        <div id="page-market" class="hidden space-y-6">
-            <div class="mars-glass p-8 max-w-3xl mx-auto">
-                <h2 class="orbitron text-2xl text-orange-500 mb-2">MARKETPLACE</h2>
-                <p class="text-xs text-gray-400 mb-4">Buy boosters for any wallet by paying with $EROL to the community address and submitting the transaction link. Payment address: <span class="font-bold">0x46914D5DC59598801e435AF2a08928Da87C60dF0</span></p>
-                <div class="grid grid-cols-1 gap-4">
-                    <div>
-                        <label class="text-[10px] opacity-60">Select Booster</label>
-                        <select id="marketBooster" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500">
-                            <option value="titan_shield" data-price="500">TITAN SHIELD — 500 $EROL</option>
-                            <option value="solar_flare" data-price="750">SOLAR FLARE — 750 $EROL</option>
-                            <option value="scout_pack" data-price="50">SCOUT PACK — 50 $EROL</option>
-                        </select>
+        <!-- Main Content Area -->
+        <div class="lg:col-span-9">
+            
+            <!-- Lobby View -->
+            <div id="lobbySection" class="space-y-8">
+                <div class="mars-glass p-8 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h2 class="orbitron text-4xl font-bold text-white mb-2 uppercase tracking-tighter italic">Initiate_Gambit</h2>
+                        <p class="text-orange-500/60 text-xs mb-8 max-w-md uppercase tracking-widest font-bold">Deploy EROL liquidity and challenge the Martian Grid.</p>
+                        
+                        <div class="flex flex-wrap gap-4 items-end">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[10px] text-orange-500/40 uppercase">Stake_Amount</label>
+                                <div class="flex items-center bg-black border border-orange-500/30 px-4 py-2">
+                                    <input type="number" id="wagerInput" value="50" min="50" class="bg-transparent text-xl font-bold w-24 outline-none text-orange-500" />
+                                    <span class="text-[10px] opacity-40">EROL</span>
+                                </div>
+                            </div>
+                            <button id="hostGameBtn" onclick="hostGame()" class="btn-mars px-8 py-3 orbitron text-sm">
+                                Deploy_Signal
+                            </button>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[10px] opacity-60">Target Wallet (to receive the booster)</label>
-                        <input id="marketTarget" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500" placeholder="0x..." />
+                    <i class="fas fa-meteor absolute -right-10 -bottom-10 text-[15rem] text-orange-500/5 -rotate-12"></i>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4">
+                        <h3 class="orbitron text-xs font-bold text-orange-500 uppercase tracking-[0.3em]">Broadcasts_In_Range</h3>
+                        <div class="h-px bg-orange-500/20 flex-grow"></div>
                     </div>
-                    <div>
-                        <label class="text-[10px] opacity-60">Transaction Link (Explorer URL)</label>
-                        <input id="marketTxLink" class="w-full p-2 bg-black border border-white/10 text-xs text-orange-500" placeholder="https://.../tx/0x..." />
-                    </div>
-                    <div class="flex gap-2 items-center">
-                        <button id="submitPurchaseBtn2" class="bg-orange-600 text-black px-4 py-2 text-[10px] font-bold hover:bg-orange-500 transition-colors">SUBMIT PURCHASE</button>
-                    </div>
-                    <div id="marketMsg" class="text-sm text-green-400"></div>
+                    <div id="matchGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
             </div>
-        </div>
 
-        <!-- ABOUT PAGE -->
-        <div id="page-about" class="hidden space-y-8 max-w-4xl mx-auto">
-            <div class="mars-glass p-8">
-                <h2 class="orbitron text-3xl text-orange-500 mb-6">MISSION BRIEFING</h2>
-                <div class="space-y-6 text-sm leading-relaxed text-gray-300">
-                    <section>
-                        <h3 class="orbitron text-orange-400 text-xs mb-2">THE MARS HABITAT</h3>
-                        <p>In the year 2084, the EROL Musk Colony serves as the last bastion of human innovation on the red planet. Divided into three tactical sectors—Maximum, Explorer, and Scout—colonists must simulate surface conflicts to determine resource allocation and habitat priority.</p>
-                    </section>
-                    
-                    <section>
-                        <h3 class="orbitron text-orange-400 text-xs mb-2">BATTLE PROTOCOLS</h3>
-                        <ul class="list-disc list-inside space-y-2 text-xs opacity-80">
-                            <li>Simulations trigger automatically every 60 seconds of rest.</li>
-                            <li>Units from the top 150 wallet holders are deployed based on their $EROL weight.</li>
-                            <li>Sectors earn 100 points for every battle won.</li>
-                            <li>Passive income is distributed every 6 hours based on the total $EROL weight of a sector.</li>
-                        </ul>
-                    </section>
+            <!-- Game View (Active Match) -->
+            <div id="gameSection" class="space-y-6 hidden">
+                <div class="mars-glass p-6 flex justify-between items-center border-b-2 border-orange-500">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-orange-500/20 flex items-center justify-center border border-orange-500/40">
+                            <i class="fas fa-shield-alt text-orange-500"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-orange-500/40 uppercase">Active_Engagment</p>
+                            <h2 id="opponentName" class="orbitron text-lg font-bold text-white tracking-widest uppercase">WAITING...</h2>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-orange-500/40 uppercase">Contract_Pool</p>
+                        <p id="matchPool" class="orbitron text-2xl font-bold text-orange-500">0.00 EROL</p>
+                    </div>
+                </div>
 
-                    <section>
-                        <h3 class="orbitron text-orange-400 text-xs mb-2">POINT SYSTEM (XP)</h3>
-                        <p>Points ($XP) are the lifeblood of the habitat. They signify a wallet holder's contribution to the colony's defense. High-point holders will gain access to Titan Shields, Solar Flares, and eventually, Governance over the Martian treasury.</p>
-                    </section>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-orange-900/30">
-                        <a href="https://twitter.com/ErolMuskAvax" target="_blank" rel="noopener noreferrer" class="mars-glass p-4 text-center hover:bg-orange-600 hover:text-black transition-all">
-                            <div class="text-[10px] uppercase opacity-50 mb-1">Project</div>
-                            <div class="font-bold">@ErolMuskAvax</div>
-                        </a>
-                        <a href="https://twitter.com/Precidobos" target="_blank" rel="noopener noreferrer" class="mars-glass p-4 text-center hover:bg-orange-600 hover:text-black transition-all">
-                            <div class="text-[10px] uppercase opacity-50 mb-1">Developer</div>
-                            <div class="font-bold">@Precidobos</div>
-                        </a>
-                        <a href="https://erolmusk.com" target="_blank" rel="noopener noreferrer" class="mars-glass p-4 text-center hover:bg-orange-600 hover:text-black transition-all">
-                            <div class="text-[10px] uppercase opacity-50 mb-1">Website</div>
-                            <div class="font-bold">erolmusk.com</div>
-                        </a>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Solar Flare -->
+                    <div class="move-card mars-glass p-8 text-center flex flex-col items-center gap-4 group" onclick="selectMove('solar_flare')">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center bg-orange-500/10 border-2 border-orange-500/20 group-hover:border-orange-500 transition-all">
+                            <i class="fas fa-sun text-4xl text-orange-500"></i>
+                        </div>
+                        <h3 class="orbitron font-bold text-white uppercase tracking-widest">Solar_Flare</h3>
+                        <p class="text-[9px] text-orange-500/40 uppercase leading-relaxed">High-energy radiation.<br>Beats Oxygen Siphon.</p>
+                    </div>
+
+                    <!-- Oxygen Siphon -->
+                    <div class="move-card mars-glass p-8 text-center flex flex-col items-center gap-4 group" onclick="selectMove('oxygen_siphon')">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center bg-blue-500/10 border-2 border-blue-500/20 group-hover:border-blue-500 transition-all">
+                            <i class="fas fa-wind text-4xl text-blue-500"></i>
+                        </div>
+                        <h3 class="orbitron font-bold text-white uppercase tracking-widest">O2_Siphon</h3>
+                        <p class="text-[9px] text-blue-500/40 uppercase leading-relaxed">Atmospheric capture.<br>Beats Dust Storm.</p>
+                    </div>
+
+                    <!-- Dust Storm -->
+                    <div class="move-card mars-glass p-8 text-center flex flex-col items-center gap-4 group" onclick="selectMove('dust_storm')">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center bg-yellow-500/10 border-2 border-yellow-500/20 group-hover:border-yellow-500 transition-all">
+                            <i class="fas fa-cloud-showers-heavy text-4xl text-yellow-500"></i>
+                        </div>
+                        <h3 class="orbitron font-bold text-white uppercase tracking-widest">Dust_Storm</h3>
+                        <p class="text-[9px] text-yellow-500/40 uppercase leading-relaxed">Visual obstruction.<br>Beats Solar Flare.</p>
+                    </div>
+                </div>
+
+                <div class="mars-glass p-6 flex flex-col items-center gap-4">
+                    <p id="moveStatus" class="orbitron text-xs text-orange-500 uppercase tracking-widest animate-pulse">Select Your Tactical Gambit</p>
+                    <button id="lockMoveBtn" disabled class="btn-mars px-12 py-3 orbitron text-sm w-full md:w-auto">
+                        Commit_Tactical_Move
+                    </button>
+                </div>
+            </div>
+
+            <!-- Command Center View -->
+            <div id="profileSection" class="space-y-6 hidden">
+                <div class="flex items-center justify-between border-b border-orange-500/20 pb-4">
+                    <button onclick="switchView('lobby')" class="text-[10px] text-orange-500/50 hover:text-orange-500 orbitron uppercase tracking-widest">
+                        <i class="fas fa-chevron-left mr-1"></i> Return_to_Sector
+                    </button>
+                    <h2 class="orbitron text-xl font-bold text-white uppercase italic">Command_Center</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div class="md:col-span-4 mars-glass p-8 text-center">
+                        <div class="w-24 h-24 border-2 border-orange-500/30 flex items-center justify-center mx-auto mb-6 bg-orange-500/5">
+                            <i class="fas fa-id-badge text-4xl text-orange-500"></i>
+                        </div>
+                        <div class="space-y-4">
+                            <input id="editUsername" type="text" class="w-full input-mars text-center py-2 text-sm font-bold uppercase" placeholder="COMMANDER" />
+                            <p id="fullWalletAddress" class="text-[9px] opacity-30 break-all bg-black p-2 font-mono"></p>
+                            <button onclick="updateProfile()" class="w-full btn-mars py-2 text-xs orbitron">Sync_Identity</button>
+                        </div>
+                    </div>
+                    <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="mars-glass p-6 border-l-4 border-orange-500">
+                            <p class="text-[10px] text-orange-500/40 uppercase mb-4">Account_Liquidity</p>
+                            <p id="profileBalance" class="orbitron text-4xl font-bold text-white">0.00</p>
+                            <p class="text-[10px] text-orange-500 mt-2 italic">Units: EROL</p>
+                        </div>
+                        <div class="mars-glass p-6 border-l-4 border-orange-500">
+                            <p class="text-[10px] text-orange-500/40 uppercase mb-4">Tactical_Victories</p>
+                            <p id="profileWins" class="orbitron text-4xl font-bold text-white">0</p>
+                            <p class="text-[10px] text-orange-500 mt-2 italic">Status: Verified_on_Chain</p>
+                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </main>
 
+    <div id="statusToast" class="fixed bottom-6 right-6 px-6 py-3 border-l-4 font-bold text-xs uppercase orbitron hidden z-[110] bg-black/90 backdrop-blur-md shadow-2xl"></div>
+
     <script>
-        // Attempt to load runtime env from /env.js (generated at build). This file should set `window.__ENV = { SUPABASE_KEY: '...', API_KEY: '...' }`.
-        // On Vercel you can generate it during build using the env vars (see README instructions below).
-        (function(){ try { var _s = document.createElement('script'); _s.src = '/env.js'; _s.async = true; _s.onerror = function(){ console.info('/env.js not found, skipping runtime injection'); }; document.head.appendChild(_s); } catch(e){} })();
-
-        const SUPABASE_URL = 'https://swveqrjuczfvqjhzzrxy.supabase.co';
-        // Load secrets from runtime-injected env (set on Vercel). Do NOT commit secrets into the repo.
-        const SUPABASE_KEY = (window.__ENV && window.__ENV.SUPABASE_KEY) || '';
-        let supabaseClient = null;
-        if (SUPABASE_KEY) {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        } else {
-            console.warn('SUPABASE_KEY missing. Supabase client will not be initialized.');
-        }
-
-        // API keys should be injected at build/runtime via Vercel environment variables.
-        const API_KEY = (window.__ENV && window.__ENV.API_KEY) || '';
-        const CONTRACT_ADDRESS = '0xCaC4904E1DB1589Aa17A2Ec742F5a6bCF4c4D037';
-        const SPRITE_URL = 'https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-13-33.jpg';
-        if (!API_KEY) console.warn('API_KEY missing. Set API_KEY in Vercel and inject it into window.__ENV at build/runtime.');
+        const GAME_CONTRACT = "0x0b912a321801B2f6062b4BdC3d9763e643584074";
+        const EROL_TOKEN = "0x56a42099309E022513a070e17978280fBeD42aA3"; 
+        const CHAIN_ID = "0x7EB"; 
+        const SUPABASE_URL = "https://pcbrvtldeqhqllsilonl.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnJ2dGxkZXFocWxsc2lsb25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMyODUsImV4cCI6MjA4NjIyOTI4NX0.XtRbmbVqPT-7IrtsxmyMKbn_Ii_M1t_aGfCMnTVXu18";
         
-        let allHolders = { maximum: [], explorer: [], scout: [] };
-        let points = { maximum: 0, explorer: 0, scout: 0 };
-        let individualPoints = {}; 
-        let battleCounts = {};
-        let lastWinners = [];
-        let hp = { maximum: 100, explorer: 100, scout: 100 };
-        let gameState = 'REST';
-        let timeRemaining = 60; 
-        let players = [];
-        let spaceships = [];
-        let projectiles = []; 
-        let particles = [];
-        let stars = [];
-        /* currentPage is declared earlier to avoid TDZ errors */
-        let isMusicPlaying = false;
-        let winnerText = "";
-        let winColor = "";
-        let watchedBattlesCount = 0;
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let userWallet, userProfile, provider, signer, currentMatchId, selectedTacticalMove;
 
-        let canvas, ctx, starCanvas, sctx, bgMusic, victoryVideo, audioCtx;
-
-        let currentPage = 'arena';
-        function switchPage(page) {
-            currentPage = page;
-            const pages = ['arena', 'roster', 'market', 'about', 'tasks', 'sectors'];
-            pages.forEach(p => {
-                const el = document.getElementById(`page-${p}`);
-                const nav = document.getElementById(`nav-${p}`);
-                if (el) el.classList.toggle('hidden', p !== page);
-                if (nav) nav.classList.toggle('active', p === page);
-            });
-            if(page === 'roster') { hideWalletDetail(); renderFullRoster(); }
-            if(page === 'sectors') { updateSectorsWeightUI(); }
-            if(page === 'market') { renderMarket(); }
-        }
-
-        function hideWalletDetail() {
-            const roster = document.getElementById('rosterMain');
-            const detail = document.getElementById('walletDetail');
-            if (roster) roster.classList.remove('hidden');
-            if (detail) detail.classList.add('hidden');
-        }
-
-        async function toggleMusic() {
-            const icon = document.getElementById('audioIcon');
-            const text = document.getElementById('audioText');
-            if (!isMusicPlaying) {
-                try {
-                    if (audioCtx.state === 'suspended') await audioCtx.resume();
-                    await bgMusic.play();
-                    if (icon) icon.innerText = '🔊'; 
-                    if (text) text.innerText = 'MUTE'; 
-                    isMusicPlaying = true;
-                } catch (e) { console.error("Audio error:", e); }
-            } else {
-                bgMusic.pause(); 
-                if (icon) icon.innerText = '🔈'; 
-                if (text) text.innerText = 'MUSIC'; 
-                isMusicPlaying = false;
-            }
-        }
-
-        async function initSupabase() {
-            if (!supabaseClient) { console.warn('Supabase client not initialized, skipping initSupabase'); return; }
-            const { data: sectorData } = await supabaseClient.from('sector_points').select('*');
-            if (sectorData) { sectorData.forEach(s => { points[s.sector_name] = s.points; }); updatePointsUI(); }
-
-            const { data: userData } = await supabaseClient.from('player_stats').select('*');
-            if (userData) {
-                userData.forEach(p => { 
-                    individualPoints[p.wallet_address] = p.points; 
-                    battleCounts[p.wallet_address] = p.battles_fought || 0;
-                });
-            }
-
-            const { data: logsData } = await supabaseClient.from('battle_logs').select('*').limit(3).order('created_at', { ascending: false });
-            if (logsData) {
-                logsData.forEach(log => {
-                    if(log.message.includes("VICTORIOUS")) {
-                        const winner = log.message.split(" ")[0].toLowerCase();
-                        if(!lastWinners.includes(winner)) lastWinners.push(winner);
-                    }
-                });
-                updateWinnersUI();
-            }
-
-            supabaseClient.channel('public:sector_points')
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sector_points' }, payload => {
-                    points[payload.new.sector_name] = payload.new.points;
-                    updatePointsUI();
-                }).subscribe();
-
-            supabaseClient.channel('public:battle_logs')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'battle_logs' }, payload => {
-                    addLogUI(payload.new.message, payload.new.css_class);
-                    if(payload.new.message.includes("VICTORIOUS")) {
-                        const winner = payload.new.message.split(" ")[0].toLowerCase();
-                        lastWinners.unshift(winner);
-                        if(lastWinners.length > 5) lastWinners.pop();
-                        updateWinnersUI();
-                    }
-                }).subscribe();
-        }
-
-        async function updateSupabasePoints(sector, amount) {
-            if (!supabaseClient) { console.warn('Supabase client not initialized - skip updateSupabasePoints'); return; }
-            await supabaseClient.rpc('increment_sector_points', { s_name: sector, inc: amount });
-        }
-
-        async function updatePlayerPoints(wallet, amount, isBattle = false) {
-            if (!supabaseClient) { console.warn('Supabase client not initialized - skip updatePlayerPoints');
-                individualPoints[wallet] = (individualPoints[wallet] || 0) + amount;
-                if (isBattle) battleCounts[wallet] = (battleCounts[wallet] || 0) + 1;
-                return; }
-            const newPoints = (individualPoints[wallet] || 0) + amount;
-            const newBattles = (battleCounts[wallet] || 0) + (isBattle ? 1 : 0);
-            await supabaseClient.from('player_stats').upsert(
-                { wallet_address: wallet, points: newPoints, battles_fought: newBattles },
-                { onConflict: 'wallet_address' }
-            );
-            individualPoints[wallet] = newPoints;
-            battleCounts[wallet] = newBattles;
-        }
-
-        async function broadcastLog(msg, css = "") {
-            if (!supabaseClient) { console.warn('Supabase client not initialized - skip broadcastLog'); addLogUI(msg, css); return; }
-            await supabaseClient.from('battle_logs').insert([{ message: msg, css_class: css }]);
-        }
-
-        function updateWinnersUI() {
-            const el = document.getElementById('recentWinners');
-            if(!el) return;
-            el.innerHTML = '';
-            if (!lastWinners.length) {
-                const none = document.createElement('div');
-                none.className = 'opacity-50 italic';
-                none.textContent = 'No recent history...';
-                el.appendChild(none);
-                return;
-            }
-            lastWinners.forEach(w => {
-                const row = document.createElement('div');
-                row.className = 'flex justify-between border-b border-white/5 pb-1';
-                const span1 = document.createElement('span');
-                span1.style.color = `var(--tier-${w})`;
-                span1.textContent = w.toUpperCase();
-                const span2 = document.createElement('span');
-                span2.className = 'opacity-50';
-                span2.textContent = 'CONQUEST';
-                row.appendChild(span1);
-                row.appendChild(span2);
-                el.appendChild(row);
-            });
-        }
-
-        function updateSectorsWeightUI() {
-            ['maximum', 'explorer', 'scout'].forEach(tier => {
-                const total = allHolders[tier].reduce((acc, h) => acc + (parseFloat(h.TokenHolderQuantity || h.balance) / 1e18), 0);
-                const el = document.getElementById(`sector-weight-${tier}`);
-                if(el) el.innerText = total.toLocaleString(undefined, {maximumFractionDigits:0}) + " $EROL";
-            });
-        }
-
-        async function claimWatchTask() {
-            if (watchedBattlesCount < 2) return alert("Task Incomplete: You must watch 2 full battles first.");
-            const wallet = document.getElementById('watchTaskWallet').value.trim().toLowerCase();
-            if (!wallet) return alert("Please enter your wallet address.");
-            const isHolder = [...allHolders.maximum, ...allHolders.explorer, ...allHolders.scout].some(h => (h.TokenHolderAddress || h.address).toLowerCase() === wallet);
-            if (!isHolder) return alert("Access Denied: Wallet address must be within the top 150 colony roster.");
-            await updatePlayerPoints(wallet, 100);
-            alert("Success! 100 Points added to your mission log.");
-            watchedBattlesCount = 0;
-            updateTaskUI();
-        }
-
-        function updateTaskUI() {
-            const prog = document.getElementById('watchTaskProgress');
-            const bar = document.getElementById('watchTaskBar');
-            const stat = document.getElementById('watchTaskStatus');
-            if (prog) prog.innerText = watchedBattlesCount;
-            if (bar) bar.style.width = (watchedBattlesCount / 2 * 100) + "%";
-            if (stat) {
-                stat.innerText = watchedBattlesCount >= 2 ? "READY TO CLAIM" : "INCOMPLETE";
-                stat.classList.toggle('text-green-400', watchedBattlesCount >= 2);
-            }
-        }
-
-        // Marketplace helpers
-        const BOOSTERS = [
-            { id: 'titan_shield', name: 'TITAN SHIELD', price: 500 },
-            { id: 'solar_flare', name: 'SOLAR FLARE', price: 750 },
-            { id: 'scout_pack', name: 'SCOUT PACK', price: 50 }
-        ];
-
-        function renderMarket() {
-            const sel = document.getElementById('marketBooster'); if (!sel) return;
-            sel.innerHTML = '';
-            BOOSTERS.forEach(b => {
-                const opt = document.createElement('option'); opt.value = b.id; opt.textContent = `${b.name} — ${b.price} $EROL`; opt.dataset.price = b.price; sel.appendChild(opt);
-            });
-            const msg = document.getElementById('marketMsg'); if (msg) msg.innerText = '';
-        }
-
-        async function submitPurchase() {
-            const booster = (document.getElementById('marketBooster') || {}).value;
-            const target = (document.getElementById('marketTarget') || {}).value || '';
-            const tx = (document.getElementById('marketTxLink') || {}).value || '';
-            if (!booster || !target || !tx) return alert('Please provide booster, target wallet, and transaction link.');
+        async function connect() {
+            if (!window.ethereum) return toast("SYSTEM_ERROR: MetaMask required", true);
+            showLoading("LINKING_SATELLITE...");
             try {
-                const res = await fetch('/api/purchase', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ booster, target: target.toLowerCase(), txLink: tx }) });
-                const data = await res.json();
-                if (!res.ok) return alert('Purchase failed: ' + (data.error || data.message || JSON.stringify(data)));
-                document.getElementById('marketMsg').innerText = 'Purchase submitted — it will be verified and processed.';
-                addLogUI(`Purchase submitted for ${target} (${booster})`, 'text-green-400');
-                document.getElementById('marketTarget').value = '';
-                document.getElementById('marketTxLink').value = '';
-            } catch (e) { alert('Network error: ' + e.message); }
-        }
-
-        // Gameplay Classes
-        class Spaceship {
-            constructor(tier, x, color) {
-                this.tier = tier; this.x = x; this.y = 40; this.color = color;
-                this.isFiring = 0; this.target = null;
-            }
-            draw() {
-                if (hp[this.tier.toLowerCase()] <= 0) return;
-                ctx.save(); ctx.translate(this.x, this.y);
-                ctx.fillStyle = this.color; ctx.beginPath();
-                ctx.moveTo(-30, 0); ctx.lineTo(30, 0); ctx.lineTo(10, 15); ctx.lineTo(-10, 15);
-                ctx.closePath(); ctx.fill();
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
-                if (this.isFiring > 0 && this.target) {
-                    ctx.beginPath(); ctx.strokeStyle = this.color; ctx.lineWidth = this.isFiring / 4;
-                    ctx.moveTo(this.x, this.y + 15); ctx.lineTo(this.target.x, this.target.y);
-                    ctx.stroke(); this.isFiring--;
+                provider = new ethers.BrowserProvider(window.ethereum);
+                const network = await provider.getNetwork();
+                if (network.chainId !== BigInt(2027)) {
+                    await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID }] });
                 }
-            }
+                const accounts = await provider.send("eth_requestAccounts", []);
+                userWallet = accounts[0].toLowerCase();
+                signer = await provider.getSigner();
+                
+                // Initialize a temporary local profile even if sync fails
+                userProfile = { 
+                    wallet_address: userWallet, 
+                    username: `PILOT_${userWallet.slice(2, 6).toUpperCase()}`,
+                    id: null 
+                };
+                
+                await syncProfile();
+                await fetchBalance();
+                setupRealtime();
+                updateUI();
+                toast("UPLINK_ESTABLISHED");
+            } catch (err) { toast("UPLINK_ERROR: " + err.message, true); }
+            finally { hideLoading(); }
         }
 
-        class Projectile {
-            constructor(type, x, y, targetX, targetY, color, ownerTier) {
-                this.type = type; this.x = x; this.y = y; this.tx = targetX; this.ty = targetY;
-                this.color = color; this.ownerTier = ownerTier; this.life = 100;
-                this.speed = type === 'rocket' ? 4 : 2;
-                this.angle = Math.atan2(targetY - y, targetX - x);
-            }
-            update() {
-                this.x += Math.cos(this.angle) * this.speed;
-                this.y += Math.sin(this.angle) * this.speed;
-                const dist = Math.hypot(this.tx - this.x, this.ty - this.y);
-                if (dist < 10) this.explode();
-            }
-            explode() {
-                this.life = 0;
-                particles.push(new Explosion(this.x, this.y, this.color, this.type === 'bomb' ? 60 : 20));
-                if (this.type === 'bomb') {
-                    playBombSound();
-                    Object.keys(hp).forEach(t => { if (t.toUpperCase() !== this.ownerTier) hp[t] = Math.max(0, hp[t] - 5); });
-                    const container = document.getElementById('arenaContainer');
-                    if (container) { container.classList.add('shake'); setTimeout(() => container.classList.remove('shake'), 400); }
-                } else { playLaserSound(); }
-                updateHPUI();
-            }
-            draw() {
-                ctx.fillStyle = this.color; ctx.beginPath();
-                if (this.type === 'rocket') ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-                else ctx.rect(this.x - 4, this.y - 4, 8, 8);
-                ctx.fill();
-            }
-        }
-
-        class Explosion {
-            constructor(x, y, color, size) {
-                this.x = x; this.y = y; this.color = color; this.size = size; this.life = 1.0;
-            }
-            draw() {
-                ctx.save(); ctx.globalAlpha = this.life; ctx.strokeStyle = this.color;
-                ctx.beginPath(); ctx.arc(this.x, this.y, (1 - this.life) * this.size, 0, Math.PI * 2);
-                ctx.stroke(); ctx.restore(); this.life -= 0.05;
-            }
-        }
-
-        class Stickman {
-            constructor(tier, wallet, x, y, color) {
-                this.tier = tier; this.wallet = wallet;
-                this.id = wallet.substring(wallet.length - 4);
-                this.x = x; this.y = y; this.color = color;
-                this.isFiring = 0; this.target = null;
-                this.targetX = x; this.targetY = y;
-                this.speed = 0.4 + Math.random() * 0.4;
-            }
-            update() {
-                if (hp[this.tier.toLowerCase()] <= 0) return;
-                if (Math.abs(this.x - this.targetX) < 5 && Math.abs(this.y - this.targetY) < 5) {
-                    this.targetX = 50 + Math.random() * (canvas.width - 100);
-                    this.targetY = 100 + Math.random() * (canvas.height - 200);
-                }
-                this.x += (this.targetX - this.x) > 0 ? this.speed : -this.speed;
-                this.y += (this.targetY - this.y) > 0 ? this.speed : -this.speed;
-                if (this.isFiring > 0) this.isFiring--;
-            }
-            draw() {
-                if (hp[this.tier.toLowerCase()] <= 0) return;
-                ctx.save(); ctx.translate(this.x, this.y);
-                ctx.fillStyle = this.color; ctx.font = 'bold 9px Share Tech Mono';
-                ctx.textAlign = 'center'; ctx.fillText(this.id, 0, -35);
-                ctx.strokeStyle = this.isFiring > 0 ? this.color : '#444'; ctx.lineWidth = 2;
-                if (this.isFiring > 0) { ctx.shadowBlur = 10; ctx.shadowColor = this.color; }
-                ctx.beginPath(); ctx.arc(0, -25, 4, 0, Math.PI * 2); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, -21); ctx.lineTo(0, -5);
-                ctx.moveTo(-8, -15); ctx.lineTo(8, -15);
-                ctx.moveTo(0, -5); ctx.lineTo(-6, 5); ctx.moveTo(0, -5); ctx.lineTo(6, 5);
-                ctx.stroke(); ctx.restore();
-            }
-        }
-
-        function playLaserSound() {
-            if (!audioCtx || audioCtx.state === 'suspended') return;
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-        }
-
-        function playBombSound() {
-            if (!audioCtx || audioCtx.state === 'suspended') return;
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); const noise = audioCtx.createBufferSource();
-            const bufferSize = audioCtx.sampleRate * 0.2; const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-            noise.buffer = buffer; osc.type = 'sine'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.3);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-            noise.connect(gain); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); noise.start(); osc.stop(audioCtx.currentTime + 0.4); noise.stop(audioCtx.currentTime + 0.4);
-        }
-
-        function updateHPUI() {
-            ['maximum', 'explorer', 'scout'].forEach(t => {
-                const percent = Math.ceil(hp[t]); const el = document.getElementById(`hp-${t}`); const val = document.getElementById(`hp-val-${t}`);
-                if(el) el.style.width = percent + "%"; if(val) val.innerText = percent + "%";
-            });
-        }
-
-        function updatePointsUI() {
-            const list = document.getElementById('pointsList'); const summary = document.getElementById('pointsSummary');
-            if(!list || !summary) return; list.innerHTML = ''; summary.innerHTML = '';
-            ['maximum', 'explorer', 'scout'].forEach(t => {
-                const row = document.createElement('div');
-                row.className = 'flex justify-between items-center';
-                const left = document.createElement('span');
-                left.className = 'text-[10px] flex items-center gap-1';
-                left.style.color = `var(--tier-${t})`;
-                const img = document.createElement('img'); img.src = SPRITE_URL; img.className = 'w-2 h-2'; img.alt = ''; img.setAttribute('aria-hidden','true');
-                left.appendChild(img);
-                left.appendChild(document.createTextNode(' ' + t.toUpperCase()));
-                const right = document.createElement('span'); right.className = 'orbitron text-white'; right.textContent = points[t];
-                row.appendChild(left); row.appendChild(right); list.appendChild(row);
-
-                const sbox = document.createElement('div'); sbox.className = 'text-center';
-                const s1 = document.createElement('div'); s1.className = 'text-[8px] opacity-50 uppercase flex items-center justify-center gap-1';
-                const sImage = document.createElement('img'); sImage.src = SPRITE_URL; sImage.className = 'w-1.5 h-1.5'; sImage.alt = ''; sImage.setAttribute('aria-hidden','true'); s1.appendChild(sImage); s1.appendChild(document.createTextNode(' ' + t));
-                const s2 = document.createElement('div'); s2.className = 'orbitron text-xs'; s2.style.color = `var(--tier-${t})`; s2.textContent = points[t];
-                sbox.appendChild(s1); sbox.appendChild(s2); summary.appendChild(sbox);
-            });
-        }
-
-        function addLogUI(msg, classes = "") {
-            const log = document.getElementById('battleLog'); if(!log) return;
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            if (classes) classes.split(' ').forEach(c => { if (c) entry.classList.add(c); });
-            const icon = document.createElement('span'); icon.className = 'opacity-30 mr-2'; icon.textContent = '>';
-            const text = document.createElement('span'); text.textContent = ' ' + msg;
-            entry.appendChild(icon); entry.appendChild(text);
-            log.prepend(entry);
-            if (log.children.length > 30) log.removeChild(log.lastChild);
-        }
-
-        function resize() {
-            const container = document.getElementById('arenaContainer');
-            if (container) { canvas.width = container.clientWidth; canvas.height = 540; }
-            starCanvas.width = window.innerWidth; starCanvas.height = window.innerHeight;
-            initStars();
-        }
-
-        function initStars() {
-            stars = []; for(let i=0; i<150; i++) stars.push({ x: Math.random() * starCanvas.width, y: Math.random() * starCanvas.height, s: Math.random() * 1.5 });
-        }
-
-        async function fetchData() {
+        async function syncProfile() {
+            if (!userWallet) return null;
             try {
-                // Use serverless proxy to avoid exposing API_KEY in client bundle or network calls
-                const res = await fetch('/api/tokenholders');
-                const data = await res.json(); const raw = (data && data.result) ? data.result.slice(2) : [];
-                allHolders.maximum = raw.slice(0, 50); allHolders.explorer = raw.slice(50, 100); allHolders.scout = raw.slice(100, 150);
-                updatePointsUI(); updateSectorsWeightUI(); addLogUI("Habitat registry loaded. Mission ready.", "text-blue-400");
-            } catch (e) { addLogUI("Link error.", "text-red-500"); }
-        }
+                // We use the wallet address as the primary key for the profiles
+                const { data, error } = await sb.from('profiles')
+                    .upsert({ wallet_address: userWallet }, { onConflict: 'wallet_address' })
+                    .select()
+                    .single();
 
-        function showWalletDetail(addr, tier, balance, pts) {
-            document.getElementById('rosterMain').classList.add('hidden');
-            document.getElementById('walletDetail').classList.remove('hidden');
-            document.getElementById('detailAddress').innerText = addr;
-            document.getElementById('detailSector').innerText = tier.toUpperCase();
-            document.getElementById('detailSector').style.color = `var(--tier-${tier})`;
-            document.getElementById('detailBalance').innerText = balance + " $EROL";
-            document.getElementById('detailPoints').innerText = pts + " PTS";
-            document.getElementById('detailBattles').innerText = battleCounts[addr.toLowerCase()] || 0;
-        }
-
-        function renderFullRoster() {
-            const list = document.getElementById('fullRosterList'); if(!list) return; list.innerHTML = '';
-            const query = document.getElementById('walletSearch').value.toLowerCase();
-            ['maximum', 'explorer', 'scout'].forEach(tier => {
-                const tierDiv = document.createElement('div'); tierDiv.className = 'space-y-2';
-                const header = document.createElement('h3');
-                header.className = 'orbitron text-[10px] border-b border-white/10 pb-1 uppercase flex items-center gap-2';
-                header.style.color = `var(--tier-${tier})`;
-                const himg = document.createElement('img'); himg.src = SPRITE_URL; himg.className = 'w-3 h-3'; himg.alt = ''; himg.setAttribute('aria-hidden','true'); header.appendChild(himg);
-                header.appendChild(document.createTextNode(' ' + tier + ' Sector'));
-                tierDiv.appendChild(header);
-                (allHolders[tier] || []).forEach(h => {
-                    const addr = (h.TokenHolderAddress || h.address || '').toLowerCase(); if (query && !addr.includes(query)) return;
-                    const balance = (parseFloat(h.TokenHolderQuantity || h.balance) / 1e18).toLocaleString(undefined, {maximumFractionDigits:0});
-                    const bonus = individualPoints[addr] || 0;
-                    const item = document.createElement('div');
-                    item.className = 'p-2 bg-white/5 text-[10px] cursor-pointer hover:bg-white/10 transition-colors';
-                    if (addr.includes(query) && query) { item.classList.add('border','border-orange-500'); item.style.background = 'rgba(249,115,22,0.06)'; }
-                    item.onclick = () => showWalletDetail(addr, tier, balance, bonus);
-                    const addrDiv = document.createElement('div'); addrDiv.className = 'truncate font-bold'; addrDiv.textContent = addr;
-                    const meta = document.createElement('div'); meta.className = 'flex justify-between opacity-50';
-                    const balSpan = document.createElement('span'); balSpan.textContent = balance + ' EROL';
-                    const bonusSpan = document.createElement('span'); bonusSpan.textContent = bonus + ' XP';
-                    meta.appendChild(balSpan); meta.appendChild(bonusSpan);
-                    item.appendChild(addrDiv); item.appendChild(meta);
-                    tierDiv.appendChild(item);
-                });
-                list.appendChild(tierDiv);
-            });
-        }
-
-        function startBattle() {
-            gameState = 'BATTLE'; timeRemaining = 9999; hp = { maximum: 100, explorer: 100, scout: 100 };
-            updateHPUI(); players = []; spaceships = []; projectiles = []; particles = [];
-            const colors = { maximum: '#ffd700', explorer: '#00f2ff', scout: '#adff2f' };
-            spaceships = [
-                new Spaceship('MAXIMUM', 100, colors.maximum),
-                new Spaceship('EXPLORER', canvas.width/2, colors.explorer),
-                new Spaceship('SCOUT', canvas.width-100, colors.scout)
-            ];
-            ['maximum', 'explorer', 'scout'].forEach(t => {
-                const sample = [...allHolders[t]].sort(() => 0.5 - Math.random()).slice(0, 10);
-                sample.forEach(h => {
-                    const wallet = (h.TokenHolderAddress || h.address).toLowerCase();
-                    players.push(new Stickman(t.toUpperCase(), wallet, Math.random()*canvas.width, Math.random()*canvas.height, colors[t]));
-                    updatePlayerPoints(wallet, 10, true);
-                });
-            });
-            broadcastLog("!! SCRAMBLE !! Units deployed.", "text-orange-500 font-bold");
-            document.getElementById('battlePhaseInfo').innerText = "Surface Conflict Active";
-        }
-
-        function triggerAttack() {
-            const aliveTiers = Object.keys(hp).filter(t => hp[t] > 0);
-            if (aliveTiers.length <= 1) { if(gameState === 'BATTLE') endBattle(aliveTiers[0] || 'maximum'); return; }
-            const attackerTier = aliveTiers[Math.floor(Math.random() * aliveTiers.length)];
-            const targetTier = aliveTiers.filter(t => t !== attackerTier)[Math.floor(Math.random() * (aliveTiers.length - 1))];
-            const attackerList = players.filter(p => p.tier === attackerTier.toUpperCase());
-            const targetList = players.filter(p => p.tier === targetTier.toUpperCase());
-            if (!attackerList.length || !targetList.length) return;
-            const attacker = attackerList[Math.floor(Math.random() * attackerList.length)];
-            const victim = targetList[Math.floor(Math.random() * targetList.length)];
-            const mode = Math.random();
-            if (mode > 0.8) { 
-                const ship = spaceships.find(s => s.tier === attackerTier.toUpperCase());
-                if (ship) { ship.isFiring = 20; ship.target = victim; hp[targetTier] -= 3; playLaserSound(); }
-            } else if (mode > 0.6) { 
-                projectiles.push(new Projectile(Math.random() > 0.5 ? 'rocket' : 'bomb', attacker.x, attacker.y, victim.x, victim.y, attacker.color, attackerTier.toUpperCase()));
-            } else { attacker.isFiring = 10; attacker.target = victim; hp[targetTier] -= 1.5; playLaserSound(); }
-            updateHPUI();
-        }
-
-        async function endBattle(winner) {
-            updateSupabasePoints(winner, 100); broadcastLog(`${winner.toUpperCase()} VICTORIOUS.`, "bg-orange-600 text-black px-2 font-bold mt-2");
-            gameState = 'VICTORY_TRANS'; winnerText = `${winner.toUpperCase()} DOMINANCE`;
-            winColor = winner === 'maximum' ? '#ffd700' : (winner === 'explorer' ? '#00f2ff' : '#adff2f');
-            watchedBattlesCount = Math.min(watchedBattlesCount + 1, 2); updateTaskUI();
-            victoryVideo.currentTime = 0; victoryVideo.play().catch(e => console.log("Video wait"));
-            setTimeout(() => { victoryVideo.pause(); gameState = 'REST'; timeRemaining = 60; document.getElementById('battlePhaseInfo').innerText = "Regrouping..."; }, 6000);
-        }
-
-        function gameLoop() {
-            if (!ctx) return;
-            sctx.clearRect(0,0,starCanvas.width, starCanvas.height);
-            sctx.fillStyle = '#fff'; stars.forEach(p => { sctx.globalAlpha = Math.random() * 0.5 + 0.3; sctx.fillRect(p.x, p.y, p.s, p.s); });
-            
-            ctx.fillStyle = 'rgba(5, 5, 7, 1)'; ctx.fillRect(0,0,canvas.width, canvas.height);
-
-            if (gameState === 'BATTLE' || gameState === 'REST') {
-                if (gameState === 'BATTLE' && Math.random() > 0.92) triggerAttack();
-                // We draw ships and players even in REST if they exist
-                spaceships.forEach(s => s.draw());
-                players.forEach(p => { p.update(); p.draw(); });
-                projectiles.forEach((p, i) => { p.update(); p.draw(); if (p.life <= 0) projectiles.splice(i, 1); });
-                particles.forEach((p, i) => { p.draw(); if (p.life <= 0) particles.splice(i, 1); });
-            } 
-            
-            if (gameState === 'VICTORY_TRANS') {
-                ctx.drawImage(victoryVideo, 0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
-                ctx.font = 'bold 30px Orbitron'; ctx.fillStyle = winColor; ctx.textAlign = 'center'; ctx.fillText(winnerText, canvas.width/2, canvas.height - 50);
-                ctx.font = '12px Share Tech Mono'; ctx.fillStyle = '#fff'; ctx.fillText("+100 SECTOR POINTS GRANTED", canvas.width/2, canvas.height - 25);
-            } else if (gameState === 'REST') {
-                ctx.fillStyle = 'rgba(255, 77, 0, 0.2)'; ctx.font = '12px Orbitron'; ctx.textAlign = 'center';
-                ctx.fillText("COOLING WEAPONS SYSTEMS...", canvas.width/2, canvas.height/2);
+                if (error) throw error;
+                if (data) {
+                    userProfile = data;
+                    updateProfileUI();
+                }
+                return data;
+            } catch (e) {
+                console.warn("Profile sync bypassed. Using wallet-only mode.", e);
+                // We don't throw here to allow game mechanics to function
+                updateProfileUI();
+                return userProfile;
             }
-            requestAnimationFrame(gameLoop);
         }
 
-        window.onload = () => {
-            canvas = document.getElementById('battleCanvas'); ctx = canvas.getContext('2d');
-            starCanvas = document.getElementById('starfield'); sctx = starCanvas.getContext('2d');
-            bgMusic = document.getElementById('bgMusic'); victoryVideo = document.getElementById('victoryVideo');
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            resize(); initSupabase(); fetchData(); gameLoop(); 
-            setInterval(() => {
-                if (gameState === 'REST') { timeRemaining--; if (timeRemaining <= 0) startBattle(); }
-                const timerEl = document.getElementById('globalTimer');
-                if (timerEl) { timerEl.innerText = (gameState === 'BATTLE' || gameState === 'VICTORY_TRANS') ? 'LIVE' : `0:${timeRemaining.toString().padStart(2, '0')}`; }
-            }, 1000);
-            const searchInput = document.getElementById('walletSearch');
-            if(searchInput) searchInput.addEventListener('input', renderFullRoster);
+        function updateProfileUI() {
+            if (!userProfile) return;
+            document.getElementById('navUserName').innerText = userProfile.username.toUpperCase();
+            document.getElementById('editUsername').value = userProfile.username;
+            document.getElementById('fullWalletAddress').innerText = userProfile.wallet_address;
+            document.getElementById('profileWins').innerText = userProfile.games_won || 0;
+            document.getElementById('miniProfile').classList.remove('hidden');
+            document.getElementById('connectionStatus').classList.remove('hidden');
+            document.getElementById('connectionStatus').style.display = 'flex';
+        }
 
-            // Attach navigation and UI button handlers (avoid inline onclicks to prevent TDZ errors)
-            const navMapping = { 'nav-arena':'arena','nav-roster':'roster','nav-sectors':'sectors','nav-market':'market','nav-tasks':'tasks','nav-about':'about' };
-            Object.keys(navMapping).forEach(id => {
-                const el = document.getElementById(id); if (!el) return; el.addEventListener('click', () => switchPage(navMapping[id]));
+        async function hostGame() {
+            if (!userWallet) return connect();
+            
+            showLoading("VERIFYING_IDENT...");
+            
+            // Try one last sync but proceed regardless
+            const profile = await syncProfile();
+            
+            // If the database didn't give us a UUID (id), we try to find the profile by wallet
+            let finalId = profile?.id;
+            
+            if (!finalId) {
+                // Emergency fetch if upsert didn't return data
+                const { data } = await sb.from('profiles').select('id').eq('wallet_address', userWallet).maybeSingle();
+                finalId = data?.id;
+            }
+
+            if (!finalId) {
+                hideLoading();
+                return toast("PROFILE_NOT_READY: RETRYING...", true);
+            }
+
+            const wagerInput = document.getElementById('wagerInput');
+            const wager = parseFloat(wagerInput.value);
+            
+            if (isNaN(wager) || wager <= 0) {
+                hideLoading();
+                return toast("INVALID_WAGER", true);
+            }
+
+            showLoading("DEPLOYING_SIGNAL...");
+            try {
+                const { data, error } = await sb.from('matches').insert({
+                    host_id: finalId,
+                    wager_amount: wager,
+                    status: 'waiting'
+                }).select().single();
+
+                if (error) throw error;
+                
+                currentMatchId = data.id;
+                toast("SIGNAL_DEPLOYED");
+                // In a real app, you'd show a "waiting for opponent" screen here
+            } catch (e) {
+                console.error("Match Deployment Error:", e);
+                toast("DEPLOY_ERR: CHECK_DATABASE", true);
+            } finally { hideLoading(); }
+        }
+
+        async function fetchBalance() {
+            if (!userWallet || !provider) return;
+            try {
+                const abi = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)"];
+                const contract = new ethers.Contract(EROL_TOKEN, abi, provider);
+                const balance = await contract.balanceOf(userWallet);
+                const decimals = await contract.decimals();
+                const formatted = ethers.formatUnits(balance, decimals);
+                const display = parseFloat(formatted).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                document.getElementById('navBalance').innerText = display;
+                document.getElementById('profileBalance').innerText = display;
+            } catch (err) { console.error("Balance fetch error:", err); }
+        }
+
+        function selectMove(move) {
+            selectedTacticalMove = move;
+            document.querySelectorAll('.move-card').forEach(c => c.classList.remove('selected'));
+            const target = event.currentTarget;
+            target.classList.add('selected');
+            document.getElementById('moveStatus').innerText = `READY_TO_LOCK: ${move.replace('_', ' ').toUpperCase()}`;
+            document.getElementById('lockMoveBtn').disabled = false;
+        }
+
+        async function lockMove() {
+            if (!selectedTacticalMove || !currentMatchId) return;
+            showLoading("ENCRYPTING_MOVE...");
+            
+            try {
+                // Determine if we are host or challenger (logic would be more complex in prod)
+                // For testing, we just update the match
+                const { error } = await sb.from('matches').update({
+                    host_move: selectedTacticalMove 
+                }).eq('id', currentMatchId);
+
+                if (error) throw error;
+                
+                toast("MOVE_LOCKED_IN_VAULT");
+                document.getElementById('lockMoveBtn').disabled = true;
+                document.getElementById('moveStatus').innerText = "WAITING_FOR_OPPONENT_REVEAL...";
+            } catch (e) {
+                toast("TX_FAILED", true);
+            } finally { hideLoading(); }
+        }
+
+        async function joinGame(matchId, wager) {
+            if (!userWallet) return connect();
+            showLoading("STAKING_EROL...");
+            try {
+                const profile = await syncProfile();
+                if (!profile?.id) throw new Error("No Profile ID");
+
+                const { error } = await sb.from('matches').update({
+                    opponent_id: profile.id,
+                    status: 'in_progress'
+                }).eq('id', matchId);
+
+                if (error) throw error;
+                
+                currentMatchId = matchId;
+                startMatchUI(wager);
+            } catch (e) { 
+                console.error(e);
+                toast("JOIN_FAILED", true); 
+            } finally { hideLoading(); }
+        }
+
+        function startMatchUI(wager) {
+            switchView('game');
+            document.getElementById('matchPool').innerText = `${(wager * 2).toFixed(2)} EROL`;
+            document.getElementById('opponentName').innerText = "CALCULATING_TRAJECTORY...";
+        }
+
+        function switchView(view) {
+            ['lobbySection', 'profileSection', 'gameSection'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            if(view === 'lobby') document.getElementById('lobbySection').classList.remove('hidden');
+            if(view === 'profile') document.getElementById('profileSection').classList.remove('hidden');
+            if(view === 'game') document.getElementById('gameSection').classList.remove('hidden');
+        }
+
+        async function refreshLobby() {
+            try {
+                const { data: matches } = await sb.from('matches')
+                    .select('*, profiles!host_id(username)')
+                    .eq('status', 'waiting')
+                    .order('created_at', { ascending: false });
+                
+                const grid = document.getElementById('matchGrid');
+                if (!matches?.length) {
+                    grid.innerHTML = `<div class="col-span-full text-center py-12 mars-glass border-dashed opacity-20 orbitron text-[9px] uppercase tracking-[0.4em]">No_Signals_Found_In_Sector</div>`;
+                    return;
+                }
+                grid.innerHTML = matches.map(m => `
+                    <div class="mars-glass p-5 flex flex-col justify-between group hover:border-orange-500/50 transition-all">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <p class="text-[9px] text-orange-500/40 uppercase mb-1">Commander</p>
+                                <p class="orbitron font-bold text-white text-sm tracking-widest">${(m.profiles?.username || 'UNKNOWN').toUpperCase()}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] text-orange-500/40 uppercase mb-1">Stake</p>
+                                <p class="orbitron font-bold text-orange-500 text-lg">${m.wager_amount} <span class="text-[8px] opacity-40">EROL</span></p>
+                            </div>
+                        </div>
+                        <button onclick="joinGame('${m.id}', ${m.wager_amount})" class="w-full py-2 bg-orange-500/5 border border-orange-500/30 hover:bg-orange-500 hover:text-black orbitron text-[10px] transition-all uppercase">
+                            Accept_Gambit
+                        </button>
+                    </div>
+                `).join('');
+            } catch (e) { console.error("Lobby refresh error:", e); }
+        }
+
+        function setupRealtime() {
+            sb.channel('global').on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => refreshLobby()).subscribe();
+            sb.channel('chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, p => appendMessage(p.new)).subscribe();
+            refreshLobby();
+            fetchInitialChat();
+        }
+
+        async function fetchInitialChat() {
+            try {
+                const { data } = await sb.from('chat_messages').select('*').order('created_at', { ascending: false }).limit(20);
+                if (data) {
+                    const box = document.getElementById('chatBox');
+                    box.innerHTML = "";
+                    data.reverse().forEach(appendMessage);
+                }
+            } catch (e) {}
+        }
+
+        function appendMessage(m) {
+            const box = document.getElementById('chatBox');
+            if (!box) return;
+            const div = document.createElement('div');
+            div.className = "border-l border-orange-500/20 pl-3 py-1 mb-2";
+            div.innerHTML = `<span class="text-[8px] orbitron text-orange-500/60 uppercase">[${m.username || 'ANON'}]</span><br><span class="opacity-80">${m.message}</span>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            if (!input.value || !userProfile) return;
+            const msg = input.value;
+            input.value = "";
+            await sb.from('chat_messages').insert({ 
+                user_id: userProfile.id, 
+                username: userProfile.username, 
+                message: msg 
             });
-            const audioBtn = document.getElementById('audioToggle'); if (audioBtn) audioBtn.addEventListener('click', toggleMusic);
-            const backBtn = document.getElementById('backToDb'); if (backBtn) backBtn.addEventListener('click', hideWalletDetail);
-            const claimBtn = document.getElementById('claimWatchBtn'); if (claimBtn) claimBtn.addEventListener('click', claimWatchTask);
-            // multiple submit buttons (if present) use same class handler
-            ['submitPurchaseBtn','submitPurchaseBtn2'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', submitPurchase); });
-        };
-        window.onresize = resize;
+        }
+
+        function showLoading(text) {
+            document.getElementById('loadingText').innerText = text;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+        function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+        
+        function toast(msg, err = false) {
+            const t = document.getElementById('statusToast');
+            t.innerText = msg;
+            t.className = `fixed bottom-6 right-6 px-6 py-3 border-l-4 font-bold text-xs uppercase orbitron z-[110] bg-black shadow-2xl ${err ? 'border-red-600 text-red-500' : 'border-orange-500 text-orange-500'}`;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 4000);
+        }
+
+        function updateUI() {
+            const btn = document.getElementById('connectBtn');
+            if (userWallet) {
+                btn.innerHTML = `<i class="fas fa-terminal mr-2"></i> ${userWallet.slice(0,6)}...${userWallet.slice(-4)}`;
+                btn.className = "px-4 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-500 orbitron text-[10px]";
+            }
+        }
+
+        document.getElementById('connectBtn').addEventListener('click', connect);
+        document.getElementById('lockMoveBtn').addEventListener('click', lockMove);
+        document.getElementById('sendChat').addEventListener('click', sendChat);
+        document.getElementById('chatInput').addEventListener('keypress', e => e.key === 'Enter' && sendChat());
+
+        // Check if MetaMask is already connected
+        window.addEventListener('load', async () => {
+            if (window.ethereum) {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) connect();
+            }
+        });
     </script>
 </body>
 </html>
