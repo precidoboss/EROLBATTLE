@@ -253,6 +253,18 @@
   ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:#000;}::-webkit-scrollbar-thumb{background:var(--red-deep);}::-webkit-scrollbar-thumb:hover{background:var(--red);}
   @media(max-width:580px){.dp-inner,.ci-inn{padding:14px;}.tier-grid{grid-template-columns:1fr;}.modal-d{padding:22px 16px;}.site-title{font-size:1.6rem;}}
 
+  /* STATS BAR */
+  .stats-bar{position:relative;z-index:10;display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;background:rgba(0,0,0,0.85);border-bottom:1px solid rgba(204,0,0,0.2);}
+  .stat-block{display:flex;flex-direction:column;align-items:center;padding:10px 24px;border-right:1px solid rgba(255,255,255,0.04);gap:2px;}
+  .stat-block:last-child{border-right:none;}
+  .stat-val{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--red-bright);letter-spacing:1px;text-shadow:0 0 10px rgba(255,26,26,0.5);font-weight:600;}
+  .stat-lbl{font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:2px;text-transform:uppercase;color:var(--white-ghost);}
+
+  /* TWEET MODAL */
+  .tweet-preview-box{background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.08);padding:14px;font-family:'IM Fell English',serif;font-size:0.88rem;line-height:1.7;color:var(--white-dim);white-space:pre-wrap;word-break:break-word;margin-bottom:14px;border-left:3px solid var(--red);}
+  .tweet-char-count{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:1px;color:var(--white-ghost);text-align:right;margin-bottom:12px;}
+  .tweet-char-count.over{color:var(--red-bright);}
+
   /* HOW IT WORKS */
   .hiw-block{display:flex;gap:18px;align-items:flex-start;padding:18px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
   .hiw-block:last-child{border-bottom:none;padding-bottom:0;}
@@ -292,6 +304,45 @@
   </div>
   <div class="bal-chip" id="balChip">⚡ 0.0000 AVAX</div>
   <div class="wc" onclick="openModal('walletModal')">⚙ MANAGE VAULT</div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-block">
+    <div class="stat-val" id="statTotalBurned">— AVAX</div>
+    <div class="stat-lbl">🔥 Total Burned</div>
+  </div>
+  <div class="stat-block">
+    <div class="stat-val" id="statChronicles">—</div>
+    <div class="stat-lbl">📜 Chronicles</div>
+  </div>
+  <div class="stat-block">
+    <div class="stat-val" id="statVotes">—</div>
+    <div class="stat-lbl">⚔ Votes Cast</div>
+  </div>
+  <div class="stat-block">
+    <div class="stat-val" id="statTargets">—</div>
+    <div class="stat-lbl">💀 Targets Named</div>
+  </div>
+</div>
+
+<!-- TWEET MODAL -->
+<div class="modal-overlay" id="tweetModal">
+  <div class="modal-d">
+    <button class="modal-close" onclick="closeModal('tweetModal')">✕ CLOSE</button>
+    <div class="m-title">📋 Post to X</div>
+    <div class="m-sub">Two versions ready — one for the project account, one for users to self-post</div>
+
+    <div class="m-sec" style="margin-bottom:8px">🏴 PROJECT ACCOUNT POST <span style="color:var(--white-ghost);font-size:0.58rem">(post from @AVAXChronicles)</span></div>
+    <div class="tweet-preview-box" id="tweetProjectText"></div>
+    <div class="tweet-char-count" id="tweetProjectCount"></div>
+    <button class="btn-fire" style="width:100%;margin-bottom:16px" onclick="copyTweetVariant('project')">📋 COPY PROJECT TWEET</button>
+
+    <div class="m-sec" style="margin-bottom:8px">🔥 USER SELF-POST <span style="color:var(--white-ghost);font-size:0.58rem">(for the anon to post themselves)</span></div>
+    <div class="tweet-preview-box" id="tweetUserText"></div>
+    <div class="tweet-char-count" id="tweetUserCount"></div>
+    <button class="btn-ghost" style="width:100%" onclick="copyTweetVariant('user')">📋 COPY USER TWEET</button>
+  </div>
 </div>
 
 <!-- NAV -->
@@ -602,9 +653,15 @@ async function submitCrashOut(){
     const{error}=await db.from('chronicles').insert([row]);
     if(error)throw error;
     setTxS('writeTx','success',`✅ Sealed · TX: ${rc.transactionHash.slice(0,20)}...`);
-    toast('Thy chronicle burns eternally! 🔥','success');
-    document.getElementById('crashText').value='';document.getElementById('targetHandle').value='';document.getElementById('duelTarget').value='';updateCC();refreshBal();
-    setTimeout(()=>{sw('feed');loadFeed();},1500);
+    toast('Thy chronicle burns eternally! 🔥 Open the tweet modal to share it.','success');
+    document.getElementById('crashText').value='';document.getElementById('targetHandle').value='';document.getElementById('duelTarget').value='';updateCC();refreshBal();loadStats();
+    // auto-open tweet modal for the new chronicle
+    setTimeout(()=>{
+      db.from('chronicles').select('*').eq('tx_hash',rc.transactionHash).single().then(({data:nc})=>{
+        if(nc){tweetCache.current=nc;buildTweetPreviews(nc);openModal('tweetModal');}
+      });
+    },1200);
+    setTimeout(()=>{sw('feed');loadFeed();},3000);
   }catch(e){setTxS('writeTx','error',`❌ ${(e.message||'Failed').slice(0,90)}`);}
 }
 
@@ -630,7 +687,8 @@ function mkCard(c,prev=false){
   const tl=getTimeLeft(c.expires_at);
   const grand=c.tier==='grand';
   const mi={rage:'⚡',betrayal:'🗡',rug:'💀',fud:'👁',alpha:'🔮',degen:'🎰'}[c.crash_mode]||'📜';
-  const tweet=`${c.chronicle_name}${c.target_handle?' has challenged '+c.target_handle:' dropped a chronicle'} on AVAX Chronicles 🔥\n\n"${c.crash_text.slice(0,140)}${c.crash_text.length>140?'...':''}"\n\n🔗 avaxchronicles.xyz`;
+  // encode chronicle id safely for inline onclick
+  const safeId = encodeURIComponent(c.id||'');
   return `<div class="ci ${grand?'grand':''}">
     <div class="ci-inn">
       ${grand?'<div class="grand-tag">🔥 Grand Chronicle</div>':''}
@@ -653,7 +711,7 @@ function mkCard(c,prev=false){
           <div class="vote-a">
             <button class="vb up" onclick="doVote('${c.id}','up')">▲ ${c.upvotes||0}</button>
             <button class="vb dn" onclick="doVote('${c.id}','down')">▼ ${c.downvotes||0}</button>
-            <button class="ctb" onclick="cp(\`${tweet.replace(/`/g,'\\`').replace(/\n/g,'\\n')}\`,'Tweet copy ready 🔥')">📋 COPY TWEET</button>
+            <button class="ctb" onclick="openTweetModal('${safeId}')">🐦 POST TO X</button>
           </div>
         </div>`:''}
       </div>
@@ -672,7 +730,7 @@ async function doVote(id,dir){
     await tx.wait(1);
     const{error}=await db.rpc('increment_vote',{p_chronicle_id:id,p_direction:dir,p_voter_address:wallet.address,p_tx_hash:tx.hash});
     if(error)throw error;
-    toast(dir==='up'?'▲ Upvote cast!':'▼ Downvote cast — shame upon them','success');refreshBal();loadFeed();
+    toast(dir==='up'?'▲ Upvote cast!':'▼ Downvote cast — shame upon them','success');refreshBal();loadFeed();loadStats();
   }catch(e){toast(e.message?.includes('unique')||e.code==='23505'?'Already voted on this chronicle':'Vote failed — try again','error');}
 }
 
@@ -690,6 +748,76 @@ async function doReact(id,type){
 }
 
 function filterFeed(f,el){curFilter=f;document.querySelectorAll('.fp-btn').forEach(p=>p.classList.remove('active'));el.classList.add('active');loadFeed();}
+
+// ── TWEET MODAL ──
+let tweetCache = {};
+function openTweetModal(safeId){
+  const id = decodeURIComponent(safeId);
+  // find chronicle from current feed data in DOM — re-query supabase
+  db.from('chronicles').select('*').eq('id',id).single().then(({data:c,error})=>{
+    if(error||!c){toast('Could not load chronicle','error');return;}
+    tweetCache.current = c;
+    buildTweetPreviews(c);
+    openModal('tweetModal');
+  });
+}
+
+function buildTweetPreviews(c){
+  const target = c.target_handle || null;
+  const name   = c.chronicle_name || 'An Anonymous Degen';
+  const modeLabel = {rage:'Great Rage',betrayal:'Betrayal',rug:'Rug Pull',fud:'FUD Dispelled',alpha:'Alpha Drop',degen:'Degen Energy'}[c.crash_mode]||'Chronicle';
+  // truncate text to leave room for handles and link
+  const shortText = c.crash_text.length > 180 ? c.crash_text.slice(0,177)+'...' : c.crash_text;
+  const shortTextXS = c.crash_text.length > 130 ? c.crash_text.slice(0,127)+'...' : c.crash_text;
+
+  // PROJECT account post — tagging the target
+  const projectTweet = target
+    ? `🔥 NEW CHRONICLE SEALED ON-CHAIN\n\n${target} just got called out by ${name} in a ${modeLabel} Chronicle.\n\n"${shortText}"\n\n${(c.burn_amount||0.001)} AVAX burned forever 🔥\n\n👉 avaxchronicles.xyz\n\n#AVAX #AVAXChronicles #Avalanche`
+    : `🔥 NEW CHRONICLE SEALED ON-CHAIN\n\n${name} just dropped a ${modeLabel} Chronicle on the dungeon ledger.\n\n"${shortText}"\n\n${(c.burn_amount||0.001)} AVAX burned forever 🔥\n\n👉 avaxchronicles.xyz\n\n#AVAX #AVAXChronicles #Avalanche`;
+
+  // USER self-post — they tag the target themselves
+  const userTweet = target
+    ? `I just crashed out on ${target} and burned it on-chain forever 🔥\n\n"${shortTextXS}"\n\nSealed on @AVAXChronicles — the eternal dungeon ledger.\n\n👉 avaxchronicles.xyz\n\n#AVAX #CrashOut #Avalanche`
+    : `I just sealed a Chronicle on-chain and it burns forever 🔥\n\n"${shortTextXS}"\n\nDrop yours on @AVAXChronicles — the eternal dungeon ledger.\n\n👉 avaxchronicles.xyz\n\n#AVAX #CrashOut #Avalanche`;
+
+  document.getElementById('tweetProjectText').textContent = projectTweet;
+  document.getElementById('tweetUserText').textContent    = userTweet;
+
+  const pc = projectTweet.length, uc = userTweet.length;
+  document.getElementById('tweetProjectCount').textContent = `${pc} characters ${pc>280?'⚠ over X limit — trim the quote':pc>260?'— close to limit':'✓ good'}`;
+  document.getElementById('tweetProjectCount').className = 'tweet-char-count' + (pc>280?' over':'');
+  document.getElementById('tweetUserCount').textContent = `${uc} characters ${uc>280?'⚠ over X limit — trim the quote':uc>260?'— close to limit':'✓ good'}`;
+  document.getElementById('tweetUserCount').className = 'tweet-char-count' + (uc>280?' over':'');
+}
+
+function copyTweetVariant(which){
+  const el = document.getElementById(which==='project'?'tweetProjectText':'tweetUserText');
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    toast(which==='project'?'Project tweet copied — post it from @AVAXChronicles! 🔥':'User tweet copied — share thy chronicle! 🔥','success');
+  });
+}
+
+// ── PLATFORM STATS ──
+async function loadStats(){
+  try{
+    const[burnRes,countRes,voteRes,targetRes]=await Promise.all([
+      db.from('chronicles').select('burn_amount'),
+      db.from('chronicles').select('id',{count:'exact',head:true}),
+      db.from('votes').select('id',{count:'exact',head:true}),
+      db.from('chronicles').select('target_handle').not('target_handle','is',null)
+    ]);
+    // total burned: sum all burn_amount + votes*0.001 + reactions
+    const chronicleBurn = (burnRes.data||[]).reduce((s,r)=>s+(parseFloat(r.burn_amount)||0),0);
+    const voteBurn      = (voteRes.count||0)*0.001;
+    const totalBurn     = chronicleBurn + voteBurn;
+    document.getElementById('statTotalBurned').textContent = totalBurn.toFixed(4)+' AVAX';
+    document.getElementById('statChronicles').textContent  = countRes.count||0;
+    document.getElementById('statVotes').textContent       = voteRes.count||0;
+    // unique targets
+    const handles = new Set((targetRes.data||[]).map(r=>r.target_handle).filter(Boolean));
+    document.getElementById('statTargets').textContent = handles.size;
+  }catch(e){}
+}
 
 // ── WALLS ──
 async function loadWalls(){
@@ -780,6 +908,7 @@ function spawnFire(){
 
 spawnFire();
 initWallet();
+loadStats();
 </script>
 </body>
 </html>
