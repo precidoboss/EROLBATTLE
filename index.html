@@ -265,6 +265,37 @@
   .tweet-char-count{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:1px;color:var(--white-ghost);text-align:right;margin-bottom:12px;}
   .tweet-char-count.over{color:var(--red-bright);}
 
+  /* X USER SEARCH */
+  .x-search-wrap{position:relative;margin-bottom:16px;}
+  .x-search-row{display:flex;gap:8px;align-items:flex-end;}
+  .x-search-row .di{margin-bottom:0;flex:1;}
+  .x-results{position:absolute;top:100%;left:0;right:0;z-index:50;background:var(--stone-mid);border:1px solid rgba(204,0,0,0.35);border-top:none;max-height:320px;overflow-y:auto;}
+  .x-result-item{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;transition:background 0.15s;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .x-result-item:last-child{border-bottom:none;}
+  .x-result-item:hover{background:rgba(204,0,0,0.1);}
+  .x-avatar{width:40px;height:40px;border-radius:50%;background:var(--ash);border:1px solid rgba(204,0,0,0.3);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+  .x-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+  .x-info{flex:1;min-width:0;}
+  .x-name{font-family:'Cinzel',serif;font-size:0.75rem;color:var(--white);letter-spacing:0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .x-handle{font-family:'IM Fell English',serif;font-size:0.75rem;color:var(--red);font-style:italic;}
+  .x-bio{font-family:'IM Fell English',serif;font-size:0.7rem;color:var(--white-ghost);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+  .x-verify{font-size:0.75rem;flex-shrink:0;}
+  .x-selected-chip{display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(204,0,0,0.08);border:1px solid rgba(204,0,0,0.35);margin-top:6px;}
+  .x-selected-chip.show{display:flex;}
+  .x-sel-avatar{width:32px;height:32px;border-radius:50%;background:var(--ash);overflow:hidden;flex-shrink:0;}
+  .x-sel-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+  .x-sel-name{font-family:'Cinzel',serif;font-size:0.72rem;color:var(--white);flex:1;}
+  .x-sel-handle{font-family:'IM Fell English',serif;font-size:0.7rem;color:var(--red);font-style:italic;}
+  .x-clear-btn{background:none;border:none;color:var(--white-ghost);cursor:pointer;font-size:0.9rem;padding:2px;transition:color 0.2s;}
+  .x-clear-btn:hover{color:var(--red-bright);}
+  .x-searching{padding:12px 14px;font-family:'IM Fell English',serif;font-style:italic;color:var(--white-ghost);font-size:0.8rem;}
+  .x-no-results{padding:12px 14px;font-family:'IM Fell English',serif;font-style:italic;color:var(--white-ghost);font-size:0.8rem;}
+  .x-api-note{font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:1px;color:var(--white-ghost);margin-top:4px;opacity:0.7;}
+
+  /* CHRONICLE DEEP LINK highlight */
+  .chronicle-direct{border-color:rgba(255,200,0,0.5)!important;box-shadow:0 0 30px rgba(255,200,0,0.15)!important;}
+  .chronicle-direct::before{background:linear-gradient(90deg,transparent,#aa8800,#ffcc00,#aa8800,transparent)!important;}
+
   /* HOW IT WORKS */
   .hiw-block{display:flex;gap:18px;align-items:flex-start;padding:18px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
   .hiw-block:last-child{border-bottom:none;padding-bottom:0;}
@@ -333,12 +364,12 @@
     <div class="m-title">📋 Post to X</div>
     <div class="m-sub">Two versions ready — one for the project account, one for users to self-post</div>
 
-    <div class="m-sec" style="margin-bottom:8px">🏴 PROJECT ACCOUNT POST <span style="color:var(--white-ghost);font-size:0.58rem">(post from @AVAXChronicles)</span></div>
+    <div class="m-sec" style="margin-bottom:8px">🏴 PROJECT ACCOUNT POST <span style="color:var(--white-ghost);font-size:0.58rem">(post from @avaxchronicles_)</span></div>
     <div class="tweet-preview-box" id="tweetProjectText"></div>
     <div class="tweet-char-count" id="tweetProjectCount"></div>
     <button class="btn-fire" style="width:100%;margin-bottom:16px" onclick="copyTweetVariant('project')">📋 COPY PROJECT TWEET</button>
 
-    <div class="m-sec" style="margin-bottom:8px">🔥 USER SELF-POST <span style="color:var(--white-ghost);font-size:0.58rem">(for the anon to post themselves)</span></div>
+    <div class="m-sec" style="margin-bottom:8px">🔥 USER SELF-POST <span style="color:var(--white-ghost);font-size:0.58rem">(tags @avaxchronicles_ — for the anon to post)</span></div>
     <div class="tweet-preview-box" id="tweetUserText"></div>
     <div class="tweet-char-count" id="tweetUserCount"></div>
     <button class="btn-ghost" style="width:100%" onclick="copyTweetVariant('user')">📋 COPY USER TWEET</button>
@@ -370,7 +401,20 @@
           <span class="wn-name" id="chronicleName">— conjuring —</span>
         </div>
         <label class="fl">⚔ Target on X (optional)</label>
-        <input class="di" id="targetHandle" placeholder="@their_handle" maxlength="50">
+        <div class="x-search-wrap">
+          <div class="x-search-row">
+            <input class="di" id="xSearchInput" placeholder="Search @username or display name..." maxlength="50" oninput="onXSearchInput()" onkeydown="if(event.key==='Escape')closeXResults()">
+            <button class="btn-rg" onclick="doXSearch()" type="button">SEARCH</button>
+          </div>
+          <div class="x-results" id="xResults" style="display:none"></div>
+          <div class="x-selected-chip" id="xSelectedChip">
+            <div class="x-sel-avatar"><img id="xSelAvatar" src="" alt=""></div>
+            <div><div class="x-sel-name" id="xSelName"></div><div class="x-sel-handle" id="xSelHandle"></div></div>
+            <button class="x-clear-btn" onclick="clearXTarget()" title="Remove target">✕</button>
+          </div>
+          <input type="hidden" id="targetHandle">
+          <div class="x-api-note">Search to find and confirm the exact account before calling them out</div>
+        </div>
         <label class="fl">🔥 Crash-Out Mode</label>
         <select class="ds" id="crashMode" style="margin-bottom:18px">
           <option value="rage">⚡ The Great Rage</option>
@@ -654,7 +698,7 @@ async function submitCrashOut(){
     if(error)throw error;
     setTxS('writeTx','success',`✅ Sealed · TX: ${rc.transactionHash.slice(0,20)}...`);
     toast('Thy chronicle burns eternally! 🔥 Open the tweet modal to share it.','success');
-    document.getElementById('crashText').value='';document.getElementById('targetHandle').value='';document.getElementById('duelTarget').value='';updateCC();refreshBal();loadStats();
+    document.getElementById('crashText').value='';document.getElementById('targetHandle').value='';document.getElementById('duelTarget').value='';document.getElementById('xSearchInput').value='';clearXTarget();updateCC();refreshBal();loadStats();
     // auto-open tweet modal for the new chronicle
     setTimeout(()=>{
       db.from('chronicles').select('*').eq('tx_hash',rc.transactionHash).single().then(({data:nc})=>{
@@ -766,27 +810,29 @@ function buildTweetPreviews(c){
   const target = c.target_handle || null;
   const name   = c.chronicle_name || 'An Anonymous Degen';
   const modeLabel = {rage:'Great Rage',betrayal:'Betrayal',rug:'Rug Pull',fud:'FUD Dispelled',alpha:'Alpha Drop',degen:'Degen Energy'}[c.crash_mode]||'Chronicle';
-  // truncate text to leave room for handles and link
-  const shortText = c.crash_text.length > 180 ? c.crash_text.slice(0,177)+'...' : c.crash_text;
-  const shortTextXS = c.crash_text.length > 130 ? c.crash_text.slice(0,127)+'...' : c.crash_text;
+  // deep link to the specific chronicle — avaxchronicles.xyz/?c=ID
+  const deepLink = `avaxchronicles.xyz/?c=${c.id}`;
+  // truncate text to fit within 280 after link and handles
+  const shortText   = c.crash_text.length > 160 ? c.crash_text.slice(0,157)+'...' : c.crash_text;
+  const shortTextXS = c.crash_text.length > 120 ? c.crash_text.slice(0,117)+'...' : c.crash_text;
 
-  // PROJECT account post — tagging the target
+  // PROJECT account post — from @avaxchronicles_, tags the target
   const projectTweet = target
-    ? `🔥 NEW CHRONICLE SEALED ON-CHAIN\n\n${target} just got called out by ${name} in a ${modeLabel} Chronicle.\n\n"${shortText}"\n\n${(c.burn_amount||0.001)} AVAX burned forever 🔥\n\n👉 avaxchronicles.xyz\n\n#AVAX #AVAXChronicles #Avalanche`
-    : `🔥 NEW CHRONICLE SEALED ON-CHAIN\n\n${name} just dropped a ${modeLabel} Chronicle on the dungeon ledger.\n\n"${shortText}"\n\n${(c.burn_amount||0.001)} AVAX burned forever 🔥\n\n👉 avaxchronicles.xyz\n\n#AVAX #AVAXChronicles #Avalanche`;
+    ? `🔥 NEW CHRONICLE SEALED ON-CHAIN\n\n${target} just got called out in a ${modeLabel} Chronicle 👇\n\n"${shortText}"\n\n${(c.burn_amount||0.001)} AVAX burned to the dead address forever 🔥\n\n👉 ${deepLink}\n\n#AVAX #AVAXChronicles #Avalanche`
+    : `🔥 NEW CHRONICLE SEALED ON-CHAIN\n\n${name} just dropped a ${modeLabel} Chronicle on the dungeon ledger 👇\n\n"${shortText}"\n\n${(c.burn_amount||0.001)} AVAX burned forever 🔥\n\n👉 ${deepLink}\n\n#AVAX #AVAXChronicles #Avalanche`;
 
-  // USER self-post — they tag the target themselves
+  // USER self-post — tags @avaxchronicles_ and the target, deep link
   const userTweet = target
-    ? `I just crashed out on ${target} and burned it on-chain forever 🔥\n\n"${shortTextXS}"\n\nSealed on @AVAXChronicles — the eternal dungeon ledger.\n\n👉 avaxchronicles.xyz\n\n#AVAX #CrashOut #Avalanche`
-    : `I just sealed a Chronicle on-chain and it burns forever 🔥\n\n"${shortTextXS}"\n\nDrop yours on @AVAXChronicles — the eternal dungeon ledger.\n\n👉 avaxchronicles.xyz\n\n#AVAX #CrashOut #Avalanche`;
+    ? `I just crashed out on ${target} and burned it on Avalanche forever 🔥\n\n"${shortTextXS}"\n\nSealed on @avaxchronicles_ — the eternal dungeon ledger.\n\nRead it: ${deepLink}\n\n#AVAX #CrashOut #Avalanche`
+    : `I just sealed a Chronicle on-chain and it burns forever 🔥\n\n"${shortTextXS}"\n\nDrop yours on @avaxchronicles_ — the eternal dungeon ledger.\n\n👉 ${deepLink}\n\n#AVAX #CrashOut #Avalanche`;
 
   document.getElementById('tweetProjectText').textContent = projectTweet;
   document.getElementById('tweetUserText').textContent    = userTweet;
 
   const pc = projectTweet.length, uc = userTweet.length;
-  document.getElementById('tweetProjectCount').textContent = `${pc} characters ${pc>280?'⚠ over X limit — trim the quote':pc>260?'— close to limit':'✓ good'}`;
+  document.getElementById('tweetProjectCount').textContent = `${pc} chars ${pc>280?'⚠ OVER 280 — shorten the quote':pc>260?'⚠ close to limit':'✓ good to post'}`;
   document.getElementById('tweetProjectCount').className = 'tweet-char-count' + (pc>280?' over':'');
-  document.getElementById('tweetUserCount').textContent = `${uc} characters ${uc>280?'⚠ over X limit — trim the quote':uc>260?'— close to limit':'✓ good'}`;
+  document.getElementById('tweetUserCount').textContent = `${uc} chars ${uc>280?'⚠ OVER 280 — shorten the quote':uc>260?'⚠ close to limit':'✓ good to post'}`;
   document.getElementById('tweetUserCount').className = 'tweet-char-count' + (uc>280?' over':'');
 }
 
@@ -906,9 +952,167 @@ function spawnFire(){
   }
 }
 
+// ── X USER SEARCH ──
+const X_BEARER = 'AAAAAAAAAAAAAAAAAAAAAACcF7wEAAAAAXHYlfu%2F3ZQuRqOwUk%2FBzN79sPp8%3DnVUZYMO06MC4aDYBRLrLNFLfF7ZL8NvA7KCLAd3yB2KpNKxQz7';
+let xSearchTimer = null;
+let xSelectedUser = null;
+
+function onXSearchInput(){
+  clearTimeout(xSearchTimer);
+  const val = document.getElementById('xSearchInput').value.trim();
+  if(!val){ closeXResults(); return; }
+  xSearchTimer = setTimeout(()=>doXSearch(), 600);
+}
+
+async function doXSearch(){
+  const q = document.getElementById('xSearchInput').value.trim().replace(/^@/,'');
+  if(!q) return;
+  const res = document.getElementById('xResults');
+  res.style.display = 'block';
+  res.innerHTML = '<div class="x-searching">🔍 Searching the dungeon records...</div>';
+
+  try{
+    // Use a CORS proxy since X API doesn't allow direct browser calls
+    const url = `https://api.twitter.com/2/users/by/username/${encodeURIComponent(q)}?user.fields=name,username,description,profile_image_url,verified,public_metrics`;
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const resp = await fetch(proxyUrl,{
+      headers:{ Authorization:`Bearer ${X_BEARER}` }
+    });
+    if(!resp.ok) throw new Error('API error '+resp.status);
+    const json = await resp.json();
+
+    if(json.data){
+      // Single exact match by username
+      showXResults([json.data]);
+    } else {
+      // Try search endpoint as fallback
+      const searchUrl = `https://api.twitter.com/2/users/search?query=${encodeURIComponent(q)}&user.fields=name,username,description,profile_image_url,verified,public_metrics&max_results=5`;
+      const proxySearch = `https://corsproxy.io/?${encodeURIComponent(searchUrl)}`;
+      const resp2 = await fetch(proxySearch,{ headers:{ Authorization:`Bearer ${X_BEARER}` } });
+      const json2 = await resp2.json();
+      if(json2.data?.length){ showXResults(json2.data); }
+      else{ res.innerHTML = '<div class="x-no-results">No account found — check the spelling</div>'; }
+    }
+  }catch(err){
+    // Fallback: if CORS/API fails, let user manually confirm
+    res.innerHTML = `<div class="x-no-results">
+      <div style="margin-bottom:8px">Could not reach X API from browser — enter the handle manually:</div>
+      <div class="x-result-item" onclick="selectXManual('@${esc(document.getElementById('xSearchInput').value.trim().replace(/^@/,''))}')">
+        <div class="x-avatar">🐦</div>
+        <div class="x-info">
+          <div class="x-name">@${esc(document.getElementById('xSearchInput').value.trim().replace(/^@/,''))}</div>
+          <div class="x-bio">Click to select this handle unverified</div>
+        </div>
+      </div>
+    </div>`;
+  }
+}
+
+function showXResults(users){
+  const res = document.getElementById('xResults');
+  if(!users.length){ res.innerHTML='<div class="x-no-results">No results found</div>'; return; }
+  res.innerHTML = users.map(u=>{
+    const avatar = u.profile_image_url ? u.profile_image_url.replace('_normal','_bigger') : '';
+    const followers = u.public_metrics?.followers_count ? `${(u.public_metrics.followers_count/1000).toFixed(1)}K followers` : '';
+    const safeU = JSON.stringify(u).replace(/'/g,"\\'");
+    return `<div class="x-result-item" onclick='selectXUser(${safeU})'>
+      <div class="x-avatar">${avatar?`<img src="${avatar}" alt="">`:'🐦'}</div>
+      <div class="x-info">
+        <div class="x-name">${esc(u.name||'')} ${u.verified?'✓':''}</div>
+        <div class="x-handle">@${esc(u.username||'')}</div>
+        <div class="x-bio">${esc((u.description||'').slice(0,60))}${followers?` · ${followers}`:''}</div>
+      </div>
+      <div class="x-verify">${u.verified?'✅':'🐦'}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectXUser(u){
+  xSelectedUser = u;
+  document.getElementById('targetHandle').value = '@'+u.username;
+  document.getElementById('xSearchInput').value = '@'+u.username;
+  closeXResults();
+
+  // show selected chip
+  const chip = document.getElementById('xSelectedChip');
+  chip.classList.add('show');
+  document.getElementById('xSelName').textContent = u.name || u.username;
+  document.getElementById('xSelHandle').textContent = '@'+u.username;
+  const av = document.getElementById('xSelAvatar');
+  if(u.profile_image_url){ av.src = u.profile_image_url.replace('_normal','_bigger'); av.style.display='block'; }
+  else{ av.style.display='none'; }
+  toast(`✓ Target confirmed: @${u.username}`,'success');
+}
+
+function selectXManual(handle){
+  document.getElementById('targetHandle').value = handle;
+  document.getElementById('xSearchInput').value = handle;
+  closeXResults();
+  const chip = document.getElementById('xSelectedChip');
+  chip.classList.add('show');
+  document.getElementById('xSelName').textContent = handle;
+  document.getElementById('xSelHandle').textContent = '(unverified — manually entered)';
+  document.getElementById('xSelAvatar').style.display='none';
+  toast('Handle set (unverified)','');
+}
+
+function clearXTarget(){
+  xSelectedUser = null;
+  document.getElementById('targetHandle').value = '';
+  document.getElementById('xSearchInput').value = '';
+  document.getElementById('xSelectedChip').classList.remove('show');
+}
+
+function closeXResults(){
+  document.getElementById('xResults').style.display='none';
+}
+
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.x-search-wrap')) closeXResults();
+});
+
+// ── DEEP LINK ROUTER ──
+// Handles avaxchronicles.xyz/?c=CHRONICLE_ID
+// Opens the feed tab and scrolls/highlights the specific chronicle
+async function handleDeepLink(){
+  const params = new URLSearchParams(window.location.search);
+  const chronicleId = params.get('c');
+  if(!chronicleId) return;
+
+  // Switch to feed
+  sw('feed');
+
+  // Load the specific chronicle and jump to it
+  try{
+    const{data:c, error} = await db.from('chronicles').select('*').eq('id', chronicleId).single();
+    if(error || !c){ toast('Chronicle not found in the dungeon','error'); return; }
+
+    // Render it highlighted at the top
+    const card = mkCard(c);
+    const container = document.getElementById('feedContainer');
+    container.innerHTML = `
+      <div style="font-family:'Cinzel',serif;font-size:0.62rem;letter-spacing:2px;color:var(--white-ghost);text-align:center;margin-bottom:12px;text-transform:uppercase;">
+        📌 Direct Chronicle Link
+        <button onclick="loadFeed()" style="margin-left:10px;background:none;border:1px solid rgba(255,255,255,0.15);color:var(--white-ghost);font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:1px;padding:3px 10px;cursor:pointer;text-transform:uppercase;">View Full Feed</button>
+      </div>
+      ${card}
+    `;
+    // Highlight the card
+    setTimeout(()=>{
+      const el = container.querySelector('.ci');
+      if(el){ el.classList.add('chronicle-direct'); el.scrollIntoView({behavior:'smooth', block:'center'}); }
+    }, 200);
+
+    // Clean URL without reloading
+    window.history.replaceState({}, '', window.location.pathname);
+  }catch(e){ toast('Failed to load direct chronicle','error'); }
+}
+
 spawnFire();
 initWallet();
 loadStats();
+// Run deep link check after wallet loads
+setTimeout(handleDeepLink, 800);
 </script>
 </body>
 </html>
