@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AVAX Chronicles — The Eternal Dungeon Ledger</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -57,13 +57,14 @@
   }
 
   .site-title{
-    font-family:'UnifrakturMaguntia',cursive;
-    font-size:clamp(2.6rem,7vw,5rem);
+    font-family:'Cinzel Decorative',cursive;
+    font-size:clamp(1.8rem,5vw,3.8rem);
+    font-weight:900;
     color:var(--white);
-    text-shadow:0 0 12px rgba(255,20,20,0.95),0 0 35px rgba(204,0,0,0.75),0 0 70px rgba(204,0,0,0.4),3px 3px 0 rgba(120,0,0,0.8),5px 5px 0 rgba(0,0,0,0.7);
-    letter-spacing:5px;
+    text-shadow:0 0 12px rgba(255,20,20,0.95),0 0 35px rgba(204,0,0,0.75),0 0 70px rgba(204,0,0,0.4),2px 2px 0 rgba(120,0,0,0.8),4px 4px 0 rgba(0,0,0,0.7);
+    letter-spacing:4px;
     animation:titleFlicker 3.5s ease-in-out infinite alternate;
-    line-height:1;
+    line-height:1.1;
   }
   @keyframes titleFlicker{
     from{text-shadow:0 0 12px rgba(255,20,20,0.95),0 0 35px rgba(204,0,0,0.75),3px 3px 0 rgba(120,0,0,0.8),5px 5px 0 rgba(0,0,0,0.7);}
@@ -250,7 +251,17 @@
   .sr-row{display:flex;gap:8px;margin-bottom:16px;}
   .sr-row .di{margin-bottom:0;flex:1;}
   ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:#000;}::-webkit-scrollbar-thumb{background:var(--red-deep);}::-webkit-scrollbar-thumb:hover{background:var(--red);}
-  @media(max-width:580px){.dp-inner,.ci-inn{padding:14px;}.tier-grid{grid-template-columns:1fr;}.modal-d{padding:22px 16px;}.site-title{font-size:2.4rem;}}
+  @media(max-width:580px){.dp-inner,.ci-inn{padding:14px;}.tier-grid{grid-template-columns:1fr;}.modal-d{padding:22px 16px;}.site-title{font-size:1.6rem;}}
+
+  /* HOW IT WORKS */
+  .hiw-block{display:flex;gap:18px;align-items:flex-start;padding:18px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .hiw-block:last-child{border-bottom:none;padding-bottom:0;}
+  .hiw-num{font-family:'Cinzel Decorative',cursive;font-size:1.3rem;color:var(--red);min-width:36px;text-align:center;line-height:1;text-shadow:0 0 10px rgba(204,0,0,0.6);flex-shrink:0;padding-top:2px;}
+  .hiw-content{flex:1;}
+  .hiw-title{font-family:'Cinzel',serif;font-size:0.82rem;letter-spacing:1.5px;color:var(--white);margin-bottom:8px;text-transform:uppercase;}
+  .hiw-text{font-family:'IM Fell English',serif;font-size:0.92rem;line-height:1.75;color:var(--white-fade);}
+  .hiw-text strong{color:var(--white-dim);font-style:normal;}
+  .hiw-text em{color:var(--red-bright);}
 </style>
 </head>
 <body>
@@ -291,6 +302,7 @@
   <button class="tab-btn" onclick="sw('fame')">⚜ Wall of Fame</button>
   <button class="tab-btn" onclick="sw('wanted')">💀 Most Wanted</button>
   <button class="tab-btn" onclick="sw('archives')">🗄 Archives</button>
+  <button class="tab-btn" onclick="sw('howto')">📖 How It Works</button>
 </nav>
 
 <!-- MAIN -->
@@ -400,6 +412,87 @@
     </div></div>
   </div>
 
+  <!-- HOW IT WORKS -->
+  <div id="tab-howto" class="tab-content">
+    <div class="dp"><div class="dp-inner">
+      <div class="sec-title">📖 How It Works</div>
+      <div class="sec-sub">Everything thou needest to know about the Dungeon Ledger</div>
+
+      <div class="hiw-block">
+        <div class="hiw-num">I</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Thy Anonymous Vault is Auto-Generated</div>
+          <div class="hiw-text">The moment you open AVAX Chronicles, a fresh wallet is conjured for you automatically and stored in your browser's local storage. No sign-up. No email. No identity. It survives page reloads and return visits. Your wallet address becomes your anonymous identity on the ledger — and from it, your unique <strong>Chronicle Name</strong> is derived (e.g. <em>Scorned Degen of the Flame</em>).</div>
+        </div>
+      </div>
+
+      <div class="hiw-block">
+        <div class="hiw-num">II</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Deposit AVAX to Your Vault</div>
+          <div class="hiw-text">Open the <strong>Manage Vault</strong> panel (top of screen) and copy your wallet address. Send AVAX to it from any exchange or wallet — Coinbase, MetaMask, Binance, wherever. Your balance refreshes automatically every 15 seconds. You need at least <strong>0.002 AVAX</strong> to start sealing chronicles, voting, and reacting.</div>
+        </div>
+      </div>
+
+      <div class="hiw-block">
+        <div class="hiw-num">III</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Write Thy Chronicle — Crash Out Freely</div>
+          <div class="hiw-text">Go to <strong>Write Chronicle</strong>. Drop the @handle of whoever you're calling out (optional), pick a Crash-Out Mode (Rage, Betrayal, Rug Pull, FUD, Alpha, or Pure Degen), and write your truth — up to 1000 characters. You can also link to an existing Chronicle UUID to create a <strong>Duel</strong> — a side-by-side confrontation on the ledger.</div>
+        </div>
+      </div>
+
+      <div class="hiw-block">
+        <div class="hiw-num">IV</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Choose Thy Tier — Then Seal & Burn Forever</div>
+          <div class="hiw-text">Two tiers available: <strong>Standard Chronicle</strong> burns 0.001 AVAX to the dead address on Avalanche C-Chain — eternal and humble. <strong>Grand Chronicle</strong> burns 0.01 AVAX and gets a pinned golden treatment at the top of the feed for 24 hours. Once sealed, the burn transaction is irreversible and your chronicle is inscribed into both the blockchain and the dungeon ledger forever. No edits. No deletions.</div>
+        </div>
+      </div>
+
+      <div class="hiw-block">
+        <div class="hiw-num">V</div>
+        <div class="hiw-content">
+          <div class="hiw-title">The Community Votes — With Real AVAX</div>
+          <div class="hiw-text">Every upvote (▲) and downvote (▼) costs <strong>0.001 AVAX</strong> burned to the dead address. This means community sentiment has real financial weight — no spam, no bots, no fake engagement. You can only vote once per chronicle. Reactions — the 🔴 Wax Seal, 🦅 Raven, and 🔥 Torch — also cost 0.001 AVAX each and can only be sent once per chronicle per wallet.</div>
+        </div>
+      </div>
+
+      <div class="hiw-block">
+        <div class="hiw-num">VI</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Heat Score — What Makes Chronicles Rise</div>
+          <div class="hiw-text">Each chronicle has a <strong>Heat Score</strong> calculated from: (upvotes × 2) minus downvotes plus all reactions. Hot chronicles rise to the top of the feed. Heat decays over time so fresh chronicles can always challenge for dominance. Chronicles live on the hot feed for <strong>48 hours</strong> before moving to the Archives — but they remain searchable and readable forever.</div>
+        </div>
+      </div>
+
+      <div class="hiw-block">
+        <div class="hiw-num">VII</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Wall of Shame, Wall of Fame & Most Wanted</div>
+          <div class="hiw-text"><strong>Wall of Shame</strong> shows the most downvoted chronicles — the community's condemned. <strong>Wall of Fame</strong> shows the most upvoted legends. <strong>Most Wanted</strong> tracks which X handles have been called out the most times across all chronicles — the dungeon's permanent hit list.</div>
+        </div>
+      </div>
+
+      <div class="hiw-block">
+        <div class="hiw-num">VIII</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Export & Protect Thy Vault</div>
+          <div class="hiw-text">Your private key lives in your browser's local storage. Go to <strong>Manage Vault</strong> to export a JSON key file or copy the private key — store it somewhere safe offline. If you clear your browser data without backing up your key, thy vault is lost forever. You can import this key into MetaMask or any EVM wallet to send AVAX back out if needed. Each device generates its own vault — your key does not sync across devices automatically.</div>
+        </div>
+      </div>
+
+      <div class="hiw-block">
+        <div class="hiw-num">IX</div>
+        <div class="hiw-content">
+          <div class="hiw-title">Copy Tweet — The Project Posts For You</div>
+          <div class="hiw-text">Every chronicle has a <strong>Copy Tweet</strong> button that formats a ready-to-post message: who challenged who, the first 140 characters of the crash-out, and the link. The AVAX Chronicles project account reviews these in Supabase and posts the spiciest ones manually — so the community sees thy wrath on X without any auto-posting or bots.</div>
+        </div>
+      </div>
+
+    </div></div>
+  </div>
+
 </main>
 
 <!-- WALLET MODAL -->
@@ -436,13 +529,6 @@
       <button class="btn-fire" onclick="withdrawAVAX()">WITHDRAW</button>
     </div>
     <div class="txs" id="walletTx"></div>
-    <div class="m-div"></div>
-    <div class="m-sec">⚠ Import Existing Wallet</div>
-    <div class="avax-note" style="margin-bottom:9px">This replaces your current wallet. Export first.</div>
-    <div class="amt-row">
-      <input class="di" id="importKey" type="password" placeholder="Private key 0x..." style="margin-bottom:0">
-      <button class="btn-rg" onclick="importWallet()">IMPORT</button>
-    </div>
   </div>
 </div>
 
@@ -489,12 +575,6 @@ function exportVault(){
   const d=JSON.stringify({address:addr,privateKey:pk,chronicleName:makeName(addr),network:'Avalanche C-Chain (43114)',rpc:AVAX_RPC,warning:'NEVER share. Import via MetaMask using privateKey field.'},null,2);
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d],{type:'application/json'}));a.download=`avax-chronicles-vault-${addr.slice(0,10)}.json`;a.click();
   toast('Vault exported 🔐','success');
-}
-function importWallet(){
-  const pk=document.getElementById('importKey').value.trim();if(!pk)return;
-  if(!confirm('Replace wallet? Export your key first.'))return;
-  try{new ethers.Wallet(pk);localStorage.setItem('avax_chron_pk',pk);loadWallet(pk);document.getElementById('importKey').value='';toast('New vault loaded!','success');}
-  catch(e){toast('Invalid key — dungeon rejects it','error');}
 }
 async function withdrawAVAX(){
   const to=document.getElementById('withdrawAddr').value.trim(),amt=document.getElementById('withdrawAmt').value;
@@ -676,7 +756,7 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))closeModal(e.target.id);});
 
-const TABS=['write','feed','wall','fame','wanted','archives'];
+const TABS=['write','feed','wall','fame','wanted','archives','howto'];
 function sw(name){
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',TABS[i]===name));
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
