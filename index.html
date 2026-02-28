@@ -3,31 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fuji Flip - Head or Tails</title>
+    <title>Fuji Flip - Premium Head or Tails</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
         
         body {
-            font-family: 'Space+Grotesk', sans-serif;
-            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #020617;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
             color: white;
             min-height: 100vh;
         }
 
         .glass {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        /* 3D Coin Styling */
         .coin-container {
             perspective: 1000px;
-            width: 160px;
-            height: 160px;
-            margin: 2rem auto;
+            width: 140px;
+            height: 140px;
+            margin: 1.5rem auto;
         }
 
         #coin {
@@ -46,105 +49,146 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3rem;
+            font-size: 2.5rem;
+            font-weight: 800;
             backface-visibility: hidden;
-            border: 6px solid #fbbf24;
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+            border: 4px solid #fbbf24;
         }
 
         .heads {
-            background: linear-gradient(45deg, #f59e0b, #fbbf24);
+            background: linear-gradient(135deg, #fbbf24, #d97706);
             color: #451a03;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 0 30px rgba(251, 191, 36, 0.4);
         }
 
         .tails {
-            background: linear-gradient(45deg, #78350f, #f59e0b);
+            background: linear-gradient(135deg, #f59e0b, #b45309);
             color: #451a03;
             transform: rotateY(180deg);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 0 30px rgba(180, 83, 9, 0.4);
         }
 
-        /* Animation classes */
-        .flipping-heads { transform: rotateY(1800deg); } /* 5 full spins + land on heads */
-        .flipping-tails { transform: rotateY(1980deg); } /* 5.5 spins + land on tails */
+        .flipping-heads { transform: rotateY(1800deg); }
+        .flipping-tails { transform: rotateY(1980deg); }
 
-        .btn-primary {
-            background: linear-gradient(to right, #6366f1, #a855f7);
-            transition: all 0.2s;
+        .btn-grad {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            transition: all 0.3s ease;
         }
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.4);
+        .btn-grad:hover:not(:disabled) {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(168, 85, 247, 0.5);
         }
-        .btn-primary:active { transform: translateY(0); }
+
+        .recent-item {
+            animation: slideIn 0.3s ease-out;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
     </style>
 </head>
-<body class="p-4 md:p-8 flex items-center justify-center">
+<body class="p-4 flex items-center justify-center">
 
-    <div class="max-w-md w-full glass rounded-3xl p-8 space-y-6">
-        <!-- Header -->
-        <div class="text-center">
-            <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
-                FUJI FLIP
-            </h1>
-            <p class="text-slate-400 text-sm mt-1">Double your USDC on Avalanche Fuji</p>
-        </div>
-
-        <!-- Connection State -->
-        <div id="connectionBox" class="text-center py-2">
-            <button id="connectBtn" class="btn-primary w-full py-3 rounded-xl font-bold">
-                Connect Wallet
+    <div class="max-w-md w-full glass rounded-[2.5rem] overflow-hidden">
+        <!-- Top Bar / Logout -->
+        <div id="topBar" class="hidden px-6 pt-6 flex justify-between items-center">
+            <div class="flex flex-col">
+                <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Account</span>
+                <span id="accountMini" class="text-xs font-mono text-indigo-300">0x...</span>
+            </div>
+            <button onclick="logout()" class="text-[10px] bg-white/5 hover:bg-red-500/20 hover:text-red-400 transition-colors px-3 py-1.5 rounded-full border border-white/10 uppercase font-bold tracking-tighter">
+                Logout
             </button>
-            <p id="accountDisplay" class="hidden text-xs text-slate-400 mt-2 truncate"></p>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white/5 p-3 rounded-2xl border border-white/5">
-                <p class="text-xs text-slate-400 uppercase tracking-wider">Your USDC</p>
-                <p id="userBalance" class="text-xl font-bold">0.00</p>
-            </div>
-            <div class="bg-white/5 p-3 rounded-2xl border border-white/5">
-                <p class="text-xs text-slate-400 uppercase tracking-wider">House Pool</p>
-                <p id="houseBalance" class="text-xl font-bold">0.00</p>
-            </div>
-        </div>
-
-        <!-- Coin Display -->
-        <div class="coin-container">
-            <div id="coin">
-                <div class="side heads">H</div>
-                <div class="side tails">T</div>
-            </div>
-        </div>
-
-        <!-- Betting Controls -->
-        <div class="space-y-4">
-            <div>
-                <label class="block text-xs text-slate-400 mb-2 px-1">BET AMOUNT (USDC)</label>
-                <input type="number" id="betAmount" value="1" min="1" step="1" 
-                    class="w-full bg-black/20 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:border-indigo-500 transition-colors">
+        <div class="p-8 pt-4 space-y-6">
+            <!-- Header -->
+            <div class="text-center space-y-1">
+                <h1 class="text-4xl font-extrabold tracking-tighter italic">
+                    <span class="text-white">FUJI</span><span class="text-indigo-500">FLIP</span>
+                </h1>
+                <div id="pnlBadge" class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+                    PnL: +$0.00
+                </div>
             </div>
 
-            <div class="flex gap-4">
-                <button onclick="play(true)" id="headsBtn" class="flex-1 glass hover:bg-white/10 py-4 rounded-xl font-bold border-yellow-500/30">
-                    HEADS
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-black/20 p-4 rounded-2xl border border-white/5">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Your USDC</p>
+                    <p id="userBalance" class="text-xl font-bold tracking-tight">0.00</p>
+                </div>
+                <div class="bg-black/20 p-4 rounded-2xl border border-white/5">
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">House</p>
+                    <p id="houseBalance" class="text-xl font-bold tracking-tight">0.00</p>
+                </div>
+            </div>
+
+            <!-- Coin -->
+            <div class="coin-container">
+                <div id="coin">
+                    <div class="side heads">H</div>
+                    <div class="side tails">T</div>
+                </div>
+            </div>
+
+            <!-- Interaction Area -->
+            <div id="loginView" class="py-4">
+                <button id="connectBtn" class="btn-grad w-full py-4 rounded-2xl font-bold text-lg shadow-xl">
+                    Connect Wallet
                 </button>
-                <button onclick="play(false)" id="tailsBtn" class="flex-1 glass hover:bg-white/10 py-4 rounded-xl font-bold border-amber-800/30">
-                    TAILS
-                </button>
+            </div>
+
+            <div id="gameView" class="hidden space-y-5">
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                        <span class="text-slate-500 font-bold text-sm">$</span>
+                    </div>
+                    <input type="number" id="betAmount" value="5" min="1"
+                        class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-8 pr-4 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="play(true)" id="headsBtn" class="flex-1 bg-white/5 hover:bg-yellow-500/10 border border-white/10 hover:border-yellow-500/50 py-4 rounded-2xl font-bold transition-all">
+                        HEADS
+                    </button>
+                    <button onclick="play(false)" id="tailsBtn" class="flex-1 bg-white/5 hover:bg-orange-500/10 border border-white/10 hover:border-orange-500/50 py-4 rounded-2xl font-bold transition-all">
+                        TAILS
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div id="status" class="text-center text-xs font-semibold text-slate-400 h-4">Connect to start playing</div>
+
+            <!-- Recents -->
+            <div class="pt-2">
+                <h3 class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                    Recent Activity
+                </h3>
+                <div id="recentList" class="space-y-2 max-h-32 overflow-y-auto pr-2 text-[11px]">
+                    <div class="text-center text-slate-600 py-4 italic">No games yet...</div>
+                </div>
             </div>
         </div>
-
-        <!-- Status Message -->
-        <div id="status" class="text-center text-sm font-medium h-6 text-indigo-400"></div>
     </div>
 
     <script>
         const CONTRACT_ADDRESS = "0x26fa6Ec43d17D0D31FBee5fb3167229322116687";
         const USDC_ADDRESS = "0x5425890298aed601595a70AB815c96711a31Bc65";
-        const FUJI_CHAIN_ID = "0xa869"; // 43113
+        const FUJI_CHAIN_ID = "0xa869";
 
         let provider, signer, contract, usdcContract;
+        let totalPnL = 0;
+
         const abi = [
             "function flipCoin(uint256 _amount, bool _choice) external",
             "function getContractBalance() external view returns (uint256)",
@@ -160,14 +204,15 @@
             if (window.ethereum) {
                 provider = new ethers.BrowserProvider(window.ethereum);
                 document.getElementById('connectBtn').addEventListener('click', connect);
-            } else {
-                showStatus("Please install MetaMask!");
+                
+                // Check if already connected
+                const accounts = await provider.listAccounts();
+                if (accounts.length > 0) connect();
             }
         }
 
         async function connect() {
             try {
-                // Check/Switch Network
                 const chainId = await window.ethereum.request({ method: 'eth_chainId' });
                 if (chainId !== FUJI_CHAIN_ID) {
                     await window.ethereum.request({
@@ -182,91 +227,135 @@
                 contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
                 usdcContract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
 
-                document.getElementById('connectBtn').classList.add('hidden');
-                document.getElementById('accountDisplay').classList.remove('hidden');
-                document.getElementById('accountDisplay').innerText = `Connected: ${accounts[0]}`;
+                // UI Swap
+                document.getElementById('loginView').classList.add('hidden');
+                document.getElementById('gameView').classList.remove('hidden');
+                document.getElementById('topBar').classList.remove('hidden');
+                document.getElementById('accountMini').innerText = `${accounts[0].substring(0,6)}...${accounts[0].substring(38)}`;
                 
                 updateBalances();
-                showStatus("Ready to flip!");
+                fetchHistory();
+                showStatus("Ready for action");
             } catch (err) {
-                console.error(err);
-                showStatus("Connection failed.");
+                showStatus("Connection failed");
             }
+        }
+
+        function logout() {
+            signer = null;
+            document.getElementById('loginView').classList.remove('hidden');
+            document.getElementById('gameView').classList.add('hidden');
+            document.getElementById('topBar').classList.add('hidden');
+            showStatus("Disconnected");
         }
 
         async function updateBalances() {
             if (!signer) return;
             try {
-                const userAddr = await signer.getAddress();
-                const userBal = await usdcContract.balanceOf(userAddr);
-                const houseBal = await usdcContract.balanceOf(CONTRACT_ADDRESS);
+                const addr = await signer.getAddress();
+                const uBal = await usdcContract.balanceOf(addr);
+                const hBal = await usdcContract.balanceOf(CONTRACT_ADDRESS);
+                document.getElementById('userBalance').innerText = parseFloat(ethers.formatUnits(uBal, 6)).toFixed(2);
+                document.getElementById('houseBalance').innerText = parseFloat(ethers.formatUnits(hBal, 6)).toFixed(2);
+            } catch (e) {}
+        }
+
+        async function fetchHistory() {
+            try {
+                // Get events from the last 1000 blocks
+                const filter = contract.filters.BetPlaced();
+                const events = await contract.queryFilter(filter, -1000);
+                const list = document.getElementById('recentList');
+                list.innerHTML = '';
                 
-                document.getElementById('userBalance').innerText = ethers.formatUnits(userBal, 6);
-                document.getElementById('houseBalance').innerText = ethers.formatUnits(houseBal, 6);
-            } catch (err) {
-                console.error("Balance error:", err);
+                events.reverse().slice(0, 10).forEach(ev => addHistoryItem(ev.args));
+            } catch (e) {
+                console.error("History error", e);
             }
+        }
+
+        function addHistoryItem(args) {
+            const list = document.getElementById('recentList');
+            const item = document.createElement('div');
+            item.className = 'recent-item flex justify-between items-center py-2';
+            
+            const amt = ethers.formatUnits(args.amount, 6);
+            const side = args.choice ? "Heads" : "Tails";
+            const won = args.won;
+            
+            item.innerHTML = `
+                <div class="flex flex-col">
+                    <span class="text-white font-semibold">${args.player.substring(0,6)}...</span>
+                    <span class="text-slate-500">Bet ${side}</span>
+                </div>
+                <div class="text-right">
+                    <span class="font-bold ${won ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${won ? '+' : '-'}$${amt}
+                    </span>
+                </div>
+            `;
+            list.prepend(item);
         }
 
         async function play(choice) {
             if (!signer) return connect();
             
-            const amountInput = document.getElementById('betAmount').value;
-            const amount = ethers.parseUnits(amountInput, 6);
+            const inputVal = document.getElementById('betAmount').value;
+            const amount = ethers.parseUnits(inputVal, 6);
             
             try {
                 setLoading(true);
-                showStatus("Checking allowance...");
+                showStatus("Authorizing...");
                 
-                // Check USDC Allowance
-                const userAddr = await signer.getAddress();
-                const allowance = await usdcContract.allowance(userAddr, CONTRACT_ADDRESS);
+                const addr = await signer.getAddress();
+                const allowance = await usdcContract.allowance(addr, CONTRACT_ADDRESS);
                 
                 if (allowance < amount) {
-                    showStatus("Approving USDC...");
                     const tx = await usdcContract.approve(CONTRACT_ADDRESS, ethers.MaxUint256);
                     await tx.wait();
                 }
 
-                showStatus("Waiting for flip...");
+                showStatus("Flipping coin...");
                 const tx = await contract.flipCoin(amount, choice);
                 
-                // Start generic animation while waiting for confirmation
+                // Generic spin start
                 const coin = document.getElementById('coin');
                 coin.style.transition = "transform 3s cubic-bezier(0.4, 0, 0.2, 1)";
                 
                 const receipt = await tx.wait();
                 
-                // Parse events to find result
-                // Using Interface to parse the receipt logs
                 const iface = new ethers.Interface(abi);
                 let won = false;
-                
                 receipt.logs.forEach(log => {
                     try {
                         const parsed = iface.parseLog(log);
-                        if (parsed.name === "BetPlaced") won = parsed.args.won;
+                        if (parsed.name === "BetPlaced") {
+                            won = parsed.args.won;
+                            addHistoryItem(parsed.args);
+                        }
                     } catch (e) {}
                 });
 
-                // Finalize Animation
-                // If choice was Heads (true) and won, result was Heads.
-                // If choice was Heads (true) and lost, result was Tails.
                 const resultIsHeads = (choice === won);
-                
-                coin.className = ''; // reset
-                void coin.offsetWidth; // trigger reflow
+                coin.className = '';
+                void coin.offsetWidth;
                 coin.classList.add(resultIsHeads ? 'flipping-heads' : 'flipping-tails');
 
+                // Update PnL
+                const val = parseFloat(inputVal);
+                totalPnL += won ? val : -val;
+                const pnlEl = document.getElementById('pnlBadge');
+                pnlEl.innerText = `PnL: ${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}`;
+                pnlEl.className = `inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${totalPnL >= 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`;
+
                 setTimeout(() => {
-                    showStatus(won ? "🎉 YOU WON!" : "💀 YOU LOST");
+                    showStatus(won ? "WINNER!" : "Bust...");
                     updateBalances();
                     setLoading(false);
                 }, 3000);
 
             } catch (err) {
-                console.error(err);
-                showStatus("Transaction failed.");
+                showStatus("Try again");
                 setLoading(false);
             }
         }
