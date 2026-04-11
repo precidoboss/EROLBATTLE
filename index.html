@@ -1,92 +1,419 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Grotto of Fates: Archeologist of the Void</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { margin: 0; overflow: hidden; background: #020205; font-family: 'Georgia', serif; }
-        #ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; color: #fff; }
-        #crosshair { 
-            position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; 
-            background: rgba(255,255,255,0.5); border-radius: 50%; 
-            transform: translate(-50%, -50%); 
-        }
-        canvas { display: block; }
-        .evidence-note {
-            background: rgba(30, 30, 45, 0.95);
-            border-left: 4px solid #fbbf24;
-            padding: 12px;
-            margin-bottom: 8px;
-            font-style: italic;
-            animation: slideIn 0.3s ease-out;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Grotto of Fates: Archeologist of the Void</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&family=Share+Tech+Mono&display=swap');
+
+* { box-sizing: border-box; }
+body { margin: 0; overflow: hidden; background: #020205; font-family: 'Crimson Pro', serif; }
+canvas { display: block; }
+
+#ui-overlay {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; color: #fff;
+}
+
+#crosshair {
+  position: absolute; top: 50%; left: 50%;
+  width: 18px; height: 18px;
+  transform: translate(-50%, -50%);
+}
+#crosshair::before, #crosshair::after {
+  content: ''; position: absolute; background: rgba(255,255,255,0.6);
+}
+#crosshair::before { width: 2px; height: 18px; left: 8px; top: 0; }
+#crosshair::after  { width: 18px; height: 2px; left: 0; top: 8px; }
+.crosshair-dot {
+  position: absolute; width: 4px; height: 4px;
+  background: rgba(255,200,50,0.9); border-radius: 50%;
+  top: 7px; left: 7px;
+}
+
+/* ─── JOURNAL ─── */
+#journal {
+  position: absolute; left: 14px; top: 14px; width: 290px;
+  pointer-events: auto;
+  background: linear-gradient(160deg,#0e0c09 0%,#1a160e 100%);
+  border: 1px solid #4a3a1a;
+  border-radius: 4px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+.journal-header {
+  background: linear-gradient(90deg,#2a1f0a,#1a160e);
+  padding: 10px 14px;
+  border-bottom: 1px solid #4a3a1a;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.journal-title {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  letter-spacing: 3px; color: #d4a84b; text-transform: uppercase;
+}
+.journal-level {
+  font-family: 'Share Tech Mono', monospace; font-size: 9px;
+  color: #7a6a4a; letter-spacing: 1px;
+}
+#notes-container {
+  max-height: 380px; overflow-y: auto;
+  padding: 10px 12px; scroll-behavior: smooth;
+}
+#notes-container::-webkit-scrollbar { width: 3px; }
+#notes-container::-webkit-scrollbar-thumb { background: #4a3a1a; }
+.evidence-note {
+  background: rgba(20,15,5,0.8);
+  border-left: 3px solid #d4a84b;
+  padding: 8px 10px; margin-bottom: 6px;
+  animation: noteSlide 0.3s ease-out;
+  border-radius: 0 3px 3px 0;
+}
+@keyframes noteSlide { from { transform:translateX(-10px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+.note-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; color: #d4a84b; margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+.note-text { font-size: 12px; color: #c8bfa0; line-height: 1.45; font-style: italic; }
+.empty-note { font-size: 12px; color: #4a4035; font-style: italic; text-align: center; padding: 20px 0; }
+
+.journal-footer {
+  padding: 8px 14px;
+  border-top: 1px solid #2a2010;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.tab-hint {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px; color: #5a5040; letter-spacing: 1px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+/* ─── WHITEBOARD ─── */
+#whiteboard-panel {
+  position: absolute; right: 14px; top: 14px; width: 300px;
+  pointer-events: auto;
+  background: #f5f0e8;
+  border: 6px solid #b8a060;
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px #6a5030, 0 10px 40px rgba(0,0,0,0.8), inset 0 0 10px rgba(0,0,0,0.05);
+  display: none;
+  flex-direction: column;
+}
+#whiteboard-panel.wb-visible { display: flex; }
+.wb-frame-top {
+  background: linear-gradient(90deg,#8a6030,#b8a060,#8a6030);
+  height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: 2px solid #6a5030;
+}
+.wb-title-text {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  letter-spacing: 3px; color: #f5f0e8; text-transform: uppercase;
+}
+.wb-board {
+  padding: 12px 14px;
+  min-height: 200px; max-height: 420px;
+  overflow-y: auto;
+  background: #eeeadf;
+  position: relative;
+}
+.wb-board::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(transparent, transparent 24px, rgba(100,150,200,0.12) 25px);
+  pointer-events: none;
+}
+.wb-clue-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-bottom: 10px;
+  animation: wbWrite 0.4s ease-out;
+}
+@keyframes wbWrite { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+.wb-bullet {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #2050c0; flex-shrink: 0; margin-top: 4px;
+}
+.wb-clue-text {
+  font-size: 12px; color: #1a2050;
+  line-height: 1.4; font-family: 'Crimson Pro', serif;
+  font-style: italic;
+}
+.wb-empty {
+  text-align: center; color: #9a9080; font-style: italic;
+  font-size: 12px; padding: 30px 0;
+}
+.wb-ledge {
+  background: linear-gradient(90deg,#8a6030,#c8a860,#8a6030);
+  height: 16px; border-top: 2px solid #6a5030;
+  position: relative;
+}
+.wb-leg { display: flex; justify-content: space-between; padding: 0 20px; }
+.wb-leg-bar {
+  width: 10px; height: 24px;
+  background: linear-gradient(90deg,#8a6030,#a87040);
+  border-radius: 0 0 3px 3px;
+}
+.wb-toggle-btn {
+  position: absolute; right: 14px; top: 14px;
+  background: rgba(10,8,5,0.85);
+  border: 1px solid #4a3a1a; border-radius: 3px;
+  padding: 7px 12px; cursor: pointer;
+  font-family: 'Cinzel', serif; font-size: 9px;
+  color: #d4a84b; letter-spacing: 2px; text-transform: uppercase;
+  pointer-events: auto;
+  transition: all 0.2s;
+}
+.wb-toggle-btn:hover { background: rgba(50,35,10,0.9); color: #f0c060; }
+
+/* ─── TIMER ─── */
+#timer-panel {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  background: rgba(5,3,2,0.92);
+  border: 1px solid #5a1a1a; border-radius: 4px;
+  padding: 10px 24px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(200,30,30,0.2);
+}
+.timer-label {
+  font-family: 'Cinzel', serif; font-size: 7px;
+  letter-spacing: 4px; color: #9a4444; text-transform: uppercase; margin-bottom: 4px;
+}
+#timer {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 32px; color: #ff4444; letter-spacing: 4px;
+  text-shadow: 0 0 20px rgba(255,50,50,0.5);
+}
+#timer.warning { color: #ff2222; animation: timerBlink 0.5s infinite; }
+@keyframes timerBlink { 50%{opacity:0.4} }
+
+/* ─── MESSAGE LOG ─── */
+#message-log {
+  position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
+  text-align: center; opacity: 0; transition: opacity 0.6s;
+  pointer-events: none; white-space: nowrap;
+}
+#log-text {
+  font-family: 'Cinzel', serif; font-size: 18px;
+  color: #ffd080;
+  text-shadow: 0 0 20px rgba(255,180,50,0.8), 0 0 40px rgba(255,120,0,0.4);
+  letter-spacing: 3px;
+}
+
+/* ─── INTERACT PROMPT ─── */
+#interact-prompt {
+  position: absolute; bottom: 160px; left: 50%; transform: translateX(-50%);
+  background: rgba(5,3,2,0.85);
+  border: 1px solid #4a3a1a; border-radius: 3px;
+  padding: 8px 18px;
+  font-family: 'Cinzel', serif; font-size: 10px;
+  letter-spacing: 2px; color: #d4a84b;
+  text-transform: uppercase;
+  opacity: 0; transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+/* ─── MENU ─── */
+#menu {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, #0a0806 0%, #020100 100%);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: auto;
+}
+#menu::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 60px,
+    rgba(80,60,20,0.04) 60px, rgba(80,60,20,0.04) 61px
+  );
+  pointer-events: none;
+}
+.menu-box {
+  max-width: 600px; width: 90%;
+  border: 1px solid #3a2a0a;
+  background: linear-gradient(160deg,#0e0b07 0%,#12100a 100%);
+  padding: 48px;
+  text-align: center;
+  box-shadow: 0 0 100px rgba(0,0,0,0.9), 0 0 0 1px rgba(80,60,20,0.3);
+  border-radius: 4px;
+}
+.menu-ornament {
+  font-family: 'Cinzel', serif; font-size: 10px;
+  letter-spacing: 8px; color: #5a4a1a; margin-bottom: 16px;
+}
+#menu-title {
+  font-family: 'Cinzel', serif; font-size: 42px; font-weight: 900;
+  color: #e8d49a; letter-spacing: -1px;
+  line-height: 1.1; margin-bottom: 8px;
+  text-shadow: 0 0 60px rgba(200,150,50,0.3);
+}
+.menu-subtitle {
+  font-family: 'Cinzel', serif; font-size: 11px;
+  letter-spacing: 5px; color: #8a6a2a; margin-bottom: 24px;
+  text-transform: uppercase;
+}
+#menu-desc {
+  font-size: 15px; color: #7a6a50; line-height: 1.7;
+  font-style: italic; margin-bottom: 32px;
+}
+.controls-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6px; margin-bottom: 32px;
+}
+.ctrl-item {
+  background: rgba(20,15,5,0.6);
+  border: 1px solid #2a2010;
+  padding: 10px 12px; border-radius: 3px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: #6a5a30; letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.ctrl-item span { color: #d4a84b; display: block; font-size: 9px; margin-bottom: 2px; }
+#start-btn {
+  width: 100%;
+  background: linear-gradient(90deg,#2a1a02,#4a3010,#2a1a02);
+  border: 1px solid #8a6030; border-radius: 3px;
+  color: #e8d090;
+  font-family: 'Cinzel', serif; font-size: 12px;
+  letter-spacing: 6px; text-transform: uppercase;
+  padding: 18px; cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 0 30px rgba(100,70,10,0.3);
+}
+#start-btn:hover {
+  background: linear-gradient(90deg,#4a3010,#6a4818,#4a3010);
+  box-shadow: 0 0 50px rgba(150,100,20,0.4);
+  color: #fff8e0;
+}
+
+/* ─── NPC DIALOGUE ─── */
+#npc-dialogue {
+  position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,6,3,0.95);
+  border: 1px solid #4a3a1a; border-radius: 4px;
+  padding: 16px 20px; max-width: 480px; width: 90%;
+  display: none; pointer-events: none;
+}
+.npc-name {
+  font-family: 'Cinzel', serif; font-size: 10px;
+  color: #d4a84b; letter-spacing: 3px; margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.npc-text {
+  font-size: 14px; color: #c0b090; line-height: 1.55;
+  font-style: italic;
+}
+.npc-close {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; color: #5a4a2a; margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+/* ─── HUD BOTTOM ─── */
+#hud-bottom {
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; align-items: center;
+}
+.hud-pip {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #2a2010; border: 1px solid #3a3020;
+  transition: all 0.3s;
+}
+.hud-pip.active { background: #d4a84b; box-shadow: 0 0 8px rgba(212,168,75,0.6); }
+</style>
 </head>
 <body>
 
 <div id="ui-overlay">
-    <div id="crosshair"></div>
-    
-    <!-- Left: Evidence Board -->
-    <div id="evidence-board" class="absolute left-6 top-6 w-80 pointer-events-auto">
-        <div class="bg-stone-900/95 backdrop-blur-md p-5 rounded-lg border-2 border-stone-600 shadow-2xl">
-            <h2 class="text-stone-300 uppercase tracking-widest text-xs font-bold mb-3 border-b border-stone-700 pb-2">Investigative Journal</h2>
-            <div id="notes-container" class="max-h-[450px] overflow-y-auto pr-2 space-y-2">
-                <p class="text-stone-500 text-sm italic font-mono">No evidence collected yet...</p>
-            </div>
-            <div class="mt-4 pt-2 border-t border-stone-700 flex justify-between items-center">
-                <span class="text-[10px] text-stone-400 font-mono">CHAMBER <span id="level-val">1</span></span>
-                <span class="text-[10px] text-blue-400 font-mono animate-pulse underline">TAB TO TOGGLE MOUSE</span>
-            </div>
-        </div>
-    </div>
+  <!-- Crosshair -->
+  <div id="crosshair"><div class="crosshair-dot"></div></div>
 
-    <!-- Right: Status -->
-    <div class="absolute right-6 top-6 text-right pointer-events-auto">
-        <div class="bg-black/80 p-5 rounded-lg border border-red-500/30 backdrop-blur-sm">
-            <p class="text-[10px] text-red-400 uppercase tracking-widest font-bold mb-1">Reality Stability</p>
-            <p id="timer" class="text-4xl font-mono font-bold text-white tracking-widest shadow-red-500">05:00</p>
-        </div>
+  <!-- Journal (left) -->
+  <div id="journal">
+    <div class="journal-header">
+      <div class="journal-title">Investigator's Journal</div>
+      <div class="journal-level">CHAMBER <span id="level-val">1</span></div>
     </div>
+    <div id="notes-container">
+      <p class="empty-note">No evidence yet…<br>Explore the chamber.</p>
+    </div>
+    <div class="journal-footer">
+      <div class="tab-hint">TAB · TOGGLE CURSOR</div>
+      <div class="tab-hint" id="clue-count">0 / 0 CLUES</div>
+    </div>
+  </div>
 
-    <!-- Center: Story Prompts -->
-    <div id="message-log" class="absolute bottom-32 left-1/2 -translate-x-1/2 text-center opacity-0 transition-opacity duration-700">
-        <p id="log-text" class="text-2xl font-bold text-blue-100 drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]"></p>
-    </div>
+  <!-- Whiteboard toggle -->
+  <button class="wb-toggle-btn" id="wb-toggle-btn" onclick="toggleWhiteboard()">▣ CLUE BOARD</button>
 
-    <!-- Menu -->
-    <div id="menu" class="absolute inset-0 bg-black/98 flex items-center justify-center pointer-events-auto">
-        <div class="max-w-2xl p-12 text-center border-2 border-stone-700 bg-stone-950 shadow-[0_0_150px_rgba(0,0,0,1)] rounded-xl">
-            <h1 id="menu-title" class="text-7xl font-serif text-white mb-6 tracking-tighter">The Grotto of Fates</h1>
-            <p id="menu-desc" class="text-stone-400 mb-10 italic text-xl leading-relaxed">"You are an Archeologist of the Void. Thousands have entered these shifting caves seeking the Core. Connect the whispers of the past to survive the descent."</p>
-            <div class="grid grid-cols-2 gap-6 mb-10 text-left text-sm text-stone-300 font-mono">
-                <div class="bg-stone-900/50 border border-stone-800 p-4 rounded-lg">MOVE: WASD / ARROWS</div>
-                <div class="bg-stone-900/50 border border-stone-800 p-4 rounded-lg">LOOK: MOUSE</div>
-                <div class="bg-stone-900/50 border border-stone-800 p-4 rounded-lg">CHOOSE: WALK TO DOOR</div>
-                <div class="bg-stone-900/50 border border-stone-800 p-4 rounded-lg">CLUES: WALK TO CRYSTALS</div>
-            </div>
-            <button id="start-btn" class="w-full bg-blue-700 hover:bg-blue-500 text-white font-black py-5 rounded-lg transition-all uppercase tracking-[0.2em] shadow-lg shadow-blue-900/20">
-                Descend into the Dark
-            </button>
-        </div>
+  <!-- Whiteboard (right, toggleable) -->
+  <div id="whiteboard-panel">
+    <div class="wb-frame-top"><div class="wb-title-text">◆ Evidence Whiteboard ◆</div></div>
+    <div class="wb-board" id="wb-board">
+      <p class="wb-empty" id="wb-empty">No clues gathered yet.<br>Investigate the chamber.</p>
     </div>
+    <div class="wb-ledge"></div>
+    <div class="wb-leg">
+      <div class="wb-leg-bar"></div>
+      <div class="wb-leg-bar"></div>
+    </div>
+  </div>
+
+  <!-- Timer (top center) -->
+  <div id="timer-panel">
+    <div class="timer-label">Reality Stability</div>
+    <div id="timer">05:00</div>
+  </div>
+
+  <!-- Interact prompt -->
+  <div id="interact-prompt" id="interact-prompt"></div>
+
+  <!-- NPC dialogue -->
+  <div id="npc-dialogue">
+    <div class="npc-name" id="npc-name">???</div>
+    <div class="npc-text" id="npc-text"></div>
+    <div class="npc-close">[ walk away to dismiss ]</div>
+  </div>
+
+  <!-- Message log -->
+  <div id="message-log"><p id="log-text"></p></div>
+
+  <!-- Clue pips -->
+  <div id="hud-bottom" id="hud-bottom"></div>
+
+  <!-- Menu -->
+  <div id="menu">
+    <div class="menu-box">
+      <div class="menu-ornament">— ✦ —</div>
+      <h1 id="menu-title">The Grotto of Fates</h1>
+      <div class="menu-subtitle">Archeologist of the Void</div>
+      <p id="menu-desc">"You are an Archeologist of the Void. Thousands have entered these shifting caves seeking the Core. Connect the whispers of the past to survive the descent."</p>
+      <div class="controls-grid">
+        <div class="ctrl-item"><span>Move</span>WASD / ARROW KEYS</div>
+        <div class="ctrl-item"><span>Look</span>MOUSE (TAB TO UNLOCK)</div>
+        <div class="ctrl-item"><span>Interact</span>WALK CLOSE TO OBJECT</div>
+        <div class="ctrl-item"><span>Board</span>B KEY TOGGLE</div>
+      </div>
+      <button id="start-btn">✦ Descend into the Dark ✦</button>
+    </div>
+  </div>
 </div>
 
 <script>
-/**
- * SETTINGS & STATE
- */
-let scene, camera, renderer, clock, playerLight, flashlight;
-let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let scene, camera, renderer, clock;
+let playerLight, flashlight;
+let moveForward=false,moveBackward=false,moveLeft=false,moveRight=false;
 let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
 let mouseLocked = false;
-let euler = new THREE.Euler(0, 0, 0, 'YXZ');
+let euler = new THREE.Euler(0,0,0,'YXZ');
 
 let level = 1;
 let timeRemaining = 300;
@@ -94,348 +421,936 @@ let timerInterval;
 let correctDoorIndex = 0;
 let doors = [];
 let clues = [];
+let npcs = [];
+let envObjects = [];
 let collectedClues = new Set();
 let gameActive = false;
+let wbVisible = false;
+let wbClues = [];
 
-const STORY_FRAGMENTS = [
-    "The carvings speak of a 'Blue Meridian' that leads true.",
-    "Ancient scrolls warn: The Center is a mirror of lies.",
-    "A traveler's skeletal hand points toward the Right passage.",
-    "The air grows cold near the Left archway; a sign of life?",
-    "A riddle etched here: 'The first shall be last in the eyes of the Void.'",
-    "The ground vibrates. The path lies where the silence is loudest.",
-    "The blue runes only glow for the chosen path.",
-    "Beware the flicker of the purple gateway."
+const CLUE_COLORS = [0xd4a84b, 0x6abaff, 0xff6aaa, 0x6affa0, 0xff9060];
+
+// All NPC dialogue lines
+const NPC_DIALOGUES = [
+  { name: "The Wandering Shade", lines: [
+    "I have walked these halls for centuries. The path that glows brightest is not always the safest.",
+    "The Void listens. It mirrors your desires. Trust only what the relics confirm, not what your eyes wish to see.",
+    "I chose the center door on my third descent. I have not left since.",
+  ]},
+  { name: "Archivist Vel'Thara", lines: [
+    "Cross-reference every fragment. The Void plants false evidence near true doors. Collect all three relics before deciding.",
+    "One relic always speaks plainly. Two contradict. One lies. That is the trinity of the Grotto.",
+    "The ancient scribes marked the correct passage with a convergence of warmth — light, sound, and smell combined.",
+  ]},
+  { name: "The Hollow Child", lines: [
+    "Something is wrong with the left door. Can't you feel it? The air tastes like copper there.",
+    "Don't go. Don't go. Don't go. The one that hums is the one.",
+    "They said I could leave if I found all the pieces. I found them. I'm still here.",
+  ]},
+  { name: "Surveyor Orin", lines: [
+    "Methodical. That's the key. Don't rush the relics. Rush the door and you end up like the others.",
+    "I've mapped forty-two chambers. Every single correct door had at least two confirming relics pointing to it.",
+    "The temperature drops near dead ends. If your skin prickles, turn around.",
+  ]}
 ];
 
-/**
- * INIT
- */
+const STORY_FRAGMENTS = [
+  "The carvings speak of a 'Blue Meridian' that leads true.",
+  "Ancient scrolls warn: The Center is a mirror of lies.",
+  "A traveler's skeletal hand points toward the Right passage.",
+  "The air grows cold near the Left archway — a sign of false hope.",
+  "A riddle etched: 'The first shall be last in the eyes of the Void.'",
+  "The ground vibrates where the Core draws near. Follow the tremor.",
+  "Blue runes glow only for the chosen passage — a failsafe of the ancients.",
+  "Beware the flicker of the purple gateway. It hungers.",
+  "The moss grows toward the correct door. Life knows.",
+  "A child's voice echoes from one passage. Children always know the way home.",
+];
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
 function init() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050508);
-    scene.fog = new THREE.FogExp2(0x050508, 0.08);
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x040305);
+  scene.fog = new THREE.FogExp2(0x040305, 0.055);
 
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 1.7, 12);
+  camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 1.7, 13);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
-    renderer.toneMapping = THREE.ReinhardToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    document.body.appendChild(renderer.domElement);
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ReinhardToneMapping;
+  renderer.toneMappingExposure = 1.3;
+  document.body.appendChild(renderer.domElement);
 
-    clock = new THREE.Clock();
-
-    setupLights();
-    buildEnvironment();
-    setupControls();
-    generateLevel();
-
-    window.addEventListener('resize', onWindowResize);
-    document.getElementById('start-btn').addEventListener('click', startGame);
-    
-    animate();
+  clock = new THREE.Clock();
+  setupLights();
+  buildRoom();
+  setupControls();
+  generateLevel();
+  window.addEventListener('resize', onWindowResize);
+  document.getElementById('start-btn').addEventListener('click', startGame);
+  animate();
 }
 
+// ══════════════════════════════════════════
+// LIGHTS
+// ══════════════════════════════════════════
 function setupLights() {
-    const ambient = new THREE.AmbientLight(0x222233, 1.5);
-    scene.add(ambient);
+  scene.add(new THREE.AmbientLight(0x1a1520, 2));
 
-    playerLight = new THREE.PointLight(0xffffff, 1.0, 15);
-    scene.add(playerLight);
+  playerLight = new THREE.PointLight(0xffe8c0, 0.6, 12);
+  scene.add(playerLight);
 
-    flashlight = new THREE.SpotLight(0xfff5ee, 2.5, 25, Math.PI/4, 0.5, 1);
-    flashlight.castShadow = true;
-    scene.add(flashlight);
-    scene.add(flashlight.target);
+  flashlight = new THREE.SpotLight(0xfff5e8, 2.0, 22, Math.PI/5, 0.6, 1.5);
+  flashlight.castShadow = true;
+  flashlight.shadow.mapSize.width = 1024;
+  flashlight.shadow.mapSize.height = 1024;
+  scene.add(flashlight);
+  scene.add(flashlight.target);
 }
 
-function buildEnvironment() {
-    const floorGeo = new THREE.PlaneGeometry(120, 120);
-    const floorMat = new THREE.MeshStandardMaterial({ 
-        color: 0x08080a, 
-        roughness: 0.1, 
-        metalness: 0.8,
-        emissive: 0x020205 
-    });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    scene.add(floor);
+// ══════════════════════════════════════════
+// ROOM BUILDER
+// ══════════════════════════════════════════
+function buildRoom() {
+  // ─ FLOOR with tile pattern ─
+  const floorGeo = new THREE.PlaneGeometry(60, 60, 30, 30);
+  const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x0c0a08, roughness: 0.9, metalness: 0.1
+  });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI/2;
+  floor.receiveShadow = true;
+  scene.add(floor);
 
-    for(let i=0; i<5; i++) {
-        const ceilLight = new THREE.PointLight(0x1a1a2e, 2, 30);
-        ceilLight.position.set((Math.random()-0.5)*40, 12, (Math.random()-0.5)*40);
-        scene.add(ceilLight);
-    }
+  // floor grid lines
+  const gridHelper = new THREE.GridHelper(50, 25, 0x1a1510, 0x120e09);
+  gridHelper.position.y = 0.01;
+  scene.add(gridHelper);
 
-    const pillarGeo = new THREE.CylinderGeometry(0.5, 0.8, 15, 8);
-    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
-    for(let i=0; i<12; i++) {
-        const p = new THREE.Mesh(pillarGeo, pillarMat);
-        p.position.set(Math.random()*40-20, 7.5, Math.random()*30-10);
-        p.receiveShadow = true;
-        scene.add(p);
-    }
+  // ─ CEILING ─
+  const ceilGeo = new THREE.PlaneGeometry(60, 60);
+  const ceilMat = new THREE.MeshStandardMaterial({ color: 0x050405, roughness: 1 });
+  const ceil = new THREE.Mesh(ceilGeo, ceilMat);
+  ceil.rotation.x = Math.PI/2;
+  ceil.position.y = 14;
+  scene.add(ceil);
+
+  // ─ WALLS ─
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x0a0806, roughness: 0.95 });
+  const wallConfigs = [
+    { size:[60,14], pos:[0,7,-11], rot:0 },      // back wall
+    { size:[60,14], pos:[0,7,30], rot:Math.PI },   // front wall
+    { size:[42,14], pos:[-30,7,10], rot:Math.PI/2 }, // left wall
+    { size:[42,14], pos:[30,7,10], rot:-Math.PI/2 }, // right wall
+  ];
+  wallConfigs.forEach(w => {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(...w.size), wallMat.clone());
+    mesh.position.set(...w.pos);
+    mesh.rotation.y = w.rot;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  });
+
+  // ─ STONE PILLARS ─ (more detailed, with base + capital)
+  const pillarPositions = [
+    [-10,0,-5],[-10,0,5],[-10,0,15],[-10,0,22],
+    [10,0,-5],[10,0,5],[10,0,15],[10,0,22],
+    [-20,0,0],[-20,0,12],[20,0,0],[20,0,12]
+  ];
+  pillarPositions.forEach(([x,y,z]) => buildPillar(x,z));
+
+  // ─ CEILING LAMPS ─
+  const lampPositions = [
+    [0,13.5,0],[0,13.5,10],[0,13.5,20],
+    [-10,13.5,5],[10,13.5,5],
+    [-10,13.5,18],[10,13.5,18],
+  ];
+  lampPositions.forEach(([lx,ly,lz]) => {
+    // chain
+    const chainGeo = new THREE.CylinderGeometry(0.04, 0.04, 2, 4);
+    const chainMat = new THREE.MeshStandardMaterial({color:0x303030,roughness:0.5,metalness:0.8});
+    const chain = new THREE.Mesh(chainGeo, chainMat);
+    chain.position.set(lx, ly-0.5, lz);
+    scene.add(chain);
+    // lamp cage
+    const cageGeo = new THREE.CylinderGeometry(0.35, 0.5, 0.8, 8, 1, true);
+    const cageMat = new THREE.MeshStandardMaterial({color:0x202020,roughness:0.5,metalness:0.9,wireframe:false,side:THREE.DoubleSide});
+    const cage = new THREE.Mesh(cageGeo, cageMat);
+    cage.position.set(lx, ly-1.8, lz);
+    scene.add(cage);
+    // glow inside
+    const bulb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.15, 8, 8),
+      new THREE.MeshStandardMaterial({color:0xffe080,emissive:0xffe080,emissiveIntensity:3})
+    );
+    bulb.position.set(lx, ly-1.8, lz);
+    scene.add(bulb);
+    // point light
+    const lamp = new THREE.PointLight(0xffe8a0, 1.2, 18);
+    lamp.position.set(lx, ly-2, lz);
+    scene.add(lamp);
+  });
+
+  // ─ WALL SCONCES ─
+  const sconcePositions = [
+    [-29.5,6,-5],[-29.5,6,5],[-29.5,6,15],[-29.5,6,22],
+    [29.5,6,-5],[29.5,6,5],[29.5,6,15],[29.5,6,22],
+  ];
+  sconcePositions.forEach(([sx,sy,sz]) => {
+    const sconceLight = new THREE.PointLight(0xff9040, 1.5, 12);
+    sconceLight.position.set(sx,sy,sz);
+    scene.add(sconceLight);
+    const sconceMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.22, 0.4, 8),
+      new THREE.MeshStandardMaterial({color:0xff7020,emissive:0xff4000,emissiveIntensity:2})
+    );
+    sconceMesh.position.set(sx,sy,sz);
+    scene.add(sconceMesh);
+  });
+
+  // ─ BOOKSHELF / CRATE PROPS ─
+  buildBookshelf(-26, 0, 0, 0);
+  buildBookshelf(-26, 0, 12, 0);
+  buildBookshelf(26, 0, 0, Math.PI);
+  buildCrate(-22, 0, 18, 0.3);
+  buildCrate(-20, 0, 20, -0.2);
+  buildCrate(22, 0, 18, 0.1);
+  buildAltar(0, 0, 5);
+
+  // ─ RUGS / floor decoration ─
+  const rugGeo = new THREE.PlaneGeometry(8, 16);
+  const rugMat = new THREE.MeshStandardMaterial({ color: 0x3a1a08, roughness: 1 });
+  const rug = new THREE.Mesh(rugGeo, rugMat);
+  rug.rotation.x = -Math.PI/2;
+  rug.position.set(0, 0.01, 5);
+  scene.add(rug);
+
+  // ─ BACK WALL INSCRIPTION ─
+  buildWallInscription();
 }
 
+function buildPillar(x, z) {
+  const pillarMat = new THREE.MeshStandardMaterial({ color: 0x0f0c09, roughness: 0.85 });
+  // base
+  const base = new THREE.Mesh(new THREE.BoxGeometry(2,0.6,2), pillarMat.clone());
+  base.position.set(x, 0.3, z);
+  base.castShadow = true; scene.add(base);
+  // shaft
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.65, 13, 8), pillarMat.clone());
+  shaft.position.set(x, 7, z);
+  shaft.castShadow = true; scene.add(shaft);
+  // capital
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 1.5), pillarMat.clone());
+  cap.position.set(x, 13.6, z);
+  scene.add(cap);
+  // rune band (emissive ring)
+  const bandGeo = new THREE.TorusGeometry(0.52, 0.05, 6, 16);
+  const bandMat = new THREE.MeshStandardMaterial({
+    color: 0x2a3a6a, emissive: 0x1a2a5a, emissiveIntensity: 1.5
+  });
+  const band = new THREE.Mesh(bandGeo, bandMat);
+  band.rotation.x = Math.PI/2;
+  band.position.set(x, 2, z);
+  scene.add(band);
+}
+
+function buildBookshelf(x, y, z, ry) {
+  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x1a1008, roughness: 0.9 });
+  // frame
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.3, 5, 3), shelfMat);
+  frame.position.set(x, y+2.5, z);
+  frame.rotation.y = ry;
+  frame.castShadow = true;
+  scene.add(frame);
+  // shelves
+  for(let i=0; i<3; i++) {
+    const sh = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.12, 2.8), shelfMat.clone());
+    sh.position.set(x + (ry===0?0:0), y+0.8+i*1.5, z);
+    scene.add(sh);
+    // books
+    const bookColors = [0x8a2020, 0x204080, 0x206040, 0x806020, 0x602060];
+    for(let b=0; b<5; b++) {
+      const bk = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 0.8+Math.random()*0.4, 0.4),
+        new THREE.MeshStandardMaterial({ color: bookColors[b], roughness: 0.9 })
+      );
+      bk.position.set(x + (ry===0?0.04:0), y+0.8+i*1.5+0.5, z - 1 + b*0.5);
+      bk.rotation.y = ry + (Math.random()-0.5)*0.1;
+      scene.add(bk);
+    }
+  }
+}
+
+function buildCrate(x, y, z, ry) {
+  const crateMat = new THREE.MeshStandardMaterial({ color: 0x2a1e0a, roughness: 0.95 });
+  const c = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), crateMat);
+  c.position.set(x, y+0.6, z);
+  c.rotation.y = ry;
+  c.castShadow = true;
+  scene.add(c);
+  // plank lines
+  const plankMat = new THREE.MeshStandardMaterial({ color: 0x1a1205, roughness: 1 });
+  for(let i=0; i<3; i++) {
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.05, 0.05), plankMat);
+    pl.position.set(x, y+0.3+i*0.3, z+0.61);
+    scene.add(pl);
+  }
+  envObjects.push(c);
+}
+
+function buildAltar(x, y, z) {
+  const altarMat = new THREE.MeshStandardMaterial({ color: 0x0e0b08, roughness: 0.7, metalness: 0.3 });
+  // base plinth
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(3, 0.4, 2), altarMat);
+  plinth.position.set(x, y+0.2, z);
+  plinth.castShadow = true;
+  scene.add(plinth);
+  // column
+  const col = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 1.5), altarMat.clone());
+  col.position.set(x, y+1.0, z);
+  scene.add(col);
+  // surface
+  const surf = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.15, 1.8), altarMat.clone());
+  surf.position.set(x, y+1.675, z);
+  scene.add(surf);
+  // candles
+  [-0.8, 0.8].forEach(ox => {
+    const candle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.06, 0.4, 8),
+      new THREE.MeshStandardMaterial({ color: 0xe8e0c0 })
+    );
+    candle.position.set(x+ox, y+1.95, z);
+    scene.add(candle);
+    const flame = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0xff8020, emissive: 0xff6010, emissiveIntensity: 4 })
+    );
+    flame.position.set(x+ox, y+2.2, z);
+    scene.add(flame);
+    const candleLight = new THREE.PointLight(0xff7020, 1.5, 5);
+    candleLight.position.set(x+ox, y+2.3, z);
+    scene.add(candleLight);
+  });
+  envObjects.push(plinth);
+}
+
+function buildWallInscription() {
+  // Decorative arch above the doors
+  const archGeo = new THREE.TorusGeometry(12, 0.25, 6, 32, Math.PI);
+  const archMat = new THREE.MeshStandardMaterial({
+    color: 0x4a3a10, emissive: 0x2a1a04, emissiveIntensity: 0.5, roughness: 0.6
+  });
+  const arch = new THREE.Mesh(archGeo, archMat);
+  arch.position.set(0, 8, -10.1);
+  arch.rotation.z = Math.PI;
+  scene.add(arch);
+}
+
+// ══════════════════════════════════════════
+// LEVEL GENERATION
+// ══════════════════════════════════════════
 function generateLevel() {
-    doors.forEach(d => scene.remove(d));
-    clues.forEach(c => scene.remove(c));
-    doors = [];
-    clues = [];
-    collectedClues.clear();
-    document.getElementById('notes-container').innerHTML = '<p class="text-stone-500 text-sm italic font-mono">Exploring the dark...</p>';
+  // cleanup old
+  doors.forEach(d => scene.remove(d));
+  clues.forEach(c => scene.remove(c));
+  npcs.forEach(n => scene.remove(n));
+  doors = []; clues = []; npcs = [];
+  collectedClues.clear();
+  wbClues = [];
+  document.getElementById('notes-container').innerHTML = '<p class="empty-note">Exploring the dark…</p>';
+  document.getElementById('wb-board').innerHTML = '<p class="wb-empty" id="wb-empty">No clues gathered yet.</p>';
+  updateClueCount();
 
-    correctDoorIndex = Math.floor(Math.random() * 3);
-    const doorData = [
-        { label: "LEFT", color: 0x3b82f6, pos: -8 },
-        { label: "CENTER", color: 0x8b5cf6, pos: 0 },
-        { label: "RIGHT", color: 0x06b6d4, pos: 8 }
-    ];
+  correctDoorIndex = Math.floor(Math.random() * 3);
 
-    doorData.forEach((data, i) => {
-        const group = new THREE.Group();
-        
-        const frame = new THREE.Mesh(
-            new THREE.BoxGeometry(4.5, 8, 1),
-            new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5 })
-        );
-        group.add(frame);
-
-        const portal = new THREE.Mesh(
-            new THREE.PlaneGeometry(3.8, 7.2),
-            new THREE.MeshStandardMaterial({ 
-                color: 0x000000, 
-                emissive: data.color, 
-                emissiveIntensity: 0.4,
-                transparent: true,
-                opacity: 0.9
-            })
-        );
-        portal.position.z = 0.51;
-        group.add(portal);
-
-        const light = new THREE.PointLight(data.color, 4, 15);
-        light.position.set(0, 0, 1);
-        group.add(light);
-
-        group.position.set(data.pos, 4, -10);
-        group.userData = { index: i, type: 'door', label: data.label };
-        scene.add(group);
-        doors.push(group);
-    });
-
-    for (let i = 0; i < 3; i++) {
-        const crystal = new THREE.Group();
-        const mesh = new THREE.Mesh(
-            new THREE.OctahedronGeometry(0.6),
-            new THREE.MeshStandardMaterial({ 
-                color: 0xffd700, 
-                emissive: 0xffd700, 
-                emissiveIntensity: 3 
-            })
-        );
-        crystal.add(mesh);
-        
-        const light = new THREE.PointLight(0xffd700, 2.5, 10);
-        crystal.add(light);
-
-        let text = "";
-        if (i === 0) {
-            const pathNames = ["Left", "Center", "Right"];
-            text = `CHAMBER FRAGMENT: The ancient path of the ${pathNames[correctDoorIndex]} shines brightest today.`;
-        } else {
-            text = STORY_FRAGMENTS[Math.floor(Math.random() * STORY_FRAGMENTS.length)];
-        }
-
-        const angle = (i - 1) * 0.8;
-        crystal.position.set(Math.sin(angle) * 8, 1.2, Math.cos(angle) * 8);
-        crystal.userData = { type: 'clue', text: text, id: i };
-        scene.add(crystal);
-        clues.push(crystal);
-    }
-    
-    document.getElementById('level-val').innerText = level;
+  buildDoors();
+  buildClues();
+  buildNPCs();
+  buildHudPips();
+  document.getElementById('level-val').innerText = level;
 }
 
-/**
- * SYSTEMS
- */
+function buildDoors() {
+  const doorData = [
+    { label:"LEFT",   color:0x3b82f6, pos:-8 },
+    { label:"CENTER", color:0x8b5cf6, pos: 0 },
+    { label:"RIGHT",  color:0x06b6d4, pos: 8 }
+  ];
+
+  doorData.forEach((data, i) => {
+    const group = new THREE.Group();
+    const isCorrect = (i === correctDoorIndex);
+
+    // DOOR SURROUND (stone arch)
+    const archRad = 3.2;
+    const archMesh = new THREE.Mesh(
+      new THREE.TorusGeometry(archRad, 0.3, 8, 24, Math.PI),
+      new THREE.MeshStandardMaterial({ color: 0x1a1510, roughness: 0.8 })
+    );
+    archMesh.position.set(0, archRad, 0);
+    archMesh.rotation.z = Math.PI;
+    group.add(archMesh);
+
+    // side pillars
+    [-3.5, 3.5].forEach(ox => {
+      const sidePillar = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.4, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0x141210, roughness: 0.85 })
+      );
+      sidePillar.position.set(ox, 4, 0);
+      group.add(sidePillar);
+    });
+
+    // door FRAME
+    const frame = new THREE.Mesh(
+      new THREE.BoxGeometry(7, 9, 0.8),
+      new THREE.MeshStandardMaterial({ color: 0x1a1510, roughness: 0.7, metalness: 0.2 })
+    );
+    group.add(frame);
+
+    // door PORTAL (inner glowing panel)
+    const portal = new THREE.Mesh(
+      new THREE.PlaneGeometry(5.8, 8.4),
+      new THREE.MeshStandardMaterial({
+        color: 0x000000,
+        emissive: data.color,
+        emissiveIntensity: isCorrect ? 0.7 : 0.3,
+        transparent: true, opacity: 0.92
+      })
+    );
+    portal.position.z = 0.41;
+    group.add(portal);
+
+    // door PANELS (woodwork detail)
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0x0e0b07, roughness: 0.9 });
+    [[0, 2.5], [0, -1.5]].forEach(([px, py]) => {
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(2.6, 3.2, 0.15), panelMat);
+      panel.position.set(px, py, 0.45);
+      group.add(panel);
+      // raised border
+      [[0,1.6,0],[0,-1.6,0],[1.3,0,0],[-1.3,0,0]].forEach(([bx,by,bz]) => {
+        const border = new THREE.Mesh(
+          new THREE.BoxGeometry(bx===0?2.6:0.1, by===0?0.1:3.2, 0.05),
+          new THREE.MeshStandardMaterial({ color: 0x2a2010, roughness: 0.6 })
+        );
+        border.position.set(px+bx, py+by, 0.52);
+        group.add(border);
+      });
+    });
+
+    // door HANDLE
+    const handle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.12, 8, 8),
+      new THREE.MeshStandardMaterial({ color: data.color, emissive: data.color, emissiveIntensity: 2, metalness: 0.8 })
+    );
+    handle.position.set(1.2, 0, 0.5);
+    group.add(handle);
+
+    // door LABEL plate
+    const plate = new THREE.Mesh(
+      new THREE.BoxGeometry(2.5, 0.5, 0.12),
+      new THREE.MeshStandardMaterial({ color: 0x1a1208, roughness: 0.5, metalness: 0.6 })
+    );
+    plate.position.set(0, -3.5, 0.45);
+    group.add(plate);
+
+    // door LIGHT
+    const glow = new THREE.PointLight(data.color, isCorrect ? 5 : 3, 14);
+    glow.position.set(0, 2, 1.5);
+    group.add(glow);
+
+    // subtle floor glow beneath door
+    const floorGlow = new THREE.PointLight(data.color, 1.5, 6);
+    floorGlow.position.set(0, 0.3, 2);
+    group.add(floorGlow);
+
+    group.position.set(data.pos, 4.5, -10);
+    group.userData = { index: i, type: 'door', label: data.label, color: data.color };
+    scene.add(group);
+    doors.push(group);
+  });
+}
+
+function buildClues() {
+  const cluePositions = [
+    { x: -5,  z: 4,  angle: 0 },
+    { x:  5,  z: 4,  angle: 0 },
+    { x:  0,  z: 2,  angle: 0 },
+    { x: -12, z: 10, angle: 0 },
+    { x:  12, z: 10, angle: 0 },
+  ];
+  const pathNames = ["Left", "Center", "Right"];
+
+  for(let i = 0; i < 5; i++) {
+    const group = new THREE.Group();
+    const color = CLUE_COLORS[i % CLUE_COLORS.length];
+
+    // Pedestal
+    const pedestalMat = new THREE.MeshStandardMaterial({ color: 0x1a1510, roughness: 0.8 });
+    const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 0.8, 8), pedestalMat);
+    ped.position.y = -0.8;
+    group.add(ped);
+    const pedBase = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.12, 8), pedestalMat.clone());
+    pedBase.position.y = -1.18;
+    group.add(pedBase);
+    const pedTop = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.1, 8), pedestalMat.clone());
+    pedTop.position.y = -0.38;
+    group.add(pedTop);
+
+    // Crystal shard
+    const crystalGeo = new THREE.OctahedronGeometry(0.52, 1);
+    const crystalMat = new THREE.MeshStandardMaterial({
+      color: color, emissive: color, emissiveIntensity: 3,
+      roughness: 0.0, metalness: 0.0,
+      transparent: true, opacity: 0.85
+    });
+    const crystal = new THREE.Mesh(crystalGeo, crystalMat);
+    group.add(crystal);
+
+    // Inner shard
+    const innerGeo = new THREE.OctahedronGeometry(0.3, 0);
+    const innerMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, emissive: color, emissiveIntensity: 6,
+      transparent: true, opacity: 0.6
+    });
+    group.add(new THREE.Mesh(innerGeo, innerMat));
+
+    // Glow ring
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.6, 0.04, 6, 24),
+      new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 2 })
+    );
+    ring.rotation.x = Math.PI/2;
+    group.add(ring);
+
+    // Light
+    const light = new THREE.PointLight(color, 3, 10);
+    light.position.y = 0.5;
+    group.add(light);
+
+    // Text
+    let text = '';
+    if (i === 0) {
+      text = `The ancient path of the ${pathNames[correctDoorIndex]} shines brightest today. Seek that door.`;
+    } else if (i === 1) {
+      const decoy = pathNames[(correctDoorIndex + 1) % 3];
+      text = `Fragment III: Avoid the ${decoy} passage — death lingers in its threshold.`;
+    } else {
+      text = STORY_FRAGMENTS[Math.floor(Math.random() * STORY_FRAGMENTS.length)];
+    }
+
+    const pos = cluePositions[i];
+    group.position.set(pos.x, 1.4, pos.z);
+    group.userData = { type: 'clue', text, id: i, color };
+    scene.add(group);
+    clues.push(group);
+  }
+
+  // update pip count
+  buildHudPips();
+}
+
+function buildNPCs() {
+  const npcPositions = [
+    { x: -18, z: 6 },
+    { x:  18, z: 6 },
+    { x:  0,  z: 22 },
+  ];
+
+  npcPositions.forEach((pos, i) => {
+    const npc = buildNPCMesh(i);
+    npc.position.set(pos.x, 0, pos.z);
+    npc.userData = { type: 'npc', id: i, dialogueIndex: i % NPC_DIALOGUES.length };
+    scene.add(npc);
+    npcs.push(npc);
+  });
+}
+
+function buildNPCMesh(idx) {
+  const group = new THREE.Group();
+  const skinColor = [0xd4a07a, 0x8b6040, 0xc0d0e0][idx % 3];
+  const robeColor = [0x1a0a2a, 0x0a1a2a, 0x2a1a0a][idx % 3];
+  const robeMat = new THREE.MeshStandardMaterial({ color: robeColor, roughness: 0.9 });
+  const skinMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.7 });
+
+  // body (robe)
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.55, 1.5, 8), robeMat);
+  body.position.y = 1.05;
+  group.add(body);
+
+  // chest
+  const chest = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 0.5), robeMat.clone());
+  chest.position.y = 1.6;
+  group.add(chest);
+
+  // head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), skinMat);
+  head.position.y = 2.35;
+  group.add(head);
+
+  // hood
+  const hood = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.6, 8), robeMat.clone());
+  hood.position.y = 2.6;
+  group.add(hood);
+
+  // eyes (glowing)
+  const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffd080, emissive: 0xffd080, emissiveIntensity: 4 });
+  [-0.08, 0.08].forEach(ox => {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), eyeMat);
+    eye.position.set(ox, 2.36, 0.20);
+    group.add(eye);
+  });
+
+  // arms
+  [-0.5, 0.5].forEach(ox => {
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.9, 6), robeMat.clone());
+    arm.position.set(ox, 1.6, 0);
+    arm.rotation.z = ox > 0 ? 0.3 : -0.3;
+    group.add(arm);
+  });
+
+  // name float indicator
+  const glowSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08, 8, 8),
+    new THREE.MeshStandardMaterial({ color: 0xffd080, emissive: 0xffd080, emissiveIntensity: 5 })
+  );
+  glowSphere.position.y = 2.9;
+  group.add(glowSphere);
+  const glowLight = new THREE.PointLight(0xffd080, 1.5, 4);
+  glowLight.position.y = 2.9;
+  group.add(glowLight);
+
+  return group;
+}
+
+function buildHudPips() {
+  const container = document.getElementById('hud-bottom');
+  container.innerHTML = '';
+  for(let i=0; i<clues.length; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'hud-pip';
+    pip.id = `pip-${i}`;
+    container.appendChild(pip);
+  }
+}
+
+// ══════════════════════════════════════════
+// WHITEBOARD
+// ══════════════════════════════════════════
+function toggleWhiteboard() {
+  wbVisible = !wbVisible;
+  const panel = document.getElementById('whiteboard-panel');
+  const btn = document.getElementById('wb-toggle-btn');
+  if(wbVisible) {
+    panel.classList.add('wb-visible');
+    btn.style.right = '328px';
+  } else {
+    panel.classList.remove('wb-visible');
+    btn.style.right = '14px';
+  }
+}
+
+function addToWhiteboard(text, color) {
+  const board = document.getElementById('wb-board');
+  const empty = document.getElementById('wb-empty');
+  if(empty) empty.remove();
+
+  const item = document.createElement('div');
+  item.className = 'wb-clue-item';
+  const hexColor = '#' + color.toString(16).padStart(6,'0');
+  item.innerHTML = `
+    <div class="wb-bullet" style="background:${hexColor}"></div>
+    <div class="wb-clue-text">${text}</div>
+  `;
+  board.appendChild(item);
+  board.scrollTop = board.scrollHeight;
+}
+
+// ══════════════════════════════════════════
+// GAME SYSTEMS
+// ══════════════════════════════════════════
 function startGame() {
-    gameActive = true;
-    level = 1;
-    timeRemaining = 300;
-    document.getElementById('menu').style.display = 'none';
-    renderer.domElement.requestPointerLock();
-    startTimer();
+  gameActive = true;
+  level = 1;
+  timeRemaining = 300;
+  document.getElementById('menu').style.display = 'none';
+  renderer.domElement.requestPointerLock();
+  startTimer();
+  showMessage("CHAMBER 1 — INVESTIGATE THE RELICS");
 }
 
 function startTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-        if (!gameActive) return;
-        timeRemaining--;
-        updateTimerUI();
-        if (timeRemaining <= 0) gameOver("The Reality Stability reached 0%. Your form dissolved into the Void.");
-    }, 1000);
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if(!gameActive) return;
+    timeRemaining--;
+    updateTimerUI();
+    if(timeRemaining <= 0) gameOver("Reality Stability reached 0%. Your form dissolved into the Void.");
+  }, 1000);
 }
 
 function updateTimerUI() {
-    const mins = Math.floor(timeRemaining / 60);
-    const secs = timeRemaining % 60;
-    const timerElem = document.getElementById('timer');
-    if (timerElem) {
-        timerElem.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
+  const mins = Math.floor(timeRemaining/60);
+  const secs = timeRemaining%60;
+  const el = document.getElementById('timer');
+  el.innerText = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  el.className = timeRemaining < 30 ? 'warning' : '';
 }
 
-function addEvidence(text) {
-    const container = document.getElementById('notes-container');
-    if (!container) return;
-    if (container.querySelector('p.italic')) container.innerHTML = '';
-    
-    const note = document.createElement('div');
-    note.className = 'evidence-note';
-    note.innerHTML = `<p class="text-[10px] text-yellow-500 font-mono mb-1 font-bold">DISCOVERY #${collectedClues.size}</p><p class="text-sm text-stone-100 font-serif leading-snug">${text}</p>`;
-    container.prepend(note);
-    
-    const log = document.getElementById('message-log');
-    const logText = document.getElementById('log-text');
-    if (log && logText) {
-        logText.innerText = "ARCHIVAL DATA SECURED";
-        log.style.opacity = 1;
-        setTimeout(() => { log.style.opacity = 0; }, 2000);
-    }
+function updateClueCount() {
+  document.getElementById('clue-count').innerText = `${collectedClues.size} / ${clues.length} CLUES`;
+}
+
+function addEvidence(text, color) {
+  const container = document.getElementById('notes-container');
+  const empty = container.querySelector('.empty-note');
+  if(empty) empty.remove();
+
+  const n = document.createElement('div');
+  n.className = 'evidence-note';
+  const hexColor = '#' + (color || 0xd4a84b).toString(16).padStart(6,'0');
+  n.innerHTML = `
+    <div class="note-label" style="color:${hexColor}">✦ DISCOVERY #${collectedClues.size}</div>
+    <div class="note-text">${text}</div>
+  `;
+  container.prepend(n);
+  addToWhiteboard(text, color || 0xd4a84b);
+  updateClueCount();
+  showMessage("ARCHIVAL DATA SECURED");
+}
+
+let currentNPCDialogueIdx = 0;
+let activeNPCId = -1;
+let npcDialogueCooldown = {};
+
+function showNPCDialogue(npcId) {
+  if(npcDialogueCooldown[npcId]) return;
+  activeNPCId = npcId;
+  const npcData = NPC_DIALOGUES[npcs[npcId].userData.dialogueIndex];
+  const line = npcData.lines[Math.floor(Math.random() * npcData.lines.length)];
+  document.getElementById('npc-name').innerText = npcData.name;
+  document.getElementById('npc-text').innerText = line;
+  document.getElementById('npc-dialogue').style.display = 'block';
+  npcDialogueCooldown[npcId] = true;
+  setTimeout(() => { delete npcDialogueCooldown[npcId]; }, 6000);
+}
+
+function hideNPCDialogue() {
+  document.getElementById('npc-dialogue').style.display = 'none';
+  activeNPCId = -1;
+}
+
+let promptTimeout;
+function showInteractPrompt(text) {
+  const el = document.getElementById('interact-prompt');
+  el.innerText = text;
+  el.style.opacity = 1;
+  clearTimeout(promptTimeout);
+}
+function hideInteractPrompt() {
+  document.getElementById('interact-prompt').style.opacity = 0;
+}
+
+function showMessage(text) {
+  const log = document.getElementById('message-log');
+  const logText = document.getElementById('log-text');
+  logText.innerText = text;
+  log.style.opacity = 1;
+  clearTimeout(log._timeout);
+  log._timeout = setTimeout(() => { log.style.opacity = 0; }, 2800);
 }
 
 function checkInteractions() {
-    doors.forEach(door => {
-        if (camera.position.distanceTo(door.position) < 3.2) {
-            if (door.userData.index === correctDoorIndex) {
-                nextLevel();
-            } else {
-                gameOver(`The ${door.userData.label} portal was a trap. Your journey ends in the deep.`);
-            }
-        }
-    });
+  let nearSomething = false;
 
-    clues.forEach(clue => {
-        if (!collectedClues.has(clue.userData.id) && camera.position.distanceTo(clue.position) < 3.5) {
-            collectedClues.add(clue.userData.id);
-            addEvidence(clue.userData.text);
-            clue.children[0].material.emissiveIntensity = 0.3;
-            clue.children[1].intensity = 0.5;
-        }
-    });
+  // Doors
+  doors.forEach(door => {
+    const dist = camera.position.distanceTo(door.position);
+    if(dist < 3.5) {
+      nearSomething = true;
+      showInteractPrompt(`[ ${door.userData.label} DOOR — ENTER TO PROCEED ]`);
+      if(dist < 2.8) {
+        if(door.userData.index === correctDoorIndex) nextLevel();
+        else gameOver(`The ${door.userData.label} portal was a trap. Your journey ends in the deep.`);
+      }
+    }
+  });
+
+  // Clues
+  clues.forEach(clue => {
+    const dist = camera.position.distanceTo(clue.position);
+    if(dist < 2.8 && !collectedClues.has(clue.userData.id)) {
+      nearSomething = true;
+      showInteractPrompt(`[ EXAMINE RELIC ]`);
+      if(dist < 2.0) {
+        collectedClues.add(clue.userData.id);
+        addEvidence(clue.userData.text, clue.userData.color);
+        // dim crystal
+        clue.children.forEach(ch => {
+          if(ch.material && ch.material.emissiveIntensity !== undefined) {
+            ch.material.emissiveIntensity *= 0.2;
+          }
+          if(ch.isLight) ch.intensity *= 0.2;
+        });
+        // activate pip
+        const pip = document.getElementById(`pip-${clue.userData.id}`);
+        if(pip) pip.classList.add('active');
+      }
+    } else if(dist < 2.8 && collectedClues.has(clue.userData.id)) {
+      nearSomething = true;
+      showInteractPrompt(`[ RELIC EXAMINED ]`);
+    }
+  });
+
+  // NPCs
+  npcs.forEach((npc, i) => {
+    const dist = camera.position.distanceTo(npc.position);
+    if(dist < 3.5) {
+      nearSomething = true;
+      showInteractPrompt(`[ SPEAK WITH ${NPC_DIALOGUES[npc.userData.dialogueIndex].name.toUpperCase()} ]`);
+      if(dist < 2.5) showNPCDialogue(i);
+    } else if(activeNPCId === i) {
+      hideNPCDialogue();
+    }
+  });
+
+  if(!nearSomething) hideInteractPrompt();
 }
 
 function nextLevel() {
-    level++;
-    timeRemaining = Math.max(60, 300 - (level * 12));
-    camera.position.set(0, 1.7, 12);
-    generateLevel();
-    
-    const log = document.getElementById('message-log');
-    const logText = document.getElementById('log-text');
-    if (log && logText) {
-        logText.innerText = `DESCENDING TO CHAMBER ${level}...`;
-        log.style.opacity = 1;
-        setTimeout(() => { log.style.opacity = 0; }, 3000);
-    }
+  level++;
+  timeRemaining = Math.max(60, 300 - level * 15);
+  camera.position.set(0, 1.7, 13);
+  euler.set(0, 0, 0);
+  camera.quaternion.setFromEuler(euler);
+  generateLevel();
+  showMessage(`✦ DESCENDING TO CHAMBER ${level} ✦`);
 }
 
 function gameOver(reason) {
-    gameActive = false;
-    clearInterval(timerInterval);
-    document.exitPointerLock();
-    
-    const menu = document.getElementById('menu');
-    const title = document.getElementById('menu-title');
-    const desc = document.getElementById('menu-desc');
-    const btn = document.getElementById('start-btn');
+  gameActive = false;
+  clearInterval(timerInterval);
+  document.exitPointerLock();
 
-    if (menu) menu.style.display = 'flex';
-    if (title) title.innerText = "TRIAL FAILED";
-    if (desc) desc.innerText = reason;
-    if (btn) btn.innerText = "REATTEMPT DESCENT";
+  const menu = document.getElementById('menu');
+  document.getElementById('menu-title').innerText = "TRIAL FAILED";
+  document.getElementById('menu-desc').innerText = reason;
+  document.getElementById('start-btn').innerText = '✦ Reattempt Descent ✦';
+  menu.style.display = 'flex';
 }
 
+// ══════════════════════════════════════════
+// CONTROLS
+// ══════════════════════════════════════════
 function setupControls() {
-    const handleKey = (code, val) => {
-        switch (code) {
-            case 'KeyW': case 'ArrowUp': moveForward = val; break;
-            case 'KeyS': case 'ArrowDown': moveBackward = val; break;
-            case 'KeyA': case 'ArrowLeft': moveLeft = val; break;
-            case 'KeyD': case 'ArrowRight': moveRight = val; break;
-            case 'Tab': if (val) {
-                if (mouseLocked) document.exitPointerLock();
-                else renderer.domElement.requestPointerLock();
-            } break;
+  const handleKey = (code, val) => {
+    switch(code) {
+      case 'KeyW': case 'ArrowUp':    moveForward  = val; break;
+      case 'KeyS': case 'ArrowDown':  moveBackward = val; break;
+      case 'KeyA': case 'ArrowLeft':  moveLeft     = val; break;
+      case 'KeyD': case 'ArrowRight': moveRight    = val; break;
+      case 'Tab':
+        if(val) {
+          if(mouseLocked) document.exitPointerLock();
+          else renderer.domElement.requestPointerLock();
         }
-    };
-    document.addEventListener('keydown', (e) => handleKey(e.code, true));
-    document.addEventListener('keyup', (e) => handleKey(e.code, false));
-    document.addEventListener('mousemove', (e) => {
-        if (!mouseLocked) return;
-        euler.y -= e.movementX * 0.002;
-        euler.x -= e.movementY * 0.002;
-        euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
-        camera.quaternion.setFromEuler(euler);
-    });
-    document.addEventListener('pointerlockchange', () => {
-        mouseLocked = (document.pointerLockElement === renderer.domElement);
-    });
+        break;
+      case 'KeyB':
+        if(val) toggleWhiteboard();
+        break;
+    }
+  };
+  document.addEventListener('keydown', e => { e.preventDefault(); handleKey(e.code, true); });
+  document.addEventListener('keyup',   e => handleKey(e.code, false));
+  document.addEventListener('mousemove', e => {
+    if(!mouseLocked) return;
+    euler.y -= e.movementX * 0.002;
+    euler.x -= e.movementY * 0.002;
+    euler.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, euler.x));
+    camera.quaternion.setFromEuler(euler);
+  });
+  document.addEventListener('pointerlockchange', () => {
+    mouseLocked = (document.pointerLockElement === renderer.domElement);
+  });
 }
 
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+// ══════════════════════════════════════════
+// ANIMATE
+// ══════════════════════════════════════════
+let tick = 0;
 function animate() {
-    requestAnimationFrame(animate);
+  requestAnimationFrame(animate);
+  tick++;
 
-    if (gameActive && mouseLocked) {
-        const delta = clock.getDelta();
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
+  const delta = clock.getDelta();
+  const t = Date.now() * 0.001;
 
-        direction.z = Number(moveForward) - Number(moveBackward);
-        direction.x = Number(moveRight) - Number(moveLeft);
-        direction.normalize();
+  if(gameActive && mouseLocked) {
+    velocity.x -= velocity.x * 10 * delta;
+    velocity.z -= velocity.z * 10 * delta;
+    direction.z = Number(moveForward)  - Number(moveBackward);
+    direction.x = Number(moveRight)    - Number(moveLeft);
+    direction.normalize();
 
-        const speed = 75.0;
-        if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
-        if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
+    const speed = 65;
+    if(moveForward  || moveBackward) velocity.z -= direction.z * speed * delta;
+    if(moveLeft     || moveRight)    velocity.x -= direction.x * speed * delta;
 
-        camera.translateX(-velocity.x * delta);
-        camera.translateZ(-velocity.z * delta);
-        camera.position.y = 1.7;
+    camera.translateX(-velocity.x * delta);
+    camera.translateZ(-velocity.z * delta);
+    camera.position.y = 1.7;
+    camera.position.x = Math.max(-28, Math.min(28, camera.position.x));
+    camera.position.z = Math.max(-9, Math.min(28, camera.position.z));
 
-        camera.position.x = Math.max(-25, Math.min(25, camera.position.x));
-        camera.position.z = Math.max(-9, Math.min(30, camera.position.z));
+    playerLight.position.copy(camera.position);
+    flashlight.position.copy(camera.position);
+    const lookDir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+    flashlight.target.position.copy(camera.position).add(lookDir);
 
-        playerLight.position.copy(camera.position);
-        
-        flashlight.position.copy(camera.position);
-        const lookDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-        flashlight.target.position.copy(camera.position).add(lookDir);
+    if(tick % 3 === 0) checkInteractions();
+  }
 
-        checkInteractions();
+  // Animate crystals
+  clues.forEach((c, i) => {
+    c.rotation.y += 0.012;
+    c.position.y = 1.4 + Math.sin(t * 1.5 + i * 1.2) * 0.22;
+    // ring pulse
+    if(c.children[3]) {
+      c.children[3].rotation.y += 0.02;
+      c.children[3].scale.setScalar(1 + Math.sin(t*3+i)*0.08);
     }
+  });
 
-    clues.forEach((c, i) => {
-        c.rotation.y += 0.015;
-        c.rotation.x += 0.005;
-        c.position.y = 1.2 + Math.sin(Date.now() * 0.003 + i) * 0.25;
-    });
+  // Animate NPCs (subtle sway)
+  npcs.forEach((npc, i) => {
+    npc.rotation.y = Math.sin(t * 0.4 + i * 2.1) * 0.15;
+    // glow bob
+    const glowBead = npc.children[npc.children.length - 2];
+    if(glowBead) glowBead.position.y = 2.9 + Math.sin(t*2+i)*0.08;
+  });
 
-    renderer.render(scene, camera);
+  // Animate door portals (flicker)
+  doors.forEach((door, i) => {
+    const portal = door.children[3];
+    if(portal && portal.material) {
+      const base = (i === correctDoorIndex) ? 0.7 : 0.3;
+      portal.material.emissiveIntensity = base + Math.sin(t*2.5 + i*1.7) * 0.1;
+    }
+  });
+
+  renderer.render(scene, camera);
 }
 
 window.onload = init;
