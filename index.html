@@ -3,374 +3,442 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fuji Flip - Premium Head or Tails</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <title>The Grotto of Fates: Archeologist of the Void</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
-        
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #020617;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
-            color: white;
-            min-height: 100vh;
+        body { margin: 0; overflow: hidden; background: #020205; font-family: 'Georgia', serif; }
+        #ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; color: #fff; }
+        #crosshair { 
+            position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; 
+            background: rgba(255,255,255,0.5); border-radius: 50%; 
+            transform: translate(-50%, -50%); 
         }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .coin-container {
-            perspective: 1000px;
-            width: 140px;
-            height: 140px;
-            margin: 1.5rem auto;
-        }
-
-        #coin {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .side {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            font-weight: 800;
-            backface-visibility: hidden;
-            border: 4px solid #fbbf24;
-        }
-
-        .heads {
-            background: linear-gradient(135deg, #fbbf24, #d97706);
-            color: #451a03;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 0 30px rgba(251, 191, 36, 0.4);
-        }
-
-        .tails {
-            background: linear-gradient(135deg, #f59e0b, #b45309);
-            color: #451a03;
-            transform: rotateY(180deg);
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 0 30px rgba(180, 83, 9, 0.4);
-        }
-
-        .flipping-heads { transform: rotateY(1800deg); }
-        .flipping-tails { transform: rotateY(1980deg); }
-
-        .btn-grad {
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            transition: all 0.3s ease;
-        }
-        .btn-grad:hover:not(:disabled) {
-            filter: brightness(1.1);
-            transform: translateY(-1px);
-            box-shadow: 0 10px 20px -5px rgba(168, 85, 247, 0.5);
-        }
-
-        .recent-item {
+        canvas { display: block; }
+        .evidence-note {
+            background: rgba(30, 30, 45, 0.95);
+            border-left: 4px solid #fbbf24;
+            padding: 12px;
+            margin-bottom: 8px;
+            font-style: italic;
             animation: slideIn 0.3s ease-out;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
-<body class="p-4 flex items-center justify-center">
+<body>
 
-    <div class="max-w-md w-full glass rounded-[2.5rem] overflow-hidden">
-        <!-- Top Bar / Logout -->
-        <div id="topBar" class="hidden px-6 pt-6 flex justify-between items-center">
-            <div class="flex flex-col">
-                <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Account</span>
-                <span id="accountMini" class="text-xs font-mono text-indigo-300">0x...</span>
+<div id="ui-overlay">
+    <div id="crosshair"></div>
+    
+    <!-- Left: Evidence Board -->
+    <div id="evidence-board" class="absolute left-6 top-6 w-80 pointer-events-auto">
+        <div class="bg-stone-900/95 backdrop-blur-md p-5 rounded-lg border-2 border-stone-600 shadow-2xl">
+            <h2 class="text-stone-300 uppercase tracking-widest text-xs font-bold mb-3 border-b border-stone-700 pb-2">Investigative Journal</h2>
+            <div id="notes-container" class="max-h-[450px] overflow-y-auto pr-2 space-y-2">
+                <p class="text-stone-500 text-sm italic font-mono">No evidence collected yet...</p>
             </div>
-            <button onclick="logout()" class="text-[10px] bg-white/5 hover:bg-red-500/20 hover:text-red-400 transition-colors px-3 py-1.5 rounded-full border border-white/10 uppercase font-bold tracking-tighter">
-                Logout
-            </button>
-        </div>
-
-        <div class="p-8 pt-4 space-y-6">
-            <!-- Header -->
-            <div class="text-center space-y-1">
-                <h1 class="text-4xl font-extrabold tracking-tighter italic">
-                    <span class="text-white">FUJI</span><span class="text-indigo-500">FLIP</span>
-                </h1>
-                <div id="pnlBadge" class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-                    PnL: +$0.00
-                </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-black/20 p-4 rounded-2xl border border-white/5">
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Your USDC</p>
-                    <p id="userBalance" class="text-xl font-bold tracking-tight">0.00</p>
-                </div>
-                <div class="bg-black/20 p-4 rounded-2xl border border-white/5">
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">House</p>
-                    <p id="houseBalance" class="text-xl font-bold tracking-tight">0.00</p>
-                </div>
-            </div>
-
-            <!-- Coin -->
-            <div class="coin-container">
-                <div id="coin">
-                    <div class="side heads">H</div>
-                    <div class="side tails">T</div>
-                </div>
-            </div>
-
-            <!-- Interaction Area -->
-            <div id="loginView" class="py-4">
-                <button id="connectBtn" class="btn-grad w-full py-4 rounded-2xl font-bold text-lg shadow-xl">
-                    Connect Wallet
-                </button>
-            </div>
-
-            <div id="gameView" class="hidden space-y-5">
-                <div class="relative group">
-                    <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                        <span class="text-slate-500 font-bold text-sm">$</span>
-                    </div>
-                    <input type="number" id="betAmount" value="5" min="1"
-                        class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-8 pr-4 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all">
-                </div>
-
-                <div class="flex gap-3">
-                    <button onclick="play(true)" id="headsBtn" class="flex-1 bg-white/5 hover:bg-yellow-500/10 border border-white/10 hover:border-yellow-500/50 py-4 rounded-2xl font-bold transition-all">
-                        HEADS
-                    </button>
-                    <button onclick="play(false)" id="tailsBtn" class="flex-1 bg-white/5 hover:bg-orange-500/10 border border-white/10 hover:border-orange-500/50 py-4 rounded-2xl font-bold transition-all">
-                        TAILS
-                    </button>
-                </div>
-            </div>
-
-            <!-- Status -->
-            <div id="status" class="text-center text-xs font-semibold text-slate-400 h-4">Connect to start playing</div>
-
-            <!-- Recents -->
-            <div class="pt-2">
-                <h3 class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
-                    Recent Activity
-                </h3>
-                <div id="recentList" class="space-y-2 max-h-32 overflow-y-auto pr-2 text-[11px]">
-                    <div class="text-center text-slate-600 py-4 italic">No games yet...</div>
-                </div>
+            <div class="mt-4 pt-2 border-t border-stone-700 flex justify-between items-center">
+                <span class="text-[10px] text-stone-400 font-mono">CHAMBER <span id="level-val">1</span></span>
+                <span class="text-[10px] text-blue-400 font-mono animate-pulse underline">TAB TO TOGGLE MOUSE</span>
             </div>
         </div>
     </div>
 
-    <script>
-        const CONTRACT_ADDRESS = "0x26fa6Ec43d17D0D31FBee5fb3167229322116687";
-        const USDC_ADDRESS = "0x5425890298aed601595a70AB815c96711a31Bc65";
-        const FUJI_CHAIN_ID = "0xa869";
+    <!-- Right: Status -->
+    <div class="absolute right-6 top-6 text-right pointer-events-auto">
+        <div class="bg-black/80 p-5 rounded-lg border border-red-500/30 backdrop-blur-sm">
+            <p class="text-[10px] text-red-400 uppercase tracking-widest font-bold mb-1">Reality Stability</p>
+            <p id="timer" class="text-4xl font-mono font-bold text-white tracking-widest shadow-red-500">05:00</p>
+        </div>
+    </div>
 
-        let provider, signer, contract, usdcContract;
-        let totalPnL = 0;
+    <!-- Center: Story Prompts -->
+    <div id="message-log" class="absolute bottom-32 left-1/2 -translate-x-1/2 text-center opacity-0 transition-opacity duration-700">
+        <p id="log-text" class="text-2xl font-bold text-blue-100 drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]"></p>
+    </div>
 
-        const abi = [
-            "function flipCoin(uint256 _amount, bool _choice) external",
-            "function getContractBalance() external view returns (uint256)",
-            "event BetPlaced(address indexed player, uint256 amount, bool choice, bool won)"
-        ];
-        const usdcAbi = [
-            "function balanceOf(address account) external view returns (uint256)",
-            "function allowance(address owner, address spender) external view returns (uint256)",
-            "function approve(address spender, uint256 amount) external returns (bool)"
-        ];
+    <!-- Menu -->
+    <div id="menu" class="absolute inset-0 bg-black/98 flex items-center justify-center pointer-events-auto">
+        <div class="max-w-2xl p-12 text-center border-2 border-stone-700 bg-stone-950 shadow-[0_0_150px_rgba(0,0,0,1)] rounded-xl">
+            <h1 id="menu-title" class="text-7xl font-serif text-white mb-6 tracking-tighter">The Grotto of Fates</h1>
+            <p id="menu-desc" class="text-stone-400 mb-10 italic text-xl leading-relaxed">"You are an Archeologist of the Void. Thousands have entered these shifting caves seeking the Core. Connect the whispers of the past to survive the descent."</p>
+            <div class="grid grid-cols-2 gap-6 mb-10 text-left text-sm text-stone-300 font-mono">
+                <div class="bg-stone-900/50 border border-stone-800 p-4 rounded-lg">MOVE: WASD / ARROWS</div>
+                <div class="bg-stone-900/50 border border-stone-800 p-4 rounded-lg">LOOK: MOUSE</div>
+                <div class="bg-stone-900/50 border border-stone-800 p-4 rounded-lg">CHOOSE: WALK TO DOOR</div>
+                <div class="bg-stone-900/50 border border-stone-800 p-4 rounded-lg">CLUES: WALK TO CRYSTALS</div>
+            </div>
+            <button id="start-btn" class="w-full bg-blue-700 hover:bg-blue-500 text-white font-black py-5 rounded-lg transition-all uppercase tracking-[0.2em] shadow-lg shadow-blue-900/20">
+                Descend into the Dark
+            </button>
+        </div>
+    </div>
+</div>
 
-        async function init() {
-            if (window.ethereum) {
-                provider = new ethers.BrowserProvider(window.ethereum);
-                document.getElementById('connectBtn').addEventListener('click', connect);
-                
-                // Check if already connected
-                const accounts = await provider.listAccounts();
-                if (accounts.length > 0) connect();
+<script>
+/**
+ * SETTINGS & STATE
+ */
+let scene, camera, renderer, clock, playerLight, flashlight;
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+let velocity = new THREE.Vector3();
+let direction = new THREE.Vector3();
+let mouseLocked = false;
+let euler = new THREE.Euler(0, 0, 0, 'YXZ');
+
+let level = 1;
+let timeRemaining = 300;
+let timerInterval;
+let correctDoorIndex = 0;
+let doors = [];
+let clues = [];
+let collectedClues = new Set();
+let gameActive = false;
+
+const STORY_FRAGMENTS = [
+    "The carvings speak of a 'Blue Meridian' that leads true.",
+    "Ancient scrolls warn: The Center is a mirror of lies.",
+    "A traveler's skeletal hand points toward the Right passage.",
+    "The air grows cold near the Left archway; a sign of life?",
+    "A riddle etched here: 'The first shall be last in the eyes of the Void.'",
+    "The ground vibrates. The path lies where the silence is loudest.",
+    "The blue runes only glow for the chosen path.",
+    "Beware the flicker of the purple gateway."
+];
+
+/**
+ * INIT
+ */
+function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050508);
+    scene.fog = new THREE.FogExp2(0x050508, 0.08);
+
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 1.7, 12);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.toneMapping = THREE.ReinhardToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    document.body.appendChild(renderer.domElement);
+
+    clock = new THREE.Clock();
+
+    setupLights();
+    buildEnvironment();
+    setupControls();
+    generateLevel();
+
+    window.addEventListener('resize', onWindowResize);
+    document.getElementById('start-btn').addEventListener('click', startGame);
+    
+    animate();
+}
+
+function setupLights() {
+    const ambient = new THREE.AmbientLight(0x222233, 1.5);
+    scene.add(ambient);
+
+    playerLight = new THREE.PointLight(0xffffff, 1.0, 15);
+    scene.add(playerLight);
+
+    flashlight = new THREE.SpotLight(0xfff5ee, 2.5, 25, Math.PI/4, 0.5, 1);
+    flashlight.castShadow = true;
+    scene.add(flashlight);
+    scene.add(flashlight.target);
+}
+
+function buildEnvironment() {
+    const floorGeo = new THREE.PlaneGeometry(120, 120);
+    const floorMat = new THREE.MeshStandardMaterial({ 
+        color: 0x08080a, 
+        roughness: 0.1, 
+        metalness: 0.8,
+        emissive: 0x020205 
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    for(let i=0; i<5; i++) {
+        const ceilLight = new THREE.PointLight(0x1a1a2e, 2, 30);
+        ceilLight.position.set((Math.random()-0.5)*40, 12, (Math.random()-0.5)*40);
+        scene.add(ceilLight);
+    }
+
+    const pillarGeo = new THREE.CylinderGeometry(0.5, 0.8, 15, 8);
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
+    for(let i=0; i<12; i++) {
+        const p = new THREE.Mesh(pillarGeo, pillarMat);
+        p.position.set(Math.random()*40-20, 7.5, Math.random()*30-10);
+        p.receiveShadow = true;
+        scene.add(p);
+    }
+}
+
+function generateLevel() {
+    doors.forEach(d => scene.remove(d));
+    clues.forEach(c => scene.remove(c));
+    doors = [];
+    clues = [];
+    collectedClues.clear();
+    document.getElementById('notes-container').innerHTML = '<p class="text-stone-500 text-sm italic font-mono">Exploring the dark...</p>';
+
+    correctDoorIndex = Math.floor(Math.random() * 3);
+    const doorData = [
+        { label: "LEFT", color: 0x3b82f6, pos: -8 },
+        { label: "CENTER", color: 0x8b5cf6, pos: 0 },
+        { label: "RIGHT", color: 0x06b6d4, pos: 8 }
+    ];
+
+    doorData.forEach((data, i) => {
+        const group = new THREE.Group();
+        
+        const frame = new THREE.Mesh(
+            new THREE.BoxGeometry(4.5, 8, 1),
+            new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5 })
+        );
+        group.add(frame);
+
+        const portal = new THREE.Mesh(
+            new THREE.PlaneGeometry(3.8, 7.2),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x000000, 
+                emissive: data.color, 
+                emissiveIntensity: 0.4,
+                transparent: true,
+                opacity: 0.9
+            })
+        );
+        portal.position.z = 0.51;
+        group.add(portal);
+
+        const light = new THREE.PointLight(data.color, 4, 15);
+        light.position.set(0, 0, 1);
+        group.add(light);
+
+        group.position.set(data.pos, 4, -10);
+        group.userData = { index: i, type: 'door', label: data.label };
+        scene.add(group);
+        doors.push(group);
+    });
+
+    for (let i = 0; i < 3; i++) {
+        const crystal = new THREE.Group();
+        const mesh = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.6),
+            new THREE.MeshStandardMaterial({ 
+                color: 0xffd700, 
+                emissive: 0xffd700, 
+                emissiveIntensity: 3 
+            })
+        );
+        crystal.add(mesh);
+        
+        const light = new THREE.PointLight(0xffd700, 2.5, 10);
+        crystal.add(light);
+
+        let text = "";
+        if (i === 0) {
+            const pathNames = ["Left", "Center", "Right"];
+            text = `CHAMBER FRAGMENT: The ancient path of the ${pathNames[correctDoorIndex]} shines brightest today.`;
+        } else {
+            text = STORY_FRAGMENTS[Math.floor(Math.random() * STORY_FRAGMENTS.length)];
+        }
+
+        const angle = (i - 1) * 0.8;
+        crystal.position.set(Math.sin(angle) * 8, 1.2, Math.cos(angle) * 8);
+        crystal.userData = { type: 'clue', text: text, id: i };
+        scene.add(crystal);
+        clues.push(crystal);
+    }
+    
+    document.getElementById('level-val').innerText = level;
+}
+
+/**
+ * SYSTEMS
+ */
+function startGame() {
+    gameActive = true;
+    level = 1;
+    timeRemaining = 300;
+    document.getElementById('menu').style.display = 'none';
+    renderer.domElement.requestPointerLock();
+    startTimer();
+}
+
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (!gameActive) return;
+        timeRemaining--;
+        updateTimerUI();
+        if (timeRemaining <= 0) gameOver("The Reality Stability reached 0%. Your form dissolved into the Void.");
+    }, 1000);
+}
+
+function updateTimerUI() {
+    const mins = Math.floor(timeRemaining / 60);
+    const secs = timeRemaining % 60;
+    const timerElem = document.getElementById('timer');
+    if (timerElem) {
+        timerElem.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+}
+
+function addEvidence(text) {
+    const container = document.getElementById('notes-container');
+    if (!container) return;
+    if (container.querySelector('p.italic')) container.innerHTML = '';
+    
+    const note = document.createElement('div');
+    note.className = 'evidence-note';
+    note.innerHTML = `<p class="text-[10px] text-yellow-500 font-mono mb-1 font-bold">DISCOVERY #${collectedClues.size}</p><p class="text-sm text-stone-100 font-serif leading-snug">${text}</p>`;
+    container.prepend(note);
+    
+    const log = document.getElementById('message-log');
+    const logText = document.getElementById('log-text');
+    if (log && logText) {
+        logText.innerText = "ARCHIVAL DATA SECURED";
+        log.style.opacity = 1;
+        setTimeout(() => { log.style.opacity = 0; }, 2000);
+    }
+}
+
+function checkInteractions() {
+    doors.forEach(door => {
+        if (camera.position.distanceTo(door.position) < 3.2) {
+            if (door.userData.index === correctDoorIndex) {
+                nextLevel();
+            } else {
+                gameOver(`The ${door.userData.label} portal was a trap. Your journey ends in the deep.`);
             }
         }
+    });
 
-        async function connect() {
-            try {
-                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-                if (chainId !== FUJI_CHAIN_ID) {
-                    await window.ethereum.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: FUJI_CHAIN_ID }],
-                    });
-                }
-
-                const accounts = await provider.send("eth_requestAccounts", []);
-                signer = await provider.getSigner();
-                
-                contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
-                usdcContract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
-
-                // UI Swap
-                document.getElementById('loginView').classList.add('hidden');
-                document.getElementById('gameView').classList.remove('hidden');
-                document.getElementById('topBar').classList.remove('hidden');
-                document.getElementById('accountMini').innerText = `${accounts[0].substring(0,6)}...${accounts[0].substring(38)}`;
-                
-                updateBalances();
-                fetchHistory();
-                showStatus("Ready for action");
-            } catch (err) {
-                showStatus("Connection failed");
-            }
+    clues.forEach(clue => {
+        if (!collectedClues.has(clue.userData.id) && camera.position.distanceTo(clue.position) < 3.5) {
+            collectedClues.add(clue.userData.id);
+            addEvidence(clue.userData.text);
+            clue.children[0].material.emissiveIntensity = 0.3;
+            clue.children[1].intensity = 0.5;
         }
+    });
+}
 
-        function logout() {
-            signer = null;
-            document.getElementById('loginView').classList.remove('hidden');
-            document.getElementById('gameView').classList.add('hidden');
-            document.getElementById('topBar').classList.add('hidden');
-            showStatus("Disconnected");
+function nextLevel() {
+    level++;
+    timeRemaining = Math.max(60, 300 - (level * 12));
+    camera.position.set(0, 1.7, 12);
+    generateLevel();
+    
+    const log = document.getElementById('message-log');
+    const logText = document.getElementById('log-text');
+    if (log && logText) {
+        logText.innerText = `DESCENDING TO CHAMBER ${level}...`;
+        log.style.opacity = 1;
+        setTimeout(() => { log.style.opacity = 0; }, 3000);
+    }
+}
+
+function gameOver(reason) {
+    gameActive = false;
+    clearInterval(timerInterval);
+    document.exitPointerLock();
+    
+    const menu = document.getElementById('menu');
+    const title = document.getElementById('menu-title');
+    const desc = document.getElementById('menu-desc');
+    const btn = document.getElementById('start-btn');
+
+    if (menu) menu.style.display = 'flex';
+    if (title) title.innerText = "TRIAL FAILED";
+    if (desc) desc.innerText = reason;
+    if (btn) btn.innerText = "REATTEMPT DESCENT";
+}
+
+function setupControls() {
+    const handleKey = (code, val) => {
+        switch (code) {
+            case 'KeyW': case 'ArrowUp': moveForward = val; break;
+            case 'KeyS': case 'ArrowDown': moveBackward = val; break;
+            case 'KeyA': case 'ArrowLeft': moveLeft = val; break;
+            case 'KeyD': case 'ArrowRight': moveRight = val; break;
+            case 'Tab': if (val) {
+                if (mouseLocked) document.exitPointerLock();
+                else renderer.domElement.requestPointerLock();
+            } break;
         }
+    };
+    document.addEventListener('keydown', (e) => handleKey(e.code, true));
+    document.addEventListener('keyup', (e) => handleKey(e.code, false));
+    document.addEventListener('mousemove', (e) => {
+        if (!mouseLocked) return;
+        euler.y -= e.movementX * 0.002;
+        euler.x -= e.movementY * 0.002;
+        euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
+        camera.quaternion.setFromEuler(euler);
+    });
+    document.addEventListener('pointerlockchange', () => {
+        mouseLocked = (document.pointerLockElement === renderer.domElement);
+    });
+}
 
-        async function updateBalances() {
-            if (!signer) return;
-            try {
-                const addr = await signer.getAddress();
-                const uBal = await usdcContract.balanceOf(addr);
-                const hBal = await usdcContract.balanceOf(CONTRACT_ADDRESS);
-                document.getElementById('userBalance').innerText = parseFloat(ethers.formatUnits(uBal, 6)).toFixed(2);
-                document.getElementById('houseBalance').innerText = parseFloat(ethers.formatUnits(hBal, 6)).toFixed(2);
-            } catch (e) {}
-        }
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
 
-        async function fetchHistory() {
-            try {
-                // Get events from the last 1000 blocks
-                const filter = contract.filters.BetPlaced();
-                const events = await contract.queryFilter(filter, -1000);
-                const list = document.getElementById('recentList');
-                list.innerHTML = '';
-                
-                events.reverse().slice(0, 10).forEach(ev => addHistoryItem(ev.args));
-            } catch (e) {
-                console.error("History error", e);
-            }
-        }
+function animate() {
+    requestAnimationFrame(animate);
 
-        function addHistoryItem(args) {
-            const list = document.getElementById('recentList');
-            const item = document.createElement('div');
-            item.className = 'recent-item flex justify-between items-center py-2';
-            
-            const amt = ethers.formatUnits(args.amount, 6);
-            const side = args.choice ? "Heads" : "Tails";
-            const won = args.won;
-            
-            item.innerHTML = `
-                <div class="flex flex-col">
-                    <span class="text-white font-semibold">${args.player.substring(0,6)}...</span>
-                    <span class="text-slate-500">Bet ${side}</span>
-                </div>
-                <div class="text-right">
-                    <span class="font-bold ${won ? 'text-emerald-400' : 'text-rose-400'}">
-                        ${won ? '+' : '-'}$${amt}
-                    </span>
-                </div>
-            `;
-            list.prepend(item);
-        }
+    if (gameActive && mouseLocked) {
+        const delta = clock.getDelta();
+        velocity.x -= velocity.x * 10.0 * delta;
+        velocity.z -= velocity.z * 10.0 * delta;
 
-        async function play(choice) {
-            if (!signer) return connect();
-            
-            const inputVal = document.getElementById('betAmount').value;
-            const amount = ethers.parseUnits(inputVal, 6);
-            
-            try {
-                setLoading(true);
-                showStatus("Authorizing...");
-                
-                const addr = await signer.getAddress();
-                const allowance = await usdcContract.allowance(addr, CONTRACT_ADDRESS);
-                
-                if (allowance < amount) {
-                    const tx = await usdcContract.approve(CONTRACT_ADDRESS, ethers.MaxUint256);
-                    await tx.wait();
-                }
+        direction.z = Number(moveForward) - Number(moveBackward);
+        direction.x = Number(moveRight) - Number(moveLeft);
+        direction.normalize();
 
-                showStatus("Flipping coin...");
-                const tx = await contract.flipCoin(amount, choice);
-                
-                // Generic spin start
-                const coin = document.getElementById('coin');
-                coin.style.transition = "transform 3s cubic-bezier(0.4, 0, 0.2, 1)";
-                
-                const receipt = await tx.wait();
-                
-                const iface = new ethers.Interface(abi);
-                let won = false;
-                receipt.logs.forEach(log => {
-                    try {
-                        const parsed = iface.parseLog(log);
-                        if (parsed.name === "BetPlaced") {
-                            won = parsed.args.won;
-                            addHistoryItem(parsed.args);
-                        }
-                    } catch (e) {}
-                });
+        const speed = 75.0;
+        if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
+        if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
 
-                const resultIsHeads = (choice === won);
-                coin.className = '';
-                void coin.offsetWidth;
-                coin.classList.add(resultIsHeads ? 'flipping-heads' : 'flipping-tails');
+        camera.translateX(-velocity.x * delta);
+        camera.translateZ(-velocity.z * delta);
+        camera.position.y = 1.7;
 
-                // Update PnL
-                const val = parseFloat(inputVal);
-                totalPnL += won ? val : -val;
-                const pnlEl = document.getElementById('pnlBadge');
-                pnlEl.innerText = `PnL: ${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}`;
-                pnlEl.className = `inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${totalPnL >= 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`;
+        camera.position.x = Math.max(-25, Math.min(25, camera.position.x));
+        camera.position.z = Math.max(-9, Math.min(30, camera.position.z));
 
-                setTimeout(() => {
-                    showStatus(won ? "WINNER!" : "Bust...");
-                    updateBalances();
-                    setLoading(false);
-                }, 3000);
+        playerLight.position.copy(camera.position);
+        
+        flashlight.position.copy(camera.position);
+        const lookDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+        flashlight.target.position.copy(camera.position).add(lookDir);
 
-            } catch (err) {
-                showStatus("Try again");
-                setLoading(false);
-            }
-        }
+        checkInteractions();
+    }
 
-        function showStatus(msg) {
-            document.getElementById('status').innerText = msg;
-        }
+    clues.forEach((c, i) => {
+        c.rotation.y += 0.015;
+        c.rotation.x += 0.005;
+        c.position.y = 1.2 + Math.sin(Date.now() * 0.003 + i) * 0.25;
+    });
 
-        function setLoading(loading) {
-            document.getElementById('headsBtn').disabled = loading;
-            document.getElementById('tailsBtn').disabled = loading;
-            document.getElementById('betAmount').disabled = loading;
-        }
+    renderer.render(scene, camera);
+}
 
-        init();
-    </script>
+window.onload = init;
+</script>
 </body>
 </html>
