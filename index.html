@@ -2856,8 +2856,9 @@ function render24hTokenFlow(addr){
   }
 
   // Net flow badge in panel header
+  // Burned tokens are destroyed (not moat inflow), so net uses staked+locked only
   if(noteEl && (totalIn>0||totalOut>0)){
-    const net=totalIn-totalOut;
+    const net=(stakedAmt+lockedAmt)-totalOut;
     const netColor=net>=0?'var(--grn)':'var(--red)';
     const netSign=net>=0?'▲':'▼';
     const netLabel=net>=0?'net inflow':'net outflow';
