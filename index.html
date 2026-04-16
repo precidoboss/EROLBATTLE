@@ -555,6 +555,25 @@ main{position:relative;z-index:1;padding:.8rem;max-width:1440px;margin:0 auto}
           <div class="ch"><canvas id="cMoatDetail"></canvas></div>
         </div>
       </div>
+      <!-- 24h Token Flow Panel -->
+      <div class="panel" id="mFlow24hPanel" style="margin-bottom:.85rem">
+        <div class="ph">
+          <div class="ptitle">24h Token Flow</div>
+          <span style="font-family:'DM Mono',monospace;font-size:.56rem;color:var(--mut)" id="mFlow24hNote"></span>
+        </div>
+        <div class="pb">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem">
+            <div style="background:rgba(109,184,122,.06);border:1px solid rgba(109,184,122,.2);border-radius:10px;padding:.75rem">
+              <div style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--grn);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem">▲ Tokens In (24h)</div>
+              <div id="mFlow24hIn"><span class="spin"></span></div>
+            </div>
+            <div style="background:rgba(224,82,82,.06);border:1px solid rgba(224,82,82,.2);border-radius:10px;padding:.75rem">
+              <div style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem">▼ Tokens Out (24h)</div>
+              <div id="mFlow24hOut"><span class="spin"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="panel">
         <div class="ph">
           <div class="ptitle">Moat Activity</div>
@@ -1644,6 +1663,9 @@ const MOATS = {
   '0x93d8cc111233f8c5b9a019df7c159b6f9be7b44b':{name:'Dimish Moat',       short:'DISH',  ticker:'$dimish',  emoji:'🌑', color:'#a78bfa',tokenAddr:'0x40146E96EE5297187022D1ca62A3169B5e45B0a4',  pairAddr:null, geckoPoolAddr:'0x3edc0126e36758419ba7eeb44b2a3a094e7e9bb7', geckoNetwork:'avax', url:'https://moats.app/moat/0x93d8cc111233f8c5b9a019df7c159b6f9be7b44b',   logo:'Dimish1000px.png',              knownSupply:1000000000, twitter:'DimiFW'},
   '0x3399d03566bb6db0cb4f1e13047589a1499cebbc':{name:'Bensi Box Moat',    short:'BENSI', ticker:'$bensi',   emoji:'📦', color:'#fbbf24',tokenAddr:'0x00697F5F6dc2CA0A17e6c89bCcd1173A61eA24a6',  pairAddr:'0x7984cD0FA3DaA31f8B305A0544b6097BA40Fd3B8', swapViaWavax:true, url:'https://moats.app/moat/0x3399d03566bb6db0cb4f1e13047589a1499cebbc',    logo:'Bensi-Box-logo-new.jpg',        knownSupply:1000000000, twitter:'BensiBox'},
   '0x9c5f177cdc0332e61e423ee9ad9e4f2333f62685':{name:'Where Is Malek Moat',short:'MALEK',ticker:'$malek',   emoji:'🔍', color:'#34d399',tokenAddr:'0xeB55FAB1C23EC0Aa5024Ee593A12edCD031Ecd9b',  pairAddr:'0xa7e81808219cb1a27c71bd56f551a43fc8cad23', arenaToken:'0xB8d7710f7d8349A506b75dD184F05777c82dAd0C', odosOnly:true, url:'https://moats.app/moat/0x9c5f177cdc0332e61e423ee9ad9e4f2333f62685',    logo:'wheremalek.jpg',                knownSupply:10000000000, isNew:true},
+  '0xec7a708c9a9ac691d5e8be056bbd5c8251f003ea':{name:'Seeds Moat',          short:'SEEDS',ticker:'$seeds',   emoji:'🌱', color:'#4ade80',tokenAddr:'0x4C515fb7Ddb31Ef5Cb53895B614e6dbf356f0041',  pairAddr:'0x6ADb7BaF726779A9790c49B3BDb5bb9018E6444F', url:'https://moats.app/moat/0xec7a708c9a9ac691d5e8be056bbd5c8251f003ea',          logo:'IMG_3659.png',                  knownSupply:10000000000, isNew:true},
+  '0xe5a12711f9fe7e5263ec43a2a18eaec0a6b4c7cb':{name:'AVAX Drama Moat',     short:'DRAMA',ticker:'$drama',   emoji:'🎭', color:'#e879f9',tokenAddr:'0x58F075fFCE3b299ff81966a24063b357455a7dDf',  pairAddr:'0x01a866458a7085Fc39f7dA5A1E28A6CAe83069Ce', url:'https://moats.app/moat/0xe5a12711f9fe7e5263ec43a2a18eaec0a6b4c7cb',          logo:'IMG_3662.jpeg',                 knownSupply:10000000000, isNew:true},
+  '0xd4280e25a7969da08b7093e8b54068d693def66e':{name:'Gator Dont Play Moat',short:'GATOR',ticker:'$gator',   emoji:'🐊', color:'#86efac',tokenAddr:'0x1A31A8fD8BACB64b32dBcdcF5b2215f58Baf70c1',  pairAddr:'0x3c5560226EE5861A58707BbF9247C16cf90E0a8C', url:'https://moats.app/moat/0xd4280e25a7969da08b7093e8b54068d693def66e',          logo:'IMG_3660.jpeg',                 knownSupply:10000000000, isNew:true},
 };
 
 // Pre-seed supply cache with known values — app works instantly, Snowtrace enriches later
@@ -2300,20 +2322,66 @@ function renderMoatSelect(){
   const el=document.getElementById('moatSelectGrid'),totPts=allPts.reduce((s,p)=>s+p.points,0);
   const note=document.getElementById('moatLoadNote');
   const loaded=Object.values(moatMap).filter(m=>m.walletCount>0).length;
-  if(note)note.textContent=loaded+' of '+Object.keys(MOATS).length+' moats have data';
-  el.innerHTML=Object.entries(MOATS).map(([addr,meta])=>{
+  if(note)note.textContent=loaded+' of '+Object.keys(MOATS).length+' moats have data · sorted by 24h activity';
+
+  const now=Date.now()/1000;
+  const cutoff24h=now-86400;
+
+  // Score each moat by 24h event + tx count
+  const moatEntries=Object.entries(MOATS).map(([addr,meta])=>{
     const m=moatMap[addr]||{...meta,walletCount:0,totalPoints:0,avgPoints:0};
+    const evs24h=allEvs.filter(e=>e.contractAddress===addr&&Number(e.timestamp||0)>=cutoff24h);
+    m._evs24h=evs24h.length;
+    m._txIn24h=evs24h.filter(e=>{const t=(e.eventType||'').toLowerCase();return t.includes('stake')||t.includes('lock')||t.includes('burn');}).length;
+    m._txOut24h=evs24h.filter(e=>{const t=(e.eventType||'').toLowerCase();return t.includes('unstake')||t.includes('withdraw')||t.includes('unlock')||t.includes('eel')||t.includes('earlyexit');}).length;
+    return [addr,meta,m];
+  });
+
+  // Sort by 24h events desc, then by total points as tiebreaker
+  moatEntries.sort((a,b)=>{
+    const d=b[2]._evs24h-a[2]._evs24h;
+    return d!==0?d:b[2].totalPoints-a[2].totalPoints;
+  });
+
+  // Compute yesterday's rank (same sort but using events from 24–48h ago as proxy — use total points as stable baseline)
+  const yesterdayRanks={};
+  const byPoints=[...moatEntries].sort((a,b)=>b[2].totalPoints-a[2].totalPoints);
+  byPoints.forEach(([addr],i)=>yesterdayRanks[addr]=i+1);
+
+  el.innerHTML=moatEntries.map(([addr,meta,m],rankIdx)=>{
+    const rank=rankIdx+1;
+    const prevRank=yesterdayRanks[addr]||rank;
+    const rankDiff=prevRank-rank; // positive = moved up
+    let rankBadge='';
+    if(rankDiff>0){
+      rankBadge=`<span style="display:inline-flex;align-items:center;gap:2px;font-family:'DM Mono',monospace;font-size:.52rem;color:var(--grn);background:rgba(109,184,122,.12);border:1px solid rgba(109,184,122,.22);border-radius:4px;padding:1px 5px;margin-left:auto;flex-shrink:0">▲${rankDiff}</span>`;
+    } else if(rankDiff<0){
+      rankBadge=`<span style="display:inline-flex;align-items:center;gap:2px;font-family:'DM Mono',monospace;font-size:.52rem;color:var(--red);background:rgba(224,82,82,.12);border:1px solid rgba(224,82,82,.22);border-radius:4px;padding:1px 5px;margin-left:auto;flex-shrink:0">▼${Math.abs(rankDiff)}</span>`;
+    }
+
     const pct=totPts?(m.totalPoints/totPts*100).toFixed(1):0;
     const hasData=m.walletCount>0;
+    const activity24hLabel=m._evs24h>0
+      ? `<span style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--acc)">${m._evs24h} event${m._evs24h!==1?'s':''} (24h)</span>`
+      : `<span style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--ash2)">no activity (24h)</span>`;
+
     return `<div class="mc" onclick="navToMoat('${addr}')" style="border-top:3px solid ${meta.color};opacity:${hasData?1:.6}">
-      <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">
         <div style="display:flex;gap:0">${logoImg(meta.logo,'moat-logo',meta.emoji,meta.color)}</div>
-        <div>
+        <div style="flex:1;min-width:0">
           <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.88rem">${meta.name}</div>
           <div style="font-family:'DM Mono',monospace;font-size:.54rem;color:var(--mut)">${meta.ticker}</div>
         </div>
-        ${!hasData?'<span class="tag tag-gld" style="margin-left:auto">no data yet</span>':''}
+        ${rankBadge||(!hasData?'<span class="tag tag-gld" style="margin-left:auto">no data</span>':'')}
       </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+        <span style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--mut)">#${rank} by activity</span>
+        ${activity24hLabel}
+      </div>
+      ${m._evs24h>0?`<div style="display:flex;gap:4px;margin-bottom:7px;flex-wrap:wrap">
+        ${m._txIn24h>0?`<span style="font-family:'DM Mono',monospace;font-size:.49rem;color:var(--grn);background:rgba(109,184,122,.1);border:1px solid rgba(109,184,122,.2);border-radius:3px;padding:1px 5px">▲ ${m._txIn24h} in</span>`:''}
+        ${m._txOut24h>0?`<span style="font-family:'DM Mono',monospace;font-size:.49rem;color:var(--red);background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.2);border-radius:3px;padding:1px 5px">▼ ${m._txOut24h} out</span>`:''}
+      </div>`:''}
       <div class="msr">
         <div class="ms"><div class="msv" style="color:${meta.color}">${fmtP(m.totalPoints)}</div><div class="msl">Points</div></div>
         <div class="ms"><div class="msv">${m.walletCount}</div><div class="msl">Wallets</div></div>
@@ -2625,6 +2693,8 @@ function renderMoatDetail(addr,silent=false){
   applyMoatEvFilter();
   buildMoatLB(addr);
   renderMoatRewards(addr);
+  // Render 24h token flow panel
+  render24hTokenFlow(addr);
   // Fetch on-chain token totals from Snowtrace
   setTimeout(()=>fetchMoatTokenTotals(addr).then(totals => {
     if (!totals) return;
@@ -2680,6 +2750,113 @@ function renderMoatDetail(addr,silent=false){
 
 function hideMoatDetail(){
   backToMoats();
+}
+
+// ── 24H TOKEN FLOW PANEL ──
+function render24hTokenFlow(addr){
+  const inEl  = document.getElementById('mFlow24hIn');
+  const outEl = document.getElementById('mFlow24hOut');
+  const noteEl= document.getElementById('mFlow24hNote');
+  if(!inEl||!outEl) return;
+
+  const meta = MOATS[addr]||{};
+  const tkr  = meta.ticker||'tokens';
+  const now  = Date.now()/1000;
+  const cut  = now - 86400;
+  const px   = priceCache[addr]?.price||0;
+
+  // Gather 24h events for this moat from allEvs
+  const evs24 = allEvs.filter(e=>
+    e.contractAddress===addr && Number(e.timestamp||0)>=cut
+  );
+
+  // ── IN buckets: staked / locked / burned ──
+  let stakedAmt=0, lockedAmt=0, burnedAmt=0;
+  let stakedCnt=0, lockedCnt=0, burnedCnt=0;
+
+  // ── OUT buckets: unstake / EEL ──
+  let unstakeAmt=0, eelAmt=0;
+  let unstakeCnt=0, eelCnt=0;
+
+  evs24.forEach(e=>{
+    const t=(e.eventType||'').toLowerCase();
+    const amt=Number(e.tokenAmount||0);
+    if(t.includes('burn')){burnedAmt+=amt;burnedCnt++;}
+    else if(t.includes('lock')&&!t.includes('unlock')){lockedAmt+=amt;lockedCnt++;}
+    else if(t.includes('stake')||t.includes('deposit')){stakedAmt+=amt;stakedCnt++;}
+    else if(t.includes('eel')||t.includes('earlyexit')||t.includes('early exit')){eelAmt+=amt;eelCnt++;}
+    else if(t.includes('unstake')||t.includes('withdraw')||t.includes('unlock')){unstakeAmt+=amt;unstakeCnt++;}
+  });
+
+  const totalIn  = stakedAmt+lockedAmt+burnedAmt;
+  const totalOut = unstakeAmt+eelAmt;
+  const totalInCnt  = stakedCnt+lockedCnt+burnedCnt;
+  const totalOutCnt = unstakeCnt+eelCnt;
+
+  if(noteEl) noteEl.innerHTML = `<span style="color:var(--acc)">${evs24.length} event${evs24.length!==1?'s':''} in last 24h</span>`;
+
+  function usdLine(amt){
+    if(!amt||!px) return '';
+    return `<div style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--dim);margin-top:1px">≈ ${fmtK(amt*px)}</div>`;
+  }
+
+  function row(icon,label,amt,cnt,color){
+    if(!cnt) return '';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(51,46,40,.25)">
+      <span style="font-family:'DM Mono',monospace;font-size:.62rem;color:${color}">${icon} ${label}</span>
+      <div style="text-align:right">
+        <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.75rem;color:${color}">${amt>0?fmtP(amt):cnt+' evt'}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.5rem;color:var(--mut)">${cnt} tx${cnt!==1?'s':''}</div>
+        ${usdLine(amt)}
+      </div>
+    </div>`;
+  }
+
+  // IN panel
+  if(!totalInCnt){
+    inEl.innerHTML=`<div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--ash2)">No inflows detected in 24h</div>`;
+  } else {
+    const inRows = [
+      row('🔒','Staked', stakedAmt, stakedCnt, 'var(--acc)'),
+      row('⏳','Locked', lockedAmt, lockedCnt, 'var(--gld)'),
+      row('🔥','Burned', burnedAmt, burnedCnt, 'var(--red)'),
+    ].filter(Boolean).join('');
+    inEl.innerHTML = inRows
+      + (totalIn>0?`<div style="display:flex;align-items:center;justify-content:space-between;padding-top:.35rem;margin-top:.1rem">
+          <span style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--grn);font-weight:600">TOTAL IN</span>
+          <div style="text-align:right">
+            <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.82rem;color:var(--grn)">${fmtP(totalIn)} ${tkr}</div>
+            ${px>0?`<div style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--dim)">≈ ${fmtK(totalIn*px)}</div>`:''}
+          </div>
+        </div>`:'');
+  }
+
+  // OUT panel
+  if(!totalOutCnt){
+    outEl.innerHTML=`<div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--ash2)">No outflows detected in 24h</div>`;
+  } else {
+    const outRows = [
+      row('↩','Unstake', unstakeAmt, unstakeCnt, 'var(--mut)'),
+      row('🚨','EEL Exit', eelAmt, eelCnt, 'var(--red)'),
+    ].filter(Boolean).join('');
+    outEl.innerHTML = outRows
+      + (totalOut>0?`<div style="display:flex;align-items:center;justify-content:space-between;padding-top:.35rem;margin-top:.1rem">
+          <span style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--red);font-weight:600">TOTAL OUT</span>
+          <div style="text-align:right">
+            <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.82rem;color:var(--red)">${fmtP(totalOut)} ${tkr}</div>
+            ${px>0?`<div style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--dim)">≈ ${fmtK(totalOut*px)}</div>`:''}
+          </div>
+        </div>`:'');
+  }
+
+  // Net flow badge in panel header
+  if(noteEl && (totalIn>0||totalOut>0)){
+    const net=totalIn-totalOut;
+    const netColor=net>=0?'var(--grn)':'var(--red)';
+    const netSign=net>=0?'▲':'▼';
+    const netLabel=net>=0?'net inflow':'net outflow';
+    noteEl.innerHTML+=` &nbsp;·&nbsp; <span style="color:${netColor}">${netSign} ${fmtP(Math.abs(net))} ${tkr} ${netLabel}</span>`;
+  }
 }
 
 function buildMoatDetailChart(addr){
@@ -2749,31 +2926,21 @@ async function renderMoatRewards(addr){
      e.eventType?.toLowerCase().includes('claim')||
      e.eventType?.toLowerCase().includes('distribut')));
 
-  // ── Step 2: Fetch from /events API — exhaustive fetch (cap 6000) ──
+  // ── Step 2: Fetch from /events API (the only working endpoint) ──
   let apiEvs = [];
   try {
-    const first = await fetch(API + '/events?contractAddress=' + addr + '&limit=500&offset=0')
-      .then(r=>r.ok?r.json():null).catch(()=>null);
-    if (first) {
-      const firstArr = first.results||first||[];
-      if (Array.isArray(firstArr)) apiEvs.push(...firstArr);
-      const totalEvs = first.total || firstArr.length;
-      const remainOffsets = [];
-      for (let off = 500; off < Math.min(totalEvs, 6000); off += 500) remainOffsets.push(off);
-      if (remainOffsets.length > 0) {
-        const fetches = remainOffsets.map(offset =>
-          fetch(API + '/events?contractAddress=' + addr + '&limit=500&offset=' + offset)
-            .then(r=>r.ok?r.json():null).catch(()=>null)
-        );
-        const results = await Promise.allSettled(fetches);
-        results.forEach(r=>{
-          if(r.status==='fulfilled'&&r.value){
-            const evArr = r.value.results||r.value||[];
-            if(Array.isArray(evArr)) apiEvs.push(...evArr);
-          }
-        });
+    const pages = [0, 500, 1000]; // fetch up to 1500 events
+    const fetches = pages.map(offset =>
+      fetch(API + '/events?contractAddress=' + addr + '&limit=500&offset=' + offset)
+        .then(r=>r.ok?r.json():null).catch(()=>null)
+    );
+    const results = await Promise.allSettled(fetches);
+    results.forEach(r=>{
+      if(r.status==='fulfilled'&&r.value){
+        const evArr = r.value.results||r.value||[];
+        if(Array.isArray(evArr)) apiEvs.push(...evArr);
       }
-    }
+    });
   } catch(e){}
 
   // Filter API events for reward/claim types
@@ -2802,37 +2969,40 @@ async function renderMoatRewards(addr){
     '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7': 18, // WAVAX
     '0x152b9d0fdc40c096757f570a51e494bd4b943e50': 8,  // BTC.b
     '0x50b7545627a5162f82a992c33b87adc75187b218': 8,  // WBTC.e
-    '0x63a72806098bd3d9520cc43356dd78afe5d386d9': 18, // AAVE.e
-    '0xd586e7f844cea2f87f50152665bcbc2c279d8d70': 18, // DAI.e
   };
-  // All moat tokens are standard 18-decimal ERC20s
-  Object.values(MOATS).forEach(m=>{ if(m.tokenAddr) TOKEN_DECIMALS[m.tokenAddr.toLowerCase()]=18; });
   let onChainEvs = [];
   try {
     const RPC = 'https://api.avax.network/ext/bc/C/rpc';
+    // Collect unique txHashes from API events (claim/reward types)
     const claimTxHashes = [...new Set(
       apiRewardEvs.map(e=>e.txHash).filter(h=>h&&h.startsWith('0x'))
-    )].slice(0, 150); // cap at 150 receipts
+    )].slice(0, 50); // cap at 50 receipts
 
+    // Also do a broad getLogs scan for Transfer events TO the moat contract
+    // to catch any receipts we might have missed from the API
     const blkRes = await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]})}).then(r=>r.json()).catch(()=>null);
     const curBlock = blkRes?.result ? parseInt(blkRes.result,16) : 0;
 
+    // Fetch all tx receipts in parallel (for known claim txns from API)
     const receiptJobs = claimTxHashes.map(hash=>
       fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getTransactionReceipt',params:[hash]})
       }).then(r=>r.json()).catch(()=>null)
     );
 
+    // Also scan for Transfer events FROM the moat contract address in recent blocks
+    // (moat contract is the "from" address when it pays out rewards)
     let logScanJob = null;
     if(curBlock>0){
-      const fromBlock = '0x'+Math.max(0,curBlock-250000).toString(16); // ~10 days on Avalanche
+      const fromBlock = '0x'+Math.max(0,curBlock-100000).toString(16);
       const toBlock   = '0x'+curBlock.toString(16);
+      // Transfer events where topic[1] (from) = moat contract (padded to 32 bytes)
       const paddedAddr = '0x000000000000000000000000'+addr.slice(2).toLowerCase();
       logScanJob = fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getLogs',params:[{
           fromBlock, toBlock,
-          topics:[TRANSFER_TOPIC, paddedAddr]
+          topics:[TRANSFER_TOPIC, paddedAddr] // Transfer FROM moat contract
         }]})
       }).then(r=>r.json()).catch(()=>null);
     }
@@ -3094,34 +3264,6 @@ async function renderMoatRewards(addr){
       </div>`;
   }
 
-  // ── Reward Calculator — pass live data as JSON into inline self-contained script ──
-  // Build rewardPriceMap here where it's in scope (inside hasRewards block vars)
-  const _calcRpm = {'USDC':1,'USDT':1,'DAI.e':1};
-  if(hasRewards){
-    // rewardPriceMap was built inside if(hasRewards); re-derive minimal version for calc
-    _calcRpm['WAVAX'] = priceCache['0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7']?.price||0;
-    _calcRpm['AVAX']  = _calcRpm['WAVAX'];
-    _calcRpm['WETH.e']= priceCache['0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab']?.price||0;
-    _calcRpm['BTC.b'] = priceCache['0x152b9d0fdc40c096757f570a51e494bd4b943e50']?.price||0;
-    _calcRpm['WBTC.e']= priceCache['0x50b7545627a5162f82a992c33b87adc75187b218']?.price||0;
-    Object.entries(MOATS).forEach(([mAddr,mm])=>{ if(mm.ticker&&priceCache[mAddr]?.price>0) _calcRpm[mm.ticker]=priceCache[mAddr].price; });
-    Object.entries(cgCache).forEach(([ra,d])=>{ if(d.symbol&&!_calcRpm[d.symbol]) _calcRpm[d.symbol]=0; });
-  }
-  const _calcTally = Object.fromEntries(Object.entries(rewardTally).map(([k,v])=>[k,{total:v.total,count:v.count}]));
-  const _calcJson  = JSON.stringify({
-    totalPoints: tot,
-    moatAddr: addr,
-    moatName: meta.name||'',
-    moatColor: meta.color||'#f97316',
-    moatTicker: meta.ticker||'',
-    knownSupply: meta.knownSupply||0,
-    isLpMoat: !!meta.isLpMoat,
-    rewardTally: _calcTally,
-    rewardPriceMap: _calcRpm,
-    hasHistorical: hasRewards,
-    lockTable: [[1,2.04],[7,2.11],[30,2.31],[60,2.52],[90,2.73],[120,2.91],[180,3.23],[240,3.52],[365,4.00],[450,4.31],[540,4.57],[600,4.73],[660,4.87],[700,4.95],[729,4.99],[730,5.00]],
-  }).replace(/</g,'\\u003c').replace(/>/g,'\\u003e');
-
   el.innerHTML=`
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem;margin-bottom:.85rem">
       <div class="reward-card"><div class="rv2" style="color:${meta.color||'var(--acc)'}">${fmtP(tot)}</div><div class="rl2">Total Points Pool</div></div>
@@ -3130,204 +3272,6 @@ async function renderMoatRewards(addr){
       <div class="reward-card"><div class="rv2 cd">${tot?(top10/tot*100).toFixed(1):0}%</div><div class="rl2">Top 10 Share</div></div>
     </div>
     ${rewardCurrencyHTML}
-
-    <!-- ── REWARD CALCULATOR ── -->
-    <div style="background:linear-gradient(135deg,rgba(249,115,22,.07),rgba(212,168,67,.05));border:1px solid rgba(249,115,22,.28);border-radius:11px;padding:.95rem;margin-bottom:.85rem">
-      <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);margin-bottom:.6rem;display:flex;align-items:center;gap:7px">
-        🧮 Reward Calculator
-        <span style="font-family:'DM Mono',monospace;font-size:.52rem;font-weight:400;color:var(--mut);text-transform:none;letter-spacing:0">estimate your share based on historical rounds</span>
-      </div>
-      <div style="display:flex;gap:.4rem;margin-bottom:.8rem">
-        <button id="rcModePoints" onclick="rcSetMode('points')"
-          style="flex:1;padding:.42rem .6rem;border-radius:7px;border:1px solid rgba(249,115,22,.4);background:rgba(249,115,22,.15);color:var(--acc);font-family:'DM Mono',monospace;font-size:.6rem;cursor:pointer;font-weight:600">
-          📊 I have Moat Points
-        </button>
-        <button id="rcModeUsdc" onclick="rcSetMode('usdc')"
-          style="flex:1;padding:.42rem .6rem;border-radius:7px;border:1px solid var(--bor);background:var(--sur);color:var(--mut);font-family:'DM Mono',monospace;font-size:.6rem;cursor:pointer">
-          💵 I have USDC
-        </button>
-      </div>
-      <!-- Points mode -->
-      <div id="rcPanelPoints">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.55rem">
-          <div>
-            <label style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.28rem">My Moat Points</label>
-            <input id="rcInputPts" type="number" placeholder="e.g. 50000" oninput="rcCalc()"
-              style="width:100%;background:var(--sur);border:1px solid var(--bor);border-radius:7px;padding:.48rem .7rem;font-family:'DM Mono',monospace;font-size:.82rem;color:var(--txt);outline:none;transition:border-color .15s"
-              onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bor)'">
-          </div>
-          <div style="display:flex;flex-direction:column;justify-content:flex-end">
-            <div style="background:var(--card);border:1px solid var(--bor);border-radius:7px;padding:.48rem .7rem;text-align:center">
-              <div id="rcShareDisplay" style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.92rem;color:var(--pur)">—</div>
-              <div style="font-family:'DM Mono',monospace;font-size:.46rem;color:var(--mut);text-transform:uppercase">Pool Share</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- USDC mode -->
-      <div id="rcPanelUsdc" style="display:none">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
-          <div>
-            <label style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.28rem">USDC Budget</label>
-            <input id="rcInputUsdc" type="number" placeholder="e.g. 500" oninput="rcCalc()"
-              style="width:100%;background:var(--sur);border:1px solid var(--bor);border-radius:7px;padding:.48rem .7rem;font-family:'DM Mono',monospace;font-size:.82rem;color:var(--txt);outline:none;transition:border-color .15s"
-              onfocus="this.style.borderColor='var(--acc)'" onblur="this.style.borderColor='var(--bor)'">
-          </div>
-          <div>
-            <label style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.28rem">Strategy</label>
-            <select id="rcStratSel" onchange="rcCalc()"
-              style="width:100%;background:var(--sur);border:1px solid var(--bor);border-radius:7px;padding:.48rem .65rem;font-family:'DM Mono',monospace;font-size:.65rem;color:var(--txt);outline:none">
-              <option value="stake">🔓 Stake — 1×</option>
-              <option value="lock90">🔒 Lock 90d — 2.73×</option>
-              <option value="lock180" selected>🔒 Lock 180d — 3.23×</option>
-              <option value="lock365">🔒 Lock 365d — 4.00×</option>
-              <option value="lock730">🔒 Lock 730d — 5.00×</option>
-              <option value="burn">🔥 Burn — 10×</option>
-            </select>
-          </div>
-        </div>
-        <div id="rcUsdcDerived" style="display:none;background:var(--card);border:1px solid var(--bor);border-radius:7px;padding:.5rem .8rem;margin-bottom:.5rem">
-          <div style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
-            <div style="text-align:center;flex:1"><div id="rcUsdcTokens" style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.85rem;color:var(--txt)">—</div><div style="font-family:'DM Mono',monospace;font-size:.46rem;color:var(--mut);text-transform:uppercase">Tokens</div></div>
-            <div style="text-align:center;flex:1"><div id="rcUsdcPts" style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.85rem;color:var(--acc)">—</div><div style="font-family:'DM Mono',monospace;font-size:.46rem;color:var(--mut);text-transform:uppercase">Est. Points</div></div>
-            <div style="text-align:center;flex:1"><div id="rcUsdcShare" style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.85rem;color:var(--pur)">—</div><div style="font-family:'DM Mono',monospace;font-size:.46rem;color:var(--mut);text-transform:uppercase">Pool Share</div></div>
-          </div>
-        </div>
-      </div>
-      <!-- Results -->
-      <div id="rcResults" style="display:none;margin-top:.1rem">
-        <div style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--mut);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.45rem">
-          Est. reward share — based on <span id="rcRoundCount" style="color:var(--acc)">—</span> historical distribution round(s)
-        </div>
-        <div id="rcTokenRows" style="display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:.5rem"></div>
-        <div id="rcTotalUsd" style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1rem;color:var(--grn);text-align:right;display:none"></div>
-        <div style="font-family:'DM Mono',monospace;font-size:.46rem;color:var(--ash2);margin-top:.4rem;line-height:1.55;border-top:1px solid var(--bor);padding-top:.4rem">
-          Formula: <b style="color:var(--dim)">Your Points ÷ (Pool Total + Your Points) × Total Distributed Per Round</b>
-          · Based on historical data only. Future rewards not guaranteed. Actual amounts depend on next distribution size.
-        </div>
-      </div>
-      <div id="rcEmpty" style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--mut);text-align:center;padding:.45rem 0">
-        ${hasRewards ? 'Enter your points or budget above ↑' : 'No reward history yet — calculator activates once rewards are distributed.'}
-      </div>
-    </div>
-
-    <script>
-    (function(){
-      const CD = ${_calcJson};
-      let _mode = 'points';
-
-      window.rcSetMode = function(m){
-        _mode = m;
-        document.getElementById('rcPanelPoints').style.display = m==='points'?'':'none';
-        document.getElementById('rcPanelUsdc').style.display   = m==='usdc'?'':'none';
-        const bP = document.getElementById('rcModePoints');
-        const bU = document.getElementById('rcModeUsdc');
-        if(bP){ bP.style.background=m==='points'?'rgba(249,115,22,.15)':'var(--sur)'; bP.style.color=m==='points'?'var(--acc)':'var(--mut)'; bP.style.borderColor=m==='points'?'rgba(249,115,22,.4)':'var(--bor)'; }
-        if(bU){ bU.style.background=m==='usdc'?'rgba(249,115,22,.15)':'var(--sur)';   bU.style.color=m==='usdc'?'var(--acc)':'var(--mut)';   bU.style.borderColor=m==='usdc'?'rgba(249,115,22,.4)':'var(--bor)'; }
-        rcCalc();
-      };
-
-      function _lkM(d){
-        const v=Math.min(Math.max(Math.round(Number(d)||1),1),730);
-        const T=CD.lockTable;
-        for(let i=0;i<T.length-1;i++){const[d0,m0]=T[i],[d1,m1]=T[i+1];if(v<=d1){const t=(v-d0)/(d1-d0);return+(m0+t*(m1-m0)).toFixed(3);}}
-        return 5.00;
-      }
-      function _cPts(bal,mult,sup){ if(!bal||!sup||!mult)return 0; return Math.sqrt(bal*mult*(1e9/sup)); }
-      function _fmt(n){ if(n>=1e6)return(n/1e6).toFixed(2)+'M'; if(n>=1e3)return(n/1e3).toFixed(1)+'K'; return Number(n.toFixed(2)).toLocaleString(); }
-      function _fmtK(n){ if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M'; if(n>=1e3)return'$'+(n/1e3).toFixed(1)+'K'; return'$'+n.toFixed(2); }
-      function _el(id){ return document.getElementById(id); }
-
-      window.rcCalc = function(){
-        let myPts = 0;
-        const stratMap = {stake:1,lock90:_lkM(90),lock180:_lkM(180),lock365:_lkM(365),lock730:_lkM(730),burn:10};
-
-        if(_mode==='points'){
-          myPts = Number(_el('rcInputPts')?.value)||0;
-          const sEl = _el('rcShareDisplay');
-          if(sEl && myPts>0 && CD.totalPoints>0){
-            sEl.textContent = (myPts/(CD.totalPoints+myPts)*100).toFixed(4)+'%';
-          } else if(sEl){ sEl.textContent='—'; }
-
-        } else { // usdc mode
-          const usd   = Number(_el('rcInputUsdc')?.value)||0;
-          const strat = _el('rcStratSel')?.value||'stake';
-          const mult  = stratMap[strat]||1;
-          // Try to get live token price from parent page scope
-          let px = 0;
-          try { px = (typeof priceCache !== 'undefined' && priceCache[CD.moatAddr]?.price) || 0; } catch(e){}
-          let supply = CD.knownSupply;
-          try { if(!supply && typeof getSupply==='function'){ const s=getSupply(CD.moatAddr); if(s?.totalSupply>0) supply=s.totalSupply; } } catch(e){}
-
-          const dEl = _el('rcUsdcDerived');
-          if(usd>0 && px>0 && supply>0){
-            const tokens = usd/px;
-            myPts = _cPts(tokens, mult, supply);
-            if(dEl) dEl.style.display='';
-            const te=_el('rcUsdcTokens'); if(te) te.textContent=_fmt(tokens)+' '+CD.moatTicker;
-            const pe=_el('rcUsdcPts');    if(pe){ pe.textContent=_fmt(myPts)+' pts'; pe.style.color='var(--acc)'; }
-            if(CD.totalPoints>0){
-              const se=_el('rcUsdcShare');
-              if(se) se.textContent=(myPts/(CD.totalPoints+myPts)*100).toFixed(4)+'%';
-            }
-          } else {
-            if(dEl) dEl.style.display='none';
-            if(usd>0 && px===0){
-              const pe=_el('rcUsdcPts'); if(pe){ pe.textContent='Load price first'; pe.style.color='var(--gld)'; }
-              const dEl2=_el('rcUsdcDerived'); if(dEl2) dEl2.style.display='';
-            }
-          }
-        }
-
-        const resEl  = _el('rcResults');
-        const empEl  = _el('rcEmpty');
-        const rowsEl = _el('rcTokenRows');
-        const totEl  = _el('rcTotalUsd');
-        const rndEl  = _el('rcRoundCount');
-
-        if(!CD.hasHistorical || myPts<=0 || CD.totalPoints<=0){
-          if(resEl) resEl.style.display='none';
-          if(empEl) empEl.style.display='';
-          return;
-        }
-
-        if(resEl) resEl.style.display='';
-        if(empEl) empEl.style.display='none';
-
-        const userShare = myPts / (CD.totalPoints + myPts);
-        let totalUsd = 0;
-        const maxRounds = Math.max(...Object.values(CD.rewardTally).map(d=>d.count||1));
-        if(rndEl) rndEl.textContent = maxRounds;
-
-        const rows = Object.entries(CD.rewardTally)
-          .filter(([,d])=>d.total>0)
-          .map(([token,data])=>{
-            const perRound = data.total / (data.count||1);
-            const estAmt   = userShare * perRound; // estimate per round
-            const px2      = CD.rewardPriceMap[token]||0;
-            const usdVal   = px2>0 ? estAmt*px2 : 0;
-            totalUsd += usdVal;
-            return {token, estAmt, usdVal, perRound, totalDist:data.total, rounds:data.count||1};
-          });
-
-        if(rowsEl){
-          rowsEl.innerHTML = rows.map(r=>`
-            <div style="background:var(--card);border:1px solid rgba(109,184,122,.22);border-radius:9px;padding:.6rem .8rem;flex:1;min-width:120px">
-              <div style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--mut);text-transform:uppercase;margin-bottom:.2rem">${r.token}</div>
-              <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.95rem;color:var(--grn)">${_fmt(r.estAmt)}</div>
-              ${r.usdVal>0?'<div style="font-family:\'DM Mono\',monospace;font-size:.6rem;color:var(--grn);opacity:.85;margin-top:1px">'+_fmtK(r.usdVal)+'</div>':''}
-              <div style="font-family:'DM Mono',monospace;font-size:.48rem;color:var(--ash2);margin-top:.3rem;line-height:1.4">per round · ${_fmt(r.perRound)} avg/round<br>${_fmt(r.totalDist)} total across ${r.rounds} round${r.rounds!==1?'s':''}</div>
-            </div>`).join('');
-        }
-
-        if(totEl){
-          totEl.style.display = totalUsd>0 ? '' : 'none';
-          if(totalUsd>0) totEl.textContent = '≈ ' + _fmtK(totalUsd) + ' est. value / round';
-        }
-      };
-    })();
-    <\/script>
-
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem;margin-bottom:.85rem">
       <div class="reward-card" style="border-color:rgba(249,115,22,.2)"><div class="rv2 ca">${m.stakeCount}</div><div class="rl2">🔒 Stakers</div><div style="font-size:.63rem;color:var(--dim);margin-top:3px">${fmtP(m.stakePts)} pts</div></div>
       <div class="reward-card" style="border-color:rgba(212,168,67,.2)"><div class="rv2 cg">${m.lockCount}</div><div class="rl2">⏳ Lockers</div><div style="font-size:.63rem;color:var(--dim);margin-top:3px">${fmtP(m.lockPts)} pts</div></div>
@@ -3336,13 +3280,14 @@ async function renderMoatRewards(addr){
     ${allRewardEvs.length?`
     <div class="panel" style="margin-bottom:.85rem">
       <div class="ph"><div class="ptitle">💰 Reward & Claim Events</div><span style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--mut)">${allRewardEvs.length} events</span></div>
-      <div class="evf">${renderEvItemsInline(allRewardEvs.slice(0,50), REWARD_TOKENS, cgCache)}</div>
+      <div class="evf">${renderEvItemsInline(allRewardEvs.slice(0,20), REWARD_TOKENS, cgCache)}</div>
     </div>`:''}
     <div class="panel">
       <div class="ph"><div class="ptitle">Full Distribution (${pts.length} wallets)</div>${tokenLabels.length?`<span style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--grn)">💰 claimed rewards shown</span>`:''}</div>
       <div class="pb0 tw"><table class="tbl"><thead><tr><th>Rank</th><th>Wallet</th><th>Points</th><th>Pool %</th><th>Tier</th>${tokenLabels.map(t=>`<th style="color:var(--grn)"><div style="display:inline-flex;align-items:center;gap:3px">${tokenImgTag(t,14)} ${t}</div></th>`).join('')}</tr></thead><tbody>
         ${pts.map((p,i)=>{
           const w=getWallet(p),sh=tot?(p.points/tot*100).toFixed(3):'0';
+          // Use actionType from API if available; fall back to points-based inference
           const at=(p.actionType||'').toLowerCase();
           const tier=at==='burn'||at==='burned'?'🔥 Burn':at==='lock'||at==='locked'?'⏳ Lock':at==='stake'||at==='staked'?'🔒 Stake':
             p.points>m.avgPoints*5?'🔥 Burn':p.points>m.avgPoints*1.5?'⏳ Lock':'🔒 Stake';
@@ -5285,7 +5230,8 @@ async function runAutoAgent() {
     if(c.ecoShare<0.05)reasoning.push('low eco share = high upside');
     if(c.px?.liq>20000)reasoning.push('good liquidity');
     if(c.m.walletCount>20)reasoning.push('active community');
-    return {c,usd,strategy,mult,tokens,pts,estRank,estShare,stratLabel,reasoning,weight:weights[i]};
+    // Store isHcashLpAgent + tokensForPts on return object so render template can access them
+    return {c,usd,strategy,mult,tokens,tokensForPts,isHcashLpAgent,pts,estRank,estShare,stratLabel,reasoning,weight:weights[i]};
   });
 
   const divMult=cMult(chosen.length);
@@ -5324,8 +5270,8 @@ async function runAutoAgent() {
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:.5rem">
         <div style="text-align:center;background:var(--card);border-radius:7px;padding:.45rem">
-          <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.8rem">${isHcashLpAgent ? f2(tokensForPts) : f2(r.tokens)}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:.48rem;color:var(--mut);text-transform:uppercase">${isHcashLpAgent ? 'LP Tokens' : 'Tokens'}</div>
+          <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.8rem">${r.isHcashLpAgent ? f2(r.tokensForPts) : f2(r.tokens)}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:.48rem;color:var(--mut);text-transform:uppercase">${r.isHcashLpAgent ? 'LP Tokens' : 'Tokens'}</div>
           <div style="font-family:'DM Mono',monospace;font-size:.52rem;color:var(--mut)">@ $${fmtPrice(r.c.px.price)}</div>
         </div>
         <div style="text-align:center;background:var(--card);border-radius:7px;padding:.45rem">
@@ -5883,7 +5829,8 @@ function fmtFull(n,dec=6){
   // Show up to dec decimal places, trim trailing zeros
   return parseFloat(n.toFixed(dec)).toLocaleString('en-US',{maximumFractionDigits:dec});
 }
-function fmtP(n){if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return Math.round(n).toLocaleString();}
+// fmtP — full comma-separated integers, no K/M abbreviation (full decimals as requested)
+function fmtP(n){if(n===null||n===undefined||isNaN(n))return'—';return Math.round(n).toLocaleString();}
 function f2(n){return Number(n).toLocaleString(undefined,{maximumFractionDigits:2});}
 function fmtPrice(n){
   if(!n||n===0)return'0';
