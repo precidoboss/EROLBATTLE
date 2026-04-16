@@ -60,12 +60,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .tks{color:var(--acc);margin:0 3px}
 
 /* HEADER */
-header{position:sticky;top:0;z-index:200;border-bottom:1px solid var(--bor);background:rgba(20,18,16,.96);backdrop-filter:blur(20px);padding:0 .85rem;display:flex;align-items:center;justify-content:space-between;height:54px;gap:8px}
+header{position:sticky;top:0;z-index:200;background:rgba(20,18,16,.96);backdrop-filter:blur(20px);padding:0 .85rem;display:flex;align-items:center;justify-content:space-between;height:54px;gap:8px;border-bottom:1px solid var(--bor)}
 .logo{display:flex;align-items:center;gap:8px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:.95rem;letter-spacing:.05em;color:var(--txt);flex-shrink:0;text-decoration:none}
 .logo-img{width:34px;height:34px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)}
 .logo-fallback{width:34px;height:34px;border-radius:8px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
 .logo em{color:var(--acc);font-style:normal}
-.navtabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+/* NAV BAR — below header */
+.navbar{position:sticky;top:54px;z-index:199;background:rgba(20,18,16,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--bor);padding:0 .85rem}
+.navtabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:.4rem 0}
 .navtabs::-webkit-scrollbar{display:none}
 .tab{padding:5px 9px;border-radius:6px;cursor:pointer;color:var(--mut);transition:all .15s;border:1px solid transparent;font-family:'DM Mono',monospace;font-size:.58rem;white-space:nowrap;user-select:none;flex-shrink:0}
 .tab:hover{color:var(--txt);background:rgba(249,115,22,.07)}
@@ -114,6 +116,8 @@ main{position:relative;z-index:1;padding:.8rem;max-width:1440px;margin:0 auto}
 @media(min-width:720px){.g2{grid-template-columns:1fr 1fr}}
 .gsb{display:grid;grid-template-columns:1fr;gap:.85rem}
 @media(min-width:1024px){.gsb{grid-template-columns:1fr 320px}}
+#mSlbRow{display:grid;grid-template-columns:1fr;gap:.7rem;margin-bottom:.9rem}
+@media(min-width:540px){#mSlbRow{grid-template-columns:repeat(3,1fr)}}
 
 /* TABLE */
 .tbl{width:100%;border-collapse:collapse}
@@ -469,6 +473,12 @@ main{position:relative;z-index:1;padding:.8rem;max-width:1440px;margin:0 auto}
     <span id="mainLogoFb" class="logo-fallback" style="display:none">⬡</span>
     MOATS <em>INTEL</em>
   </a>
+  <div class="hdr-r">
+    <span class="live"><span class="ld"></span><span class="ts" id="tsEl">LIVE</span></span>
+    <button class="rfbtn" id="rfBtn" onclick="loadAll()">↺ Refresh</button>
+  </div>
+</header>
+<div class="navbar">
   <nav class="navtabs">
     <div class="tab on" data-v="overview"    onclick="nav(this)">📊 Overview</div>
     <div class="tab"    data-v="moats"       onclick="nav(this)">⬡ Moats</div>
@@ -482,11 +492,7 @@ main{position:relative;z-index:1;padding:.8rem;max-width:1440px;margin:0 auto}
     <div class="tab"    data-v="positions"   onclick="nav(this)">🏦 My Positions</div>
     <div class="tab"    data-v="debug"       onclick="nav(this)">🛠️ Debug</div>
   </nav>
-  <div class="hdr-r">
-    <span class="live"><span class="ld"></span><span class="ts" id="tsEl">LIVE</span></span>
-    <button class="rfbtn" id="rfBtn" onclick="loadAll()">↺ Refresh</button>
-  </div>
-</header>
+</div>
 
 <main>
 
@@ -551,7 +557,7 @@ main{position:relative;z-index:1;padding:.8rem;max-width:1440px;margin:0 auto}
       <div class="panel">
         <div class="ph"><div class="ptitle">Token Activity Breakdown</div><span id="mActNote" style="font-family:'DM Mono',monospace;font-size:.58rem;color:var(--mut)"></span></div>
         <div class="pb">
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:.9rem" id="mSlbRow"></div>
+          <div style="display:grid;grid-template-columns:1fr;gap:.7rem;margin-bottom:.9rem" id="mSlbRow"></div>
           <div class="ch"><canvas id="cMoatDetail"></canvas></div>
         </div>
       </div>
@@ -4167,7 +4173,15 @@ function applyMoatEvFilter() {
   const type = document.getElementById('mEvTypeFilter')?.value || '';
   const days = document.getElementById('mEvDaysFilter')?.value || '0';
   const moatEvs = allEvs.filter(e=>e.contractAddress===activeMoat);
-  const filtered = filterEvs(moatEvs, type, days, '');
+  // Deduplicate by txHash — keep first occurrence only
+  const seenTxFilt = new Set();
+  const dedupedMoatEvs = moatEvs.filter(e => {
+    const key = e.txHash || (e.wallet + '|' + e.timestamp + '|' + e.eventType);
+    if (seenTxFilt.has(key)) return false;
+    seenTxFilt.add(key);
+    return true;
+  });
+  const filtered = filterEvs(dedupedMoatEvs, type, days, '');
   const ctEl = document.getElementById('mEvCount');
   if (ctEl) ctEl.textContent = filtered.length+' events shown'+(type?' · type: '+type:'')+(Number(days)>0?' · last '+days+'d':'');
   renderEvItems(filtered.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)), 'mEvFd');
