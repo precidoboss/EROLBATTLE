@@ -2771,10 +2771,18 @@ function render24hTokenFlow(addr){
   const cut  = now - 86400;
   const px   = priceCache[addr]?.price||0;
 
-  // Gather 24h events for this moat from allEvs
-  const evs24 = allEvs.filter(e=>
+  // Gather 24h events for this moat from allEvs — deduplicate by txHash first
+  // (allEvs can contain API + on-chain copies of the same tx)
+  const evs24raw = allEvs.filter(e=>
     e.contractAddress===addr && Number(e.timestamp||0)>=cut
   );
+  const _seen24 = new Set();
+  const evs24 = evs24raw.filter(e=>{
+    const key = e.txHash || (e.wallet+'|'+e.timestamp+'|'+e.eventType);
+    if(_seen24.has(key)) return false;
+    _seen24.add(key);
+    return true;
+  });
 
   // ── IN buckets: staked / locked / burned ──
   let stakedAmt=0, lockedAmt=0, burnedAmt=0;
