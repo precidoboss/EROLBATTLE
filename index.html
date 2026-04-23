@@ -5919,8 +5919,8 @@
             const camX = CH2.camX;
 
             // Background — arena_back
-            if (ASSETS.arena_back && ASSETS.arena_back.complete) {
-                C.drawImage(ASSETS.arena_back, 0, 0, W, H);
+            if (images.arena_back && images.arena_back.complete) {
+                C.drawImage(images.arena_back, 0, 0, W, H);
             } else {
                 const bg = C.createLinearGradient(0, 0, 0, H);
                 bg.addColorStop(0, '#0d0005'); bg.addColorStop(1, '#1a0008');
@@ -5939,12 +5939,12 @@
 
             // Decorations (behind platforms)
             for (const d of CH2.decorations) {
-                const img = ASSETS[d.key];
+                const img = images[d.key];
                 if (img && img.complete) C.drawImage(img, d.x, d.y, d.w, d.h);
             }
 
             // Platforms
-            const platImg = ASSETS.arena_platform;
+            const platImg = images.arena_platform;
             for (const p of CH2.platforms) {
                 const py = p.moving ? p.base + Math.sin(p.t) * p.amp : p.y;
                 if (platImg && platImg.complete) {
@@ -5964,7 +5964,7 @@
             // Traps
             for (const tr of CH2.traps) {
                 if (tr.type === 'fire') {
-                    const fi = ASSETS.trap_fire;
+                    const fi = images.trap_fire;
                     if (fi && fi.complete) {
                         tr.ft++;
                         if (tr.ft >= 6) { tr.ft = 0; tr.frame = (tr.frame + 1) % 8; }
@@ -5973,7 +5973,7 @@
                         C.fillStyle = '#ff4400'; C.fillRect(tr.x, tr.y, tr.w, tr.h);
                     }
                 } else if (tr.type === 'spike') {
-                    const sp = ASSETS.trap_spike;
+                    const sp = images.trap_spike;
                     if (sp && sp.complete) C.drawImage(sp, 0, 0, 40, 28, tr.x, tr.y, tr.w, tr.h);
                     else { C.fillStyle = '#888'; C.fillRect(tr.x, tr.y, tr.w, tr.h); }
                 }
@@ -6008,11 +6008,8 @@
 
             C.restore();
 
-            // HUD
-            drawCh2HUD(C, W, H);
-
-            // Cinematic overlay
-            if (CH2.cinematic) drawCh2Cinematic(C, W, H);
+            // HUD — only show during fight, not during cinematic
+            if (CH2.phase === 'fight' || CH2.phase === 'entrance') drawCh2HUD(C, W, H);
         }
 
         function drawNinjaSprite(C, n) {
@@ -6022,7 +6019,7 @@
                              animKey === 'death'  ? 'ninja_death'  :
                              animKey === 'hit'    ? 'ninja_hit'    :
                              animKey === 'walk'   ? 'ninja_walk'   : 'ninja_idle';
-            const img = ASSETS[assetKey];
+            const img = images[assetKey];
             const frame = Math.min(n.frame, cfg.frames - 1);
 
             C.save();
@@ -6067,7 +6064,7 @@
                              animKey === 'walk'   ? 'knight_walk'    : 'knight_idle';
             const cfg = KNIGHT_ANIMS[animKey.replace('atk', 'atk')] ||
                         KNIGHT_ANIMS[animKey] || KNIGHT_ANIMS.idle;
-            const img = ASSETS[assetKey];
+            const img = images[assetKey];
             const frame = Math.min(k.frame, cfg.frames - 1);
 
             C.save();
@@ -6423,15 +6420,23 @@
                 if (window.AQ) AQ.startCh2Run();
                 startCh2Cinematic('intro');
                 // Run the ch2 loop
+                let _ch2LoopId = null;
                 function ch2Loop() {
                     if (!CH2.active) return;
                     const C = canvas.getContext('2d');
+                    // During cinematic intro, just clear to black — cinematic runs on overlay canvas
+                    if (CH2.phase === 'cinematic') {
+                        C.fillStyle = '#000';
+                        C.fillRect(0, 0, canvas.width, canvas.height);
+                        _ch2LoopId = requestAnimationFrame(ch2Loop);
+                        return;
+                    }
                     C.clearRect(0, 0, canvas.width, canvas.height);
                     window._ch2GameLoop(1);
                     drawCh2(C);
-                    requestAnimationFrame(ch2Loop);
+                    _ch2LoopId = requestAnimationFrame(ch2Loop);
                 }
-                requestAnimationFrame(ch2Loop);
+                _ch2LoopId = requestAnimationFrame(ch2Loop);
             }, 600);
         }
 
