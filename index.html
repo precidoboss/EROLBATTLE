@@ -3756,7 +3756,7 @@
 
         const ninjaMaxHp=300;
         CH2.boss={
-            x:1400,y:250,width:80,height:100,drawWidth:230,drawHeight:230,
+            x:1400,y:250,width:80,height:100,drawWidth:270,drawHeight:270,
             hp:ninjaMaxHp,maxHp:ninjaMaxHp,
             vx:0,vy:0,grounded:true,
             facing:'left',state:'idle',
@@ -3924,7 +3924,7 @@
         enemies.push({
             x:x||200, y:y||370,
             width:40, height:55,
-            drawWidth:140, drawHeight:140,
+            drawWidth:200, drawHeight:200,
             hp:50, maxHp:50,
             vx:0, vy:0, grounded:false,
             facing:'left', state:'idle',
@@ -4003,7 +4003,7 @@
             ctx.restore();
         }
         ctx.save();ctx.imageSmoothingEnabled=false;
-        drawSprite(img,totalFrames,player.frame,player.facing==='right',destX,destY,dw,dh);
+        drawSprite(img,totalFrames,player.frame,player.facing==='left',destX,destY,dw,dh);
         ctx.restore();
     }
 
@@ -5276,8 +5276,8 @@
                 x: p.x + p.w * 0.6,
                 y: p.y - 70,
                 width: 50, height: 70,
-                drawWidth: isClone ? 140 : 160,
-                drawHeight: isClone ? 140 : 160,
+                drawWidth: isClone ? 200 : 160,
+                drawHeight: isClone ? 200 : 160,
                 hp: 50, maxHp: 50,
                 vx: 0, vy: 0,
                 grounded: true,
