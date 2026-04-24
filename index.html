@@ -582,6 +582,12 @@
                         </div>
                         <div class="ctrl-row">
                             <div class="ctrl-keys">
+                                <img src="https://raw.githubusercontent.com/precidoboss/adventurer/main/HotkeyBox_34x34.png" class="ctrl-key-img"><span class="ctrl-key-lbl">Shift</span>
+                            </div>
+                            <span class="ctrl-desc">⚡ Dash — bursts forward, deals 50% enemy HP on contact (5s cooldown)</span>
+                        </div>
+                        <div class="ctrl-row">
+                            <div class="ctrl-keys">
                                 <img src="https://raw.githubusercontent.com/precidoboss/adventurer/main/HotkeyBox_34x34.png" class="ctrl-key-img"><span class="ctrl-key-lbl">K / Space</span>
                             </div>
                             <span class="ctrl-desc">Attack (closer = more damage)</span>
@@ -681,7 +687,7 @@
 
 <div id="game-container">
     <!-- UI drawn on canvas -->
-    <div id="controls-hint">AD / Arrows to Move | W / ↑ to Jump | Space or K to Attack | 1–5 Use Artifact</div>
+    <div id="controls-hint">AD / Arrows to Move | W / ↑ to Jump | Space or K to Attack | Shift to Dash | 1–5 Use Artifact</div>
     <!-- HP drawn on canvas -->
     <div id="game-over">
         <h1>YOU DIED</h1>
@@ -5016,37 +5022,6 @@
             drawSprite(spriteImg, totalFrames, player.frame, false, destX, destY, player.drawWidth, player.drawHeight);
         }
 
-        // Dash cooldown arc indicator above player
-        if (player.dashCooldown > 0) {
-            const cx = player.x + player.width / 2;
-            const cy = player.y - 10;
-            const r = 10;
-            const progress = 1 - player.dashCooldown / player.dashCooldownMax;
-            ctx.save();
-            // Background circle
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            // Fill arc — sweep clockwise as cooldown drains
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
-            ctx.strokeStyle = '#44ddff';
-            ctx.shadowColor = '#44ddff';
-            ctx.shadowBlur = 6;
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            // Flash icon in center
-            ctx.font = 'bold 9px Arial';
-            ctx.fillStyle = '#aaddff';
-            ctx.shadowBlur = 0;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('⚡', cx, cy);
-            ctx.restore();
-        }
-
         // Damage numbers (already moved up by update loop)
         dmgNumbers.forEach(d => {
             const alpha = Math.min(1, d.life / 20);
@@ -5189,6 +5164,43 @@
         drawUI_text('⏸', pauseX + pauseW / 2, pauseY + pauseH / 2, 14, '#ffe8a0', 'center');
         // Store pause button bounds for click detection
         window._pauseBtnBounds = { x: pauseX, y: pauseY, w: pauseW, h: pauseH };
+
+        // ==== DASH COOLDOWN — top bar, left of coins ====
+        const dashPanelW = 110, dashPanelH = 28;
+        const dashPanelX = GAME_WIDTH - coinPanelW - PAD - dashPanelW - 8;
+        const dashPanelY = PAD;
+        drawUI_img('ui_titlebox', dashPanelX, dashPanelY, dashPanelW, dashPanelH);
+        drawUI_img('ui_cornerknot', dashPanelX - 3, dashPanelY - 3, knotSz, knotSz);
+        drawUI_img('ui_cornerknot', dashPanelX + dashPanelW - knotSz + 3, dashPanelY - 3, knotSz, knotSz);
+        ctx.save();
+        if (player.dashCooldown > 0) {
+            // Cooldown bar fill
+            const progress = 1 - player.dashCooldown / player.dashCooldownMax;
+            const dashBarX = dashPanelX + 8;
+            const dashBarY = dashPanelY + 18;
+            const dashBarW = dashPanelW - 16;
+            const dashBarH = 4;
+            // Track
+            ctx.globalAlpha = 0.35;
+            ctx.fillStyle = '#224466';
+            ctx.fillRect(dashBarX, dashBarY, dashBarW, dashBarH);
+            // Fill
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#44ddff';
+            ctx.shadowColor = '#44ddff';
+            ctx.shadowBlur = 6;
+            ctx.fillRect(dashBarX, dashBarY, dashBarW * progress, dashBarH);
+            ctx.shadowBlur = 0;
+            // Label + countdown
+            const secsLeft = Math.ceil(player.dashCooldown / 60);
+            drawUI_text('⚡ DASH  ' + secsLeft + 's', dashPanelX + dashPanelW / 2, dashPanelY + 9, 10, '#7abbcc', 'center');
+        } else {
+            // Ready — glow cyan
+            ctx.shadowColor = '#44ddff';
+            ctx.shadowBlur = 10;
+            drawUI_text('⚡ DASH  READY', dashPanelX + dashPanelW / 2, dashPanelY + dashPanelH / 2, 10, '#44ffdd', 'center');
+        }
+        ctx.restore();
 
         // ==== ARTIFACT INVENTORY BAR (bottom center) ====
         const slotSize = 38, slotGap = 6, slotCount = 5;
