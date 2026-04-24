@@ -1026,6 +1026,7 @@
         x: 100, y: 300,
         width: 50, height: 70,
         drawWidth: 130, drawHeight: 120,
+        footOffset: 35, // px of transparent padding at bottom of hero sprite
         vy: 0, vx: 0,
         speed: 6, jumpForce: -14, gravity: 0.7,
         grounded: false, wasGrounded: false,
@@ -1040,9 +1041,18 @@
         invincible: 0,
         dead: false,
         attackDmg: 20,
-        artifacts: [],       // collected artifacts in inventory [type strings]
-        fireShield: 0,       // countdown timer for fire shield (frames)
-        fireShieldKey: false // to detect key press edge
+        artifacts: [],
+        fireShield: 0,
+        fireShieldKey: false,
+        // --- DASH ---
+        dashing: false,
+        dashTimer: 0,
+        dashDir: 1,
+        dashSpeed: 22,
+        dashDuration: 10,   // frames the dash lasts
+        lastLeftTap: 0,     // timestamp of last left key tap
+        lastRightTap: 0,    // timestamp of last right key tap
+        doubleTapWindow: 250 // ms window for double-tap
     };
 
     // Dragon pet state
@@ -3878,6 +3888,23 @@
         }
         keys[e.code] = true;
         if ((e.code === 'KeyK' || e.code === 'Space') && !player.isAttacking && !gamePaused) { e.preventDefault(); startAttack(); }
+
+        // ---- DOUBLE-TAP DASH ----
+        if (!gamePaused && !player.dead && !player.dashing && !STORY_MODE._marketFreezePlayer) {
+            const now = Date.now();
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') {
+                if (now - player.lastRightTap < player.doubleTapWindow) {
+                    startDash(1);
+                }
+                player.lastRightTap = now;
+            }
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+                if (now - player.lastLeftTap < player.doubleTapWindow) {
+                    startDash(-1);
+                }
+                player.lastLeftTap = now;
+            }
+        }
     });
     window.addEventListener('keyup', e => keys[e.code] = false);
     window.addEventListener('mousedown', () => { startMusic(); if(!player.isAttacking) startAttack(); });
@@ -3888,6 +3915,36 @@
         player.frame = 0;
         player.state = 'attack';
         playSound('sword');
+    }
+
+    function startDash(dir) {
+        player.dashing = true;
+        player.dashTimer = player.dashDuration;
+        player.dashDir = dir;
+        player.facing = dir === 1 ? 'right' : 'left';
+        player.invincible = player.dashDuration + 2; // brief i-frames during dash
+        // Burst of dash particles
+        spawnDashParticles();
+    }
+
+    function spawnDashParticles() {
+        const count = 18;
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 4 + 1;
+            const colors = ['#ffffff', '#aaddff', '#88ccff', '#44aaff', '#6699ff'];
+            particles.push({
+                x: player.x + player.width / 2,
+                y: player.y + player.height * 0.5,
+                vx: Math.cos(angle) * speed - player.dashDir * 2,
+                vy: Math.sin(angle) * speed - 1.5,
+                life: 20 + Math.random() * 15,
+                maxLife: 35,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 5 + 2,
+                isDash: true
+            });
+        }
     }
 
     function activateArtifact(id) {
@@ -4103,12 +4160,37 @@
         }
 
         // ---- PLAYER MOVEMENT ----
-        if (!player.isAttacking && !STORY_MODE._marketFreezePlayer) {
+        if (player.dashing) {
+            // During dash: override vx with dash speed, ignore normal input
+            player.dashTimer--;
+            player.vx = player.dashDir * player.dashSpeed;
+            // Trailing afterimage particles every other frame
+            if (player.dashTimer % 2 === 0) {
+                const trailColors = ['#aaddff', '#6699ff', '#4477ff'];
+                for (let i = 0; i < 6; i++) {
+                    particles.push({
+                        x: player.x + player.width / 2 + (Math.random() - 0.5) * 20,
+                        y: player.y + player.height * 0.4 + (Math.random() - 0.5) * 20,
+                        vx: -player.dashDir * (Math.random() * 2 + 1),
+                        vy: (Math.random() - 0.5) * 1.5,
+                        life: 12 + Math.random() * 8,
+                        maxLife: 20,
+                        color: trailColors[Math.floor(Math.random() * trailColors.length)],
+                        size: Math.random() * 4 + 2,
+                        isDash: true
+                    });
+                }
+            }
+            if (player.dashTimer <= 0) {
+                player.dashing = false;
+                player.vx = player.dashDir * player.speed; // smooth exit
+            }
+        } else if (!player.isAttacking && !STORY_MODE._marketFreezePlayer) {
             if (keys['ArrowRight'] || keys['KeyD']) { player.vx = player.speed; player.facing = 'right'; }
             else if (keys['ArrowLeft'] || keys['KeyA']) { player.vx = -player.speed; player.facing = 'left'; }
             else { player.vx *= 0.8; }
         } else if (!STORY_MODE._marketFreezePlayer) { player.vx *= 0.9; }
-        else { player.vx *= 0.85; } // coast to stop when market open
+        else { player.vx *= 0.85; }
 
         player.wasGrounded = player.grounded;
         if ((keys['ArrowUp'] || keys['KeyW']) && player.grounded && !STORY_MODE._marketFreezePlayer) {
@@ -4175,7 +4257,7 @@
         // ---- PLAYER PLATFORM COLLISION ----
         player.grounded = false;
         for (let p of platforms) {
-            const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 12);
+            const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 22);
             if (player.x < p.x + p.w && player.x + player.width > p.x &&
                 player.y + player.height > surfaceY && player.y + player.height < surfaceY + p.h + 20 &&
                 player.vy >= 0) {
@@ -4264,7 +4346,7 @@
             // Enemy platform collision
             e.grounded = false;
             for (let p of platforms) {
-                const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 12);
+                const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 22);
                 if (e.x < p.x + p.w && e.x + e.width > p.x &&
                     e.y + e.height > surfaceY && e.y + e.height < surfaceY + p.h + 20 &&
                     e.vy >= 0) {
@@ -4397,7 +4479,7 @@
                                 x: e.x + e.width / 2, y: e.y + e.height / 2,
                                 vx: Math.cos(angle) * (2 + Math.random() * 3),
                                 vy: Math.sin(angle) * (2 + Math.random() * 3) - 2,
-                                life: 35, color: `hsl(${Math.random()*40},100%,60%)`
+                                life: 35, maxLife: 35, color: `hsl(${Math.random()*40},100%,60%)`
                             });
                         }
                         shakeTimer = 14; shakeMag = 6;
@@ -4417,7 +4499,7 @@
                 npc.y += npc.vy;
                 npc.grounded = false;
                 for (let p of platforms) {
-                    const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 12);
+                    const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 22);
                     if (npc.x < p.x + p.w && npc.x + npc.width > p.x &&
                         npc.y + npc.height > surfaceY && npc.y + npc.height < surfaceY + p.h + 20 && npc.vy >= 0) {
                         npc.y = surfaceY - npc.height;
@@ -4807,14 +4889,26 @@
             }
         });
 
-        // Death particles
+        // Particles (death burst + dash trail)
         particles.forEach(p => {
             ctx.save();
-            ctx.globalAlpha = Math.max(0, p.life / 35);
+            const maxLife = p.maxLife || 35;
+            const alpha = Math.max(0, p.life / maxLife);
+            ctx.globalAlpha = alpha;
             ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-            ctx.fill();
+            if (p.isDash) {
+                // Dash particles: circular with glow, shrink as they fade
+                const r = (p.size || 4) * alpha;
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, Math.max(0.5, r), 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
             ctx.restore();
         });
 
@@ -4872,7 +4966,7 @@
             const spriteImg = images[spriteKey];
             const totalFrames = anims[player.state].frames;
             const destX = player.x - (player.drawWidth - player.width) / 2;
-            const destY = player.y + player.height - player.drawHeight;
+            const destY = player.y + player.height - player.drawHeight + (player.footOffset || 0);
             // Fire shield glow — animated flame ring
             if (player.fireShield > 0) {
                 const cx = player.x + player.width / 2;
