@@ -1026,7 +1026,7 @@
         x: 100, y: 300,
         width: 50, height: 70,
         drawWidth: 130, drawHeight: 120,
-        footOffset: 22, // px of transparent padding at bottom of hero sprite
+        footOffset: 14, // px of transparent padding at bottom of hero sprite
         vy: 0, vx: 0,
         speed: 6, jumpForce: -14, gravity: 0.7,
         grounded: false, wasGrounded: false,
@@ -1048,13 +1048,10 @@
         dashing: false,
         dashTimer: 0,
         dashDir: 1,
-        dashSpeed: 22,
+        dashSpeed: 15,
         dashDuration: 10,   // frames the dash lasts
         dashCooldown: 0,    // frames remaining on cooldown
-        dashCooldownMax: 45, // ~0.75s at 60fps
-        lastLeftTap: 0,     // timestamp of last left key tap
-        lastRightTap: 0,    // timestamp of last right key tap
-        doubleTapWindow: 250 // ms window for double-tap
+        dashCooldownMax: 300, // 5s at 60fps
     };
 
     // Dragon pet state
@@ -3891,21 +3888,12 @@
         keys[e.code] = true;
         if ((e.code === 'KeyK' || e.code === 'Space') && !player.isAttacking && !gamePaused) { e.preventDefault(); startAttack(); }
 
-        // ---- DOUBLE-TAP DASH ----
-        if (!gamePaused && !player.dead && !player.dashing && player.dashCooldown <= 0 && !STORY_MODE._marketFreezePlayer) {
-            const now = Date.now();
-            if (e.code === 'KeyD' || e.code === 'ArrowRight') {
-                if (now - player.lastRightTap < player.doubleTapWindow) {
-                    startDash(1);
-                }
-                player.lastRightTap = now;
-            }
-            if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
-                if (now - player.lastLeftTap < player.doubleTapWindow) {
-                    startDash(-1);
-                }
-                player.lastLeftTap = now;
-            }
+        // ---- SHIFT DASH — dashes in the direction the hero is currently facing ----
+        if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') &&
+            !gamePaused && !player.dead && !player.dashing &&
+            player.dashCooldown <= 0 && !STORY_MODE._marketFreezePlayer) {
+            e.preventDefault();
+            startDash(player.facing === 'right' ? 1 : -1);
         }
     });
     window.addEventListener('keyup', e => keys[e.code] = false);
