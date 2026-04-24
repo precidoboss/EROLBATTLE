@@ -462,6 +462,36 @@
         .aq-lb-page button:hover { border-color:#8a6030; }
         .aq-lb-page span { font-family:'Cinzel',serif; font-size:11px; color:#6a5030; }
         #aq-game-coins-display { display:none !important; }
+
+        /* ===== CHAPTER 2 — EMBERS OF REBIRTH STYLES ===== */
+        #ch2-locked-notice {
+            font-family:'Cinzel',serif; font-size:11px; color:#664422;
+            letter-spacing:1px; text-align:center; margin-top:4px;
+            opacity:0; animation: fadeSlideUp 0.7s 1.5s forwards;
+        }
+        .stone-btn.ch2-locked .stone-btn-inner {
+            background: linear-gradient(160deg,#1a1010,#0e0808);
+            color:#553322; border:1.5px solid #3a2018;
+        }
+        .stone-btn.ch2-ready .stone-btn-inner {
+            background: linear-gradient(160deg,#1a0820,#0e0412);
+            color:#cc88ff; border:1.5px solid #7a3acc;
+            box-shadow:0 3px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(180,80,255,0.15);
+        }
+        .stone-btn.ch2-ready:hover .stone-btn-inner {
+            background: linear-gradient(160deg,#2a1030,#18081e); border-color:#cc66ff; color:#eeccff;
+        }
+
+        /* Chapter 2 HUD defend indicator */
+        #ch2-defend-indicator {
+            position:absolute; bottom:120px; left:50%;
+            transform: translateX(-50%);
+            font-family:'Cinzel',serif; font-size:13px;
+            color:#aaddff; letter-spacing:2px;
+            background:rgba(0,20,60,0.8); border:1px solid #4466aa;
+            padding:4px 14px; border-radius:4px;
+            display:none; z-index:35;
+        }
 </style>
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -531,13 +561,17 @@
                 <div class="stone-btn primary" style="background:linear-gradient(160deg,#1a0830,#0a0418);" onclick="startGame('story')">
                     <div class="stone-btn-inner" style="color:#cc88ff;border-color:#8844cc;">✦ SHADOW CHRONICLE</div>
                 </div>
-                <div class="stone-btn primary" id="ch2-btn" style="background:linear-gradient(160deg,#1a0010,#0a0008);display:none;" onclick="startChapter2()">
-                    <div class="stone-btn-inner" style="color:#ff6633;border-color:#cc3300;">🔥 EMBERS OF REBIRTH</div>
-                </div>
                 <div class="stone-btn secondary" onclick="showView('home-howto')">
                     <div class="stone-btn-inner">HOW TO PLAY</div>
                 </div>
             </div>
+            <!-- Chapter 2 button row -->
+            <div class="home-btns-row" style="margin-top:8px;">
+                <div class="stone-btn ch2-locked" id="ch2-btn" onclick="tryStartChapter2()">
+                    <div class="stone-btn-inner" style="width:340px;text-align:center;">🔥 EMBERS OF REBIRTH — CHAPTER II</div>
+                </div>
+            </div>
+            <div id="ch2-locked-notice">🔒 Complete Shadow Chronicle to unlock Chapter II</div>
 
             <div id="aq-home-auth">
                 <div class="stone-btn secondary" onclick="AQ.showAuth('login')">
@@ -684,7 +718,8 @@
 
 <div id="game-container">
     <!-- UI drawn on canvas -->
-    <div id="controls-hint">AD / Arrows to Move | W / ↑ to Jump | Space or K to Attack | 1–5 Use Artifact</div>
+    <div id="controls-hint">AD / Arrows to Move | W / ↑ to Jump | Space or K to Attack | S / ↓ to Defend | 1–5 Use Artifact</div>
+    <div id="ch2-defend-indicator">🛡 BLOCKING</div>
     <!-- HP drawn on canvas -->
     <div id="game-over">
         <h1>YOU DIED</h1>
@@ -782,22 +817,6 @@
         npc_idle:       'https://raw.githubusercontent.com/precidoboss/adventurer/main/Idle2.png',
         portal_sheet:   'https://raw.githubusercontent.com/precidoboss/adventurer/main/Dimensional_Portal.png',
         // Boss arena assets
-        // Knight (Chapter 2 player character)
-        knight_idle:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTIDLE.png',
-        knight_walk:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTWALK.png',
-        knight_run:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTRUN.png',
-        knight_jump:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTJUMP.png',
-        knight_atk1:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTATTACK1.png',
-        knight_atk2:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTATTACK2.png',
-        knight_atk3:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTATTACK3.png',
-        knight_defend:  'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTDEFEND.png',
-        // Yellow Ninja (Chapter 2 boss)
-        ninja_idle:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20idle.png',
-        ninja_walk:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20walk.png',
-        ninja_attack:   'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20attack.png',
-        ninja_death:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20Death.png',
-        ninja_hit:      'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20hit.png',
-        ninja_whitehit: 'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20Whitehit.png',
         arena_back:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/back.png',
         arena_platform: 'https://raw.githubusercontent.com/precidoboss/adventurer/main/platform-long.png',
         arena_rock1:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/rock-1.png',
@@ -821,6 +840,39 @@
         dragon_attack:  'https://raw.githubusercontent.com/precidoboss/adventurer/main/ATTACK.png',
         dragon_fire:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/projectile.png',
     };
+    // ===== CHAPTER 2 KNIGHT & NINJA ASSETS =====
+    const CH2_ASSETS = {
+        knight_idle:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTIDLE.png',
+        knight_walk:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTWALK.png',
+        knight_run:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTRUN.png',
+        knight_jump:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTJUMP.png',
+        knight_atk1:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTATTACK1.png',
+        knight_atk2:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTATTACK2.png',
+        knight_atk3:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTATTACK3.png',
+        knight_defend:  'https://raw.githubusercontent.com/precidoboss/adventurer/main/KNIGHTDEFEND.png',
+        ninja_idle:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20idle.png',
+        ninja_walk:     'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20walk.png',
+        ninja_attack:   'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20attack.png',
+        ninja_death:    'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20Death.png',
+        ninja_hit:      'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20hit.png',
+        ninja_whitehit: 'https://raw.githubusercontent.com/precidoboss/adventurer/main/yellowNinja%20-%20Whitehit.png',
+    };
+    const ch2Images = {};
+    let ch2AssetsLoaded = 0;
+    const ch2TotalAssets = Object.keys(CH2_ASSETS).length;
+    function loadCh2Assets(cb) {
+        Object.entries(CH2_ASSETS).forEach(([key, src]) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = img.onerror = () => {
+                ch2AssetsLoaded++;
+                if(ch2AssetsLoaded >= ch2TotalAssets && cb) cb();
+            };
+            img.src = src;
+            ch2Images[key] = img;
+        });
+    }
+    loadCh2Assets();
     // Sounds (loaded separately, not counted in asset load)
     const SFX = {};
     function loadSound(key, url) {
@@ -3760,7 +3812,7 @@
     let shakeTimer = 0, shakeMag = 0;
     let gamePaused = false;
 
-    const keys = {};
+    const keys = window._keys = {};
     let scrollX = 0;
     let score = 0;
     let platforms = [];
@@ -4085,6 +4137,8 @@
     }
 
     function update() {
+        // Chapter 2 mode takes over completely
+        if(CH2.active) { updateChapter2(); return; }
         // Freeze everything during cinematics and NPC dialogue
         if (player.dead || gamePaused) return;
         if (STORY_MODE.cinematic) return;   // cinematic = full game freeze
@@ -4704,6 +4758,8 @@
     }
 
     function draw() {
+        // Chapter 2 mode draws everything independently
+        if(CH2.active) { ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT); drawChapter2(); return; }
         ctx.shadowBlur = 0; // ALWAYS reset first — prevents any prior shadowBlur leaking
         ctx.globalAlpha = 1;
         ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -5160,7 +5216,1256 @@
         // game loop starts only when player hits Play
     });
 
-    // ===== HOME PAGE =====
+    loadAssets(() => {
+        resetGame();
+        // game loop starts only when player hits Play
+    });
+
+    // =====================================================
+    // ===== CHAPTER 2: EMBERS OF REBIRTH =====
+    // =====================================================
+
+    // Knight sprite frame data (all sprites 96×83, except ninja 128×128)
+    const KNIGHT_ANIMS = {
+        idle:    { frames: 7,  speed: 10, key: 'knight_idle' },
+        walk:    { frames: 8,  speed: 8,  key: 'knight_walk' },
+        run:     { frames: 8,  speed: 6,  key: 'knight_run'  },
+        jump:    { frames: 5,  speed: 8,  key: 'knight_jump' },
+        attack1: { frames: 6,  speed: 5,  key: 'knight_atk1' },
+        attack2: { frames: 5,  speed: 5,  key: 'knight_atk2' },
+        attack3: { frames: 6,  speed: 5,  key: 'knight_atk3' },
+        defend:  { frames: 6,  speed: 8,  key: 'knight_defend'},
+    };
+    const NINJA_ANIMS = {
+        idle:   { frames: 8,  speed: 8,  key: 'ninja_idle'   },
+        walk:   { frames: 10, speed: 7,  key: 'ninja_walk'   },
+        attack: { frames: 20, speed: 4,  key: 'ninja_attack' },
+        death:  { frames: 14, speed: 6,  key: 'ninja_death'  },
+        hit:    { frames: 4,  speed: 6,  key: 'ninja_hit'    },
+        whitehit:{ frames: 4, speed: 6,  key: 'ninja_whitehit'},
+    };
+
+    // Knight player state for Chapter 2
+    const knight = {
+        x: 80, y: 300,
+        width: 40, height: 60,
+        drawWidth: 96, drawHeight: 96,
+        vx: 0, vy: 0,
+        grounded: false,
+        facing: 'right',
+        state: 'idle',
+        frame: 0, frameTimer: 0,
+        isAttacking: false,
+        attackHit: false,
+        currentAttack: 1,   // 1,2,3 randomised
+        isDefending: false,
+        hp: 200, maxHp: 200,
+        invincible: 0,
+        dead: false,
+        attackDmg: 25,
+        coins: 0,
+    };
+
+    // Yellow Ninja (Chapter 2 boss)
+    const CH2_BOSS = {
+        x: 0, y: 0,
+        width: 60, height: 80,
+        drawWidth: 128, drawHeight: 128,
+        hp: 0, maxHp: 300,
+        vx: 0, vy: 0,
+        grounded: false,
+        facing: 'left',
+        state: 'idle',
+        frame: 0, frameTimer: 0,
+        isAttacking: false, attackCooldown: 0,
+        hurtTimer: 0, dying: false, alpha: 1,
+        phase: 1, teleportCooldown: 0,
+        dashCooldown: 0, jumpCooldown: 0,
+        clones: [],   // clone positions for phase 2
+        cloneAlpha: [],
+        enraged: false,
+        throwStarCooldown: 0,
+        dead: false,
+    };
+
+    // Chapter 2 state
+    const CH2 = {
+        active: false,
+        platforms: [],          // 15 moving platforms
+        platformBobOffset: [],  // per-platform y offsets
+        arenaDecorations: [],
+        knightEntranceDone: false,
+        cinematic: null,
+        cinematicCanvas: null,
+        cinematicCtx: null,
+        cinematicAnimId: null,
+        boss: null,
+        bossUnlocked: false,
+        bossDefeated: false,
+        introPhase: 'none',     // 'none' | 'cinematic' | 'entrance' | 'play'
+        entranceT: 0,
+        timer: 0,
+        runStartMs: 0,
+        stars: [],
+        embers: [],
+        shakeT: 0, shakeMag: 0,
+        scrollX: 0,
+        isDefendKey: false,
+        ninjaStars: [],
+        clones: [],
+        flashAlpha: 0,
+        bossDeathT: 0,
+        bossDeathPhase: 'none',
+    };
+
+    function buildCh2Platforms() {
+        // 15 platforms arranged to lead toward boss at the far right
+        // Each platform bobs up and down with different phases
+        const plats = [
+            // Ground entry platform
+            { x: -100, y: 470, w: 300, h: 40, bob: 0,   bobAmp: 0,  bobSpeed: 0 },
+            // Platform 1
+            { x: 280,  y: 380, w: 160, h: 28, bob: 0,   bobAmp: 20, bobSpeed: 0.025 },
+            // Platform 2
+            { x: 530,  y: 320, w: 140, h: 28, bob: 1,   bobAmp: 25, bobSpeed: 0.02  },
+            // Platform 3
+            { x: 760,  y: 390, w: 160, h: 28, bob: 2,   bobAmp: 18, bobSpeed: 0.03  },
+            // Platform 4
+            { x: 1010, y: 310, w: 130, h: 28, bob: 3,   bobAmp: 30, bobSpeed: 0.022 },
+            // Platform 5 — wide resting spot
+            { x: 1240, y: 360, w: 200, h: 28, bob: 0.5, bobAmp: 15, bobSpeed: 0.018 },
+            // Platform 6
+            { x: 1540, y: 300, w: 140, h: 28, bob: 1.5, bobAmp: 28, bobSpeed: 0.027 },
+            // Platform 7
+            { x: 1770, y: 380, w: 150, h: 28, bob: 2.5, bobAmp: 22, bobSpeed: 0.024 },
+            // Platform 8
+            { x: 2000, y: 310, w: 130, h: 28, bob: 1,   bobAmp: 32, bobSpeed: 0.03  },
+            // Platform 9 — wide
+            { x: 2220, y: 360, w: 220, h: 28, bob: 3,   bobAmp: 20, bobSpeed: 0.02  },
+            // Platform 10
+            { x: 2540, y: 290, w: 140, h: 28, bob: 0.8, bobAmp: 26, bobSpeed: 0.026 },
+            // Platform 11
+            { x: 2780, y: 370, w: 160, h: 28, bob: 2,   bobAmp: 18, bobSpeed: 0.022 },
+            // Platform 12 — approach
+            { x: 3030, y: 300, w: 150, h: 28, bob: 1.2, bobAmp: 24, bobSpeed: 0.028 },
+            // Platform 13
+            { x: 3280, y: 380, w: 140, h: 28, bob: 3.5, bobAmp: 30, bobSpeed: 0.02  },
+            // Boss arena — large stable floor (ground)
+            { x: 3500, y: 430, w: 900, h: 80, bob: 0,   bobAmp: 0,  bobSpeed: 0 },
+        ];
+        CH2.platforms = plats;
+    }
+
+    function getCh2PlatformY(i, t) {
+        const p = CH2.platforms[i];
+        if(!p || p.bobAmp === 0) return p ? p.y : 0;
+        return p.y + Math.sin(t * p.bobSpeed + p.bob) * p.bobAmp;
+    }
+
+    function buildCh2Decorations() {
+        // Props on platforms and in arena
+        CH2.arenaDecorations = [
+            // Traps on platforms (spikes)
+            { type:'spike', platIdx:1, offX:40,  w:30, h:20 },
+            { type:'spike', platIdx:3, offX:60,  w:30, h:20 },
+            { type:'spike', platIdx:6, offX:50,  w:30, h:20 },
+            { type:'spike', platIdx:8, offX:30,  w:30, h:20 },
+            { type:'spike', platIdx:10,offX:55,  w:30, h:20 },
+            // Crates on platforms
+            { type:'crate', platIdx:2, offX:30,  w:40, h:40 },
+            { type:'crate', platIdx:5, offX:80,  w:40, h:40 },
+            { type:'crate', platIdx:9, offX:100, w:40, h:40 },
+            // Rocks / skulls at platform edges
+            { type:'skull', platIdx:4, offX:20,  w:40, h:24 },
+            { type:'skull', platIdx:7, offX:30,  w:40, h:24 },
+            { type:'skull', platIdx:12,offX:40,  w:40, h:24 },
+            // Trees in boss arena background
+            { type:'tree',  worldX:3480, worldY:260, w:120, h:200 },
+            { type:'palm',  worldX:4300, worldY:270, w: 80, h:180 },
+            { type:'bush',  worldX:3600, worldY:406, w: 60, h: 36 },
+            { type:'bush',  worldX:4100, worldY:406, w: 60, h: 36 },
+        ];
+    }
+
+    function initChapter2() {
+        if(!window.AQ || AQ.isGuest() || !AQ.getSession()) {
+            alert('You must be signed in to play Chapter II.');
+            return;
+        }
+        CH2.active = true;
+        CH2.bossUnlocked = false;
+        CH2.bossDefeated = false;
+        CH2.introPhase = 'cinematic';
+        CH2.timer = 0;
+        CH2.runStartMs = Date.now();
+        if(window.AQ) AQ.startCh2Run && AQ.startCh2Run();
+        CH2.scrollX = 0;
+        CH2.ninjaStars = [];
+        CH2.clones = [];
+        CH2.flashAlpha = 0;
+        CH2.bossDeathPhase = 'none';
+        CH2.isDefendKey = false;
+
+        // Build world
+        buildCh2Platforms();
+        buildCh2Decorations();
+
+        // Place boss
+        CH2.boss = Object.assign({}, CH2_BOSS, {
+            x: 3800, y: 280,
+            hp: 300, maxHp: 300,
+            phase: 1, alpha: 1,
+            dying: false, dead: false,
+            isAttacking: false,
+            attackCooldown: 0, hurtTimer: 0,
+            dashCooldown: 0, jumpCooldown: 0,
+            teleportCooldown: 0, throwStarCooldown: 0,
+            enraged: false, frame: 0, frameTimer: 0,
+            state: 'idle', facing: 'left',
+            vx: 0, vy: 0, grounded: false,
+            clones: [],
+        });
+
+        // Knight start
+        knight.x = 80; knight.y = 380;
+        knight.vx = 0; knight.vy = 0;
+        knight.hp = 200; knight.maxHp = 200;
+        knight.dead = false; knight.invincible = 0;
+        knight.isAttacking = false; knight.isDefending = false;
+        knight.frame = 0; knight.frameTimer = 0;
+        knight.state = 'idle'; knight.facing = 'right';
+        knight.attackDmg = 25; knight.coins = 0;
+
+        // Generate stars/embers for background
+        CH2.stars = Array.from({length:120}, ()=>({
+            x: Math.random()*GAME_WIDTH, y: Math.random()*GAME_HEIGHT,
+            size: 0.5+Math.random()*1.5, speed: 0.1+Math.random()*0.3,
+            alpha: 0.1+Math.random()*0.6
+        }));
+        CH2.embers = Array.from({length:40}, ()=>({
+            x: Math.random()*GAME_WIDTH, y: GAME_HEIGHT+Math.random()*200,
+            vx:(Math.random()-0.5)*0.5, vy:-0.5-Math.random()*1.5,
+            life: Math.random()*100, maxLife:100,
+            color:['#ff4400','#ff8800','#ffcc00','#ff2200'][Math.floor(Math.random()*4)],
+            size:1+Math.random()*3
+        }));
+
+        // Start cinematic
+        startCh2Cinematic();
+    }
+
+    // ===== CHAPTER 2 CINEMATIC =====
+    function startCh2Cinematic() {
+        if(CH2.cinematicCanvas) {
+            CH2.cinematicCanvas.style.display='block';
+        } else {
+            CH2.cinematicCanvas = document.createElement('canvas');
+            CH2.cinematicCanvas.style.cssText='position:fixed;inset:0;z-index:999;pointer-events:auto;image-rendering:pixelated;';
+            document.getElementById('game-container').appendChild(CH2.cinematicCanvas);
+        }
+        const gr = canvas.getBoundingClientRect();
+        CH2.cinematicCanvas.width = GAME_WIDTH;
+        CH2.cinematicCanvas.height = GAME_HEIGHT;
+        CH2.cinematicCanvas.style.width = gr.width+'px';
+        CH2.cinematicCanvas.style.height = gr.height+'px';
+        CH2.cinematicCanvas.style.left = gr.left+'px';
+        CH2.cinematicCanvas.style.top = gr.top+'px';
+        CH2.cinematicCtx = CH2.cinematicCanvas.getContext('2d');
+
+        const state = {
+            slides: [
+                { dur:260, scene:'ch2_title'    },
+                { dur:280, scene:'ch2_revival',  caption:'The Void-Warden is gone... but his shadow endures.' },
+                { dur:280, scene:'ch2_lab',      caption:'In the depths of a forsaken forge, a clone is born.' },
+                { dur:260, scene:'ch2_clones',   caption:'Not one. Not two. An army of shadows... identical to the fallen.' },
+                { dur:260, scene:'ch2_knight',   caption:'A knight emerges. Steel forged in ember. Vengeance in his eyes.' },
+                { dur:240, scene:'ch2_warning',  caption:'The Yellow Ninja leads the charge. Only one warrior can stop him.' },
+                { dur:220, scene:'ch2_begin',    caption:'Cross the platforms. Reach the throne. End this.' },
+            ],
+            slideIdx: 0, t: 0, globalT: 0, done: false,
+            knightFrame: 0, knightFrameTimer: 0,
+            ninjaFrame: 0, ninjaFrameTimer: 0,
+            particles: [],
+            stars: Array.from({length:100},()=>({x:Math.random()*GAME_WIDTH,y:Math.random()*GAME_HEIGHT,size:0.5+Math.random()*2,alpha:0.2+Math.random()*0.7})),
+        };
+        CH2.cinematic = state;
+
+        const skipH = (e)=>{
+            if(e.type==='keydown'&&e.code!=='Space'&&e.code!=='Enter') return;
+            e.preventDefault();
+            finishCh2Cinematic();
+            window.removeEventListener('keydown',skipH);
+            if(CH2.cinematicCanvas) CH2.cinematicCanvas.removeEventListener('click',skipH);
+        };
+        window.addEventListener('keydown',skipH);
+        CH2.cinematicCanvas.addEventListener('click',skipH);
+        state._skipH=skipH;
+
+        // TTS intro
+        try {
+            if('speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance('Chapter Two. Embers of Rebirth.');
+                u.pitch=0.7; u.rate=0.75; u.volume=0.9;
+                speechSynthesis.cancel(); speechSynthesis.speak(u);
+            }
+        } catch(e){}
+
+        if(CH2.cinematicAnimId) cancelAnimationFrame(CH2.cinematicAnimId);
+        function cinLoop() {
+            if(state.done) return;
+            CH2.cinematicAnimId = requestAnimationFrame(cinLoop);
+            renderCh2Cinematic(state);
+            tickCh2Cinematic(state);
+        }
+        cinLoop();
+    }
+
+    function tickCh2Cinematic(state) {
+        state.t++;
+        state.globalT++;
+        const slide = state.slides[state.slideIdx];
+        if(!slide) { finishCh2Cinematic(); return; }
+        state.knightFrameTimer++;
+        if(state.knightFrameTimer>=10){ state.knightFrame=(state.knightFrame+1)%7; state.knightFrameTimer=0; }
+        state.ninjaFrameTimer++;
+        if(state.ninjaFrameTimer>=8){ state.ninjaFrame=(state.ninjaFrame+1)%8; state.ninjaFrameTimer=0; }
+        if(state.t%6===0) {
+            state.particles.push({
+                x:Math.random()*GAME_WIDTH, y:GAME_HEIGHT,
+                vx:(Math.random()-0.5)*0.8, vy:-1-Math.random()*2,
+                life:80+Math.random()*80, maxLife:160,
+                color:['#ff4400','#ff8800','#ffcc00','#ff6600'][Math.floor(Math.random()*4)],
+                size:1+Math.random()*4
+            });
+        }
+        state.particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life--;});
+        state.particles=state.particles.filter(p=>p.life>0);
+        if(state.t>=slide.dur){ state.t=0; state.slideIdx++; if(state.slideIdx>=state.slides.length) finishCh2Cinematic(); }
+    }
+
+    function renderCh2Cinematic(state) {
+        const C = CH2.cinematicCtx;
+        const W = GAME_WIDTH, H = GAME_HEIGHT;
+        const slide = state.slides[state.slideIdx];
+        if(!slide) return;
+        const t = Date.now()/1000;
+        const fadeIn = Math.min(1,state.t/30);
+        const fadeOut = state.t>(slide.dur-30)?Math.max(0,(slide.dur-state.t)/30):1;
+        const alpha = Math.min(fadeIn,fadeOut);
+
+        // Background
+        C.clearRect(0,0,W,H);
+        const bgGrads = {
+            ch2_title:   ['#120005','#280010','#0a0003'],
+            ch2_revival: ['#080010','#180020','#040008'],
+            ch2_lab:     ['#100500','#221000','#060200'],
+            ch2_clones:  ['#050010','#0e0022','#020008'],
+            ch2_knight:  ['#001008','#002018','#000805'],
+            ch2_warning: ['#180000','#300000','#0a0000'],
+            ch2_begin:   ['#080006','#180010','#040003'],
+        };
+        const cols = bgGrads[slide.scene]||['#050005','#100010','#030003'];
+        const bg=C.createRadialGradient(W/2,H*0.4,0,W/2,H*0.4,W*0.7);
+        bg.addColorStop(0,cols[1]); bg.addColorStop(0.5,cols[0]); bg.addColorStop(1,cols[2]);
+        C.fillStyle=bg; C.fillRect(0,0,W,H);
+
+        // Stars
+        state.stars.forEach(s=>{
+            C.save(); C.globalAlpha=s.alpha*(0.5+0.5*Math.sin(t*2+s.x*0.05));
+            C.fillStyle='#ffffff'; C.beginPath(); C.arc(s.x,s.y,s.size,0,Math.PI*2); C.fill();
+            C.restore();
+        });
+
+        // Ember particles
+        state.particles.forEach(p=>{
+            C.save(); C.globalAlpha=(p.life/p.maxLife)*0.9;
+            C.fillStyle=p.color; C.shadowColor=p.color; C.shadowBlur=8;
+            C.beginPath(); C.arc(p.x,p.y,p.size,0,Math.PI*2); C.fill();
+            C.restore();
+        });
+
+        // Cinematic bars
+        C.fillStyle='#000'; C.fillRect(0,0,W,65); C.fillRect(0,H-65,W,65);
+
+        C.save(); C.globalAlpha=alpha;
+
+        if(slide.scene==='ch2_title') {
+            // Dramatic title — EMBERS OF REBIRTH
+            const pulse=0.3+0.2*Math.sin(t*2);
+            for(let r=4;r>=0;r--) {
+                C.shadowColor='#ff4400'; C.shadowBlur=60-r*10;
+                C.globalAlpha=alpha*(0.05+r*0.15);
+                C.beginPath(); C.arc(W/2,H/2,80+r*35+Math.sin(t*1.5)*10,0,Math.PI*2);
+                C.fillStyle='#ff2200'; C.fill();
+            }
+            C.globalAlpha=alpha;
+            // Chapter II
+            C.shadowColor='#ff8800'; C.shadowBlur=20;
+            C.font='bold 18px "Cinzel",serif'; C.fillStyle='#ff9944';
+            C.textAlign='center'; C.textBaseline='middle';
+            C.fillText('C H A P T E R   I I', W/2, H/2-80);
+            // Main title
+            for(let g=3;g>=0;g--){
+                C.shadowColor='#ff4400'; C.shadowBlur=40-g*8;
+                C.font=`bold ${44+g*3}px "Cinzel Decorative",cursive`;
+                C.fillStyle=`rgba(${180+g*20},${60+g*15},0,${0.3+g*0.2})`;
+                C.textAlign='center'; C.textBaseline='middle';
+                C.fillText('EMBERS OF', W/2, H/2-24);
+                C.fillText('REBIRTH', W/2, H/2+32);
+            }
+            C.shadowColor='#ff6600'; C.shadowBlur=25;
+            C.font='bold 52px "Cinzel Decorative",cursive';
+            const tg=C.createLinearGradient(W/2-220,0,W/2+220,0);
+            tg.addColorStop(0,'#ff4400'); tg.addColorStop(0.5,'#ffcc00'); tg.addColorStop(1,'#ff2200');
+            C.fillStyle=tg;
+            C.fillText('EMBERS OF', W/2, H/2-24);
+            C.fillText('REBIRTH', W/2, H/2+32);
+            C.shadowBlur=0; C.font='14px "Cinzel",serif'; C.fillStyle='rgba(255,150,50,0.7)';
+            C.fillText('F O R G E D   I N   A S H  ·  B O R N   T O   B U R N', W/2, H/2+82);
+        } else if(slide.scene==='ch2_revival') {
+            // Void warden dying, clone emerging
+            C.shadowColor='#8800cc'; C.shadowBlur=30;
+            C.font='bold 36px "Cinzel Decorative",cursive';
+            C.fillStyle='rgba(180,100,255,0.7)'; C.textAlign='center'; C.textBaseline='middle';
+            C.fillText('THE VOID HAS SHATTERED', W/2, H*0.28);
+            // Cracked portal effect
+            const pr=C.createRadialGradient(W/2,H*0.55,0,W/2,H*0.55,180);
+            pr.addColorStop(0,'rgba(120,0,200,0.5)'); pr.addColorStop(0.6,'rgba(60,0,100,0.2)'); pr.addColorStop(1,'transparent');
+            C.fillStyle=pr; C.fillRect(0,0,W,H);
+            for(let cr=0;cr<8;cr++){
+                const ang=(cr/8)*Math.PI*2;
+                C.strokeStyle=`rgba(150,50,255,${0.4+0.3*Math.sin(t*3+cr)})`; C.lineWidth=2;
+                C.beginPath(); C.moveTo(W/2,H*0.55);
+                C.lineTo(W/2+Math.cos(ang)*160, H*0.55+Math.sin(ang)*100); C.stroke();
+            }
+        } else if(slide.scene==='ch2_lab') {
+            // Forge/lab atmosphere
+            const heat=C.createRadialGradient(W/2,H*0.6,0,W/2,H*0.6,300);
+            heat.addColorStop(0,'rgba(200,80,0,0.5)'); heat.addColorStop(1,'transparent');
+            C.fillStyle=heat; C.fillRect(0,0,W,H);
+            C.font='bold 28px "Cinzel Decorative",cursive';
+            C.fillStyle='#ff8844'; C.textAlign='center'; C.textBaseline='middle';
+            C.shadowColor='#ff4400'; C.shadowBlur=20;
+            C.fillText('THE FORBIDDEN FORGE', W/2, H*0.28);
+            // Animated flame columns
+            for(let fl=0;fl<6;fl++){
+                const fx=W*0.15+fl*(W*0.14);
+                const fh=60+Math.sin(t*3+fl)*30;
+                for(let fy=0;fy<5;fy++){
+                    C.save(); C.globalAlpha=0.15+0.1*Math.sin(t*4+fl+fy);
+                    const fg=C.createRadialGradient(fx,H*0.65,0,fx,H*0.65,40+fh*0.3);
+                    fg.addColorStop(0,'#ff8800'); fg.addColorStop(1,'transparent');
+                    C.fillStyle=fg; C.fillRect(0,0,W,H);
+                    C.restore();
+                }
+            }
+        } else if(slide.scene==='ch2_clones') {
+            // Multiple ninja silhouettes
+            const ninjaImg = ch2Images['ninja_idle'];
+            C.font='bold 26px "Cinzel Decorative",cursive';
+            C.fillStyle='#cc88ff'; C.textAlign='center'; C.shadowColor='#8800ff'; C.shadowBlur=20;
+            C.fillText('THE CLONE ARMY RISES', W/2, H*0.2);
+            if(ninjaImg&&ninjaImg.complete&&ninjaImg.naturalWidth){
+                const fw=ninjaImg.naturalWidth/8;
+                [-320,-160,0,160,320].forEach((ox,i)=>{
+                    const scale=1.2+0.4*(i===2?1:0);
+                    C.save(); C.globalAlpha=0.5+0.4*(i===2?1:0);
+                    C.shadowColor='#ffcc00'; C.shadowBlur=20+10*(i===2?1:0);
+                    C.imageSmoothingEnabled=false;
+                    const dw=fw*scale*1.5, dh=ninjaImg.naturalHeight*scale*1.5;
+                    C.drawImage(ninjaImg,(state.ninjaFrame+i)%8*fw,0,fw,ninjaImg.naturalHeight,
+                        W/2+ox-dw/2, H*0.65-dh, dw, dh);
+                    C.restore();
+                });
+            }
+        } else if(slide.scene==='ch2_knight') {
+            // Knight hero entrance
+            const knightImg = ch2Images['knight_run'] || ch2Images['knight_idle'];
+            if(knightImg&&knightImg.complete&&knightImg.naturalWidth){
+                const frames = knightImg===ch2Images['knight_run']?8:7;
+                const fw=knightImg.naturalWidth/frames;
+                const scale=4.5;
+                const dw=fw*scale, dh=knightImg.naturalHeight*scale;
+                C.save();
+                C.shadowColor='#44aaff'; C.shadowBlur=40+15*Math.sin(t*2.5);
+                C.imageSmoothingEnabled=false;
+                C.drawImage(knightImg,state.knightFrame%frames*fw,0,fw,knightImg.naturalHeight,
+                    W*0.3-dw/2, H*0.65-dh, dw, dh);
+                C.restore();
+            }
+            C.font='bold 32px "Cinzel Decorative",cursive';
+            C.fillStyle='#aaccff'; C.textAlign='center'; C.shadowColor='#0044ff'; C.shadowBlur=25;
+            C.fillText('THE KNIGHT RISES', W/2, H*0.22);
+            C.shadowBlur=0; C.font='13px "Cinzel",serif'; C.fillStyle='#6688aa';
+            C.fillText('Steel. Honor. Vengeance.', W/2, H*0.3);
+            // Stats
+            [['❤','200 HP','#ff4444'],['⚔','3-COMBO','#ffaa00'],['🛡','SHIELD','#44aaff']].forEach((s,i)=>{
+                C.save(); C.globalAlpha=0.9;
+                C.fillStyle='rgba(0,10,40,0.7)';
+                C.fillRect(W*0.58,H*0.32+i*58,190,46);
+                C.strokeStyle='#1133aa'; C.lineWidth=1.5;
+                C.strokeRect(W*0.58,H*0.32+i*58,190,46);
+                C.font='22px Arial'; C.fillStyle=s[2];
+                C.textAlign='left'; C.textBaseline='middle'; C.fillText(s[0],W*0.58+12,H*0.32+i*58+23);
+                C.font='bold 15px "Cinzel",serif'; C.fillStyle='#cceeff';
+                C.fillText(s[1],W*0.58+46,H*0.32+i*58+23);
+                C.restore();
+            });
+        } else if(slide.scene==='ch2_warning') {
+            // Boss warning
+            const ninjaImg = ch2Images['ninja_attack']||ch2Images['ninja_idle'];
+            if(ninjaImg&&ninjaImg.complete&&ninjaImg.naturalWidth){
+                const anm = ninjaImg===ch2Images['ninja_attack']?20:8;
+                const fw=ninjaImg.naturalWidth/anm;
+                const scale=4.0;
+                const dw=fw*scale, dh=ninjaImg.naturalHeight*scale;
+                C.save();
+                C.shadowColor='#ffcc00'; C.shadowBlur=50+20*Math.sin(t*3);
+                C.imageSmoothingEnabled=false;
+                C.drawImage(ninjaImg,state.ninjaFrame%anm*fw,0,fw,ninjaImg.naturalHeight,
+                    W*0.65-dw/2, H*0.65-dh, dw, dh);
+                C.restore();
+            }
+            C.font='bold 32px "Cinzel Decorative",cursive';
+            const wg=C.createLinearGradient(W*0.1,0,W*0.9,0);
+            wg.addColorStop(0,'#ff4400'); wg.addColorStop(0.5,'#ffcc00'); wg.addColorStop(1,'#ff4400');
+            C.fillStyle=wg; C.textAlign='center'; C.shadowColor='#ff8800'; C.shadowBlur=30;
+            C.fillText('⚡ THE YELLOW NINJA ⚡', W/2, H*0.22);
+            C.shadowBlur=0; C.font='13px "Cinzel",serif'; C.fillStyle='#aa7700';
+            C.fillText('Shadow Clone Master · Phase Shifter · Assassin', W/2, H*0.3);
+        } else if(slide.scene==='ch2_begin') {
+            // BEGIN card
+            for(let r=4;r>=0;r--){
+                C.globalAlpha=alpha*(0.04*(5-r));
+                const gg=C.createRadialGradient(W/2,H/2,0,W/2,H/2,100+r*50);
+                gg.addColorStop(0,'#ff4400'); gg.addColorStop(1,'transparent');
+                C.fillStyle=gg; C.fillRect(0,0,W,H);
+            }
+            C.globalAlpha=alpha;
+            C.font='bold 56px "Cinzel Decorative",cursive';
+            C.shadowColor='#ff6600'; C.shadowBlur=40+20*Math.sin(t*3);
+            const bg2=C.createLinearGradient(W/2-220,0,W/2+220,0);
+            bg2.addColorStop(0,'#ff4400'); bg2.addColorStop(0.5,'#ffeeaa'); bg2.addColorStop(1,'#ff4400');
+            C.fillStyle=bg2; C.textAlign='center'; C.textBaseline='middle';
+            C.fillText('YOUR TRIAL BEGINS', W/2, H/2-20);
+            C.shadowBlur=0; C.font='16px "Cinzel",serif'; C.fillStyle='rgba(255,180,80,0.8)';
+            C.fillText('Cross the platforms. Face the clone. End the shadow.', W/2, H/2+46);
+        }
+
+        // Caption
+        if(slide.caption) {
+            const ca=C.createLinearGradient(0,H*0.82,0,H*0.88);
+            ca.addColorStop(0,'transparent'); ca.addColorStop(1,'rgba(0,0,0,0.7)');
+            C.fillStyle=ca; C.fillRect(0,H*0.78,W,H*0.1);
+            C.font='16px "Cinzel",serif'; C.fillStyle='rgba(255,220,150,0.95)';
+            C.textAlign='center'; C.textBaseline='middle'; C.shadowBlur=0;
+            C.fillText(slide.caption, W/2, H*0.85);
+        }
+
+        C.restore();
+        C.save(); C.globalAlpha=0.35+0.15*Math.sin(t*2);
+        C.fillStyle='#888'; C.font='12px Arial'; C.textAlign='right'; C.textBaseline='bottom';
+        C.fillText('SPACE / CLICK to skip', W-20, H-8);
+        C.restore();
+    }
+
+    function finishCh2Cinematic() {
+        if(CH2.cinematic && CH2.cinematic.done) return;
+        if(CH2.cinematic) CH2.cinematic.done=true;
+        if(CH2.cinematicAnimId) cancelAnimationFrame(CH2.cinematicAnimId);
+        if(CH2.cinematic && CH2.cinematic._skipH) {
+            window.removeEventListener('keydown', CH2.cinematic._skipH);
+            if(CH2.cinematicCanvas) CH2.cinematicCanvas.removeEventListener('click', CH2.cinematic._skipH);
+        }
+        CH2.cinematic = null;
+        if(CH2.cinematicCanvas) CH2.cinematicCanvas.style.display='none';
+        speechSynthesis && speechSynthesis.cancel();
+        // Start knight entrance
+        CH2.introPhase = 'entrance';
+        CH2.entranceT = 0;
+        // Start game loop
+        window._gameLoopActive = true;
+        _lastTime = 0; _accumulator = 0;
+        requestAnimationFrame(_gameLoopTick);
+    }
+
+    // ===== CHAPTER 2 UPDATE =====
+    function updateChapter2() {
+        if(!CH2.active) return;
+        const t = CH2.timer;
+        CH2.timer++;
+
+        // Update embers
+        CH2.embers.forEach(e=>{
+            e.x+=e.vx; e.y+=e.vy; e.life++;
+            if(e.life>=e.maxLife||e.y<-20){ e.life=0; e.x=Math.random()*GAME_WIDTH; e.y=GAME_HEIGHT+20; }
+        });
+
+        // Knight entrance animation
+        if(CH2.introPhase==='entrance') {
+            CH2.entranceT++;
+            knight.x = Math.min(120, knight.x + 2);
+            knight.state = 'run';
+            if(CH2.entranceT > 80) {
+                CH2.introPhase = 'play';
+                knight.state = 'idle';
+                // Spawn boss dialogue equivalent
+                _ch2BossIntroShown = false;
+            }
+            return;
+        }
+        if(CH2.introPhase !== 'play') return;
+
+        updateKnight();
+        if(CH2.boss && !CH2.boss.dying && !CH2.boss.dead) updateNinjaBoss();
+        updateNinjaStars();
+        updateNinjaClones();
+
+        // Show boss "intro" when player reaches boss arena
+        if(!_ch2BossIntroShown && knight.x + CH2.scrollX > 3400) {
+            _ch2BossIntroShown = true;
+            CH2.bossUnlocked = true;
+            // Cinematic flash + TTS
+            CH2.flashAlpha = 1;
+            try {
+                if('speechSynthesis' in window) {
+                    speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance("You thought the shadow died? I am the echo of a god. I am the Yellow Ninja. And today... you perish.");
+                    u.pitch=0.5; u.rate=0.7; u.volume=1;
+                    speechSynthesis.speak(u);
+                }
+            } catch(e){}
+        }
+        if(CH2.flashAlpha>0) CH2.flashAlpha=Math.max(0,CH2.flashAlpha-0.025);
+
+        // Screen shake decay
+        if(CH2.shakeT>0) CH2.shakeT--;
+
+        // Check knight death
+        if(knight.dead && !_ch2GameOver) {
+            _ch2GameOver = true;
+            setTimeout(()=>{ showCh2GameOver(); }, 1500);
+        }
+
+        // Save stats periodically
+        if(CH2.timer%300===0 && window.AQ) {
+            AQ.trackCh2Dist && AQ.trackCh2Dist(Math.floor((knight.x+CH2.scrollX)/10));
+        }
+    }
+
+    let _ch2BossIntroShown = false;
+    let _ch2GameOver = false;
+
+    // ===== KNIGHT PHYSICS + CONTROLS =====
+    function updateKnight() {
+        if(knight.dead) { knight.vy+=0.6; knight.y+=knight.vy; return; }
+
+        const keys = window._keys || {};
+        const left  = keys['ArrowLeft']  || keys['KeyA'];
+        const right = keys['ArrowRight'] || keys['KeyD'];
+        const jump  = keys['ArrowUp']    || keys['KeyW'] || keys['Space'];
+        const atk   = keys['KeyK']       || keys['KeyZ'];
+        const def   = keys['ArrowDown']  || keys['KeyS'];
+
+        // Defend (shield)
+        knight.isDefending = def && knight.grounded && !knight.isAttacking;
+        const defIndicator = document.getElementById('ch2-defend-indicator');
+        if(defIndicator) defIndicator.style.display = knight.isDefending ? 'block' : 'none';
+
+        if(!knight.isAttacking && !knight.isDefending) {
+            if(left)  { knight.vx = -4; knight.facing='left'; }
+            else if(right){ knight.vx = 4; knight.facing='right'; }
+            else knight.vx *= 0.7;
+
+            if(jump && knight.grounded) { knight.vy=-13; knight.grounded=false; }
+        } else {
+            knight.vx *= 0.4;
+        }
+
+        // Attack
+        if(atk && !knight.isAttacking && !knight.isDefending) {
+            knight.isAttacking = true;
+            knight.attackHit = false;
+            // Randomize among 3 attacks
+            knight.currentAttack = [1,2,3][Math.floor(Math.random()*3)];
+            knight.state = 'attack'+knight.currentAttack;
+            knight.frame = 0; knight.frameTimer = 0;
+        }
+
+        // Gravity
+        knight.vy += 0.7;
+        knight.x += knight.vx;
+        knight.y += knight.vy;
+
+        // Platform collision
+        knight.grounded = false;
+        const kt = CH2.timer;
+        for(let i=0;i<CH2.platforms.length;i++){
+            const p = CH2.platforms[i];
+            const py = getCh2PlatformY(i, kt);
+            const pw = {x:p.x-CH2.scrollX, y:py, w:p.w, h:p.h};
+            if(knight.x+knight.width>pw.x && knight.x<pw.x+pw.w &&
+               knight.y+knight.height>pw.y && knight.y+knight.height<pw.y+pw.h+20 && knight.vy>=0){
+                knight.y = pw.y - knight.height;
+                knight.vy = 0; knight.grounded = true;
+            }
+        }
+
+        // Scroll world when knight moves right past 350px
+        if(knight.x > 350 && CH2.scrollX < 3900) {
+            const excess = knight.x - 350;
+            CH2.scrollX += excess * 0.1;
+            knight.x -= excess * 0.1;
+        }
+        // Clamp knight
+        knight.x = Math.max(10, knight.x);
+        if(knight.y > GAME_HEIGHT+100) { knight.hp=0; }
+
+        // Invincibility
+        if(knight.invincible>0) knight.invincible--;
+
+        // Animate knight
+        const stateMap = { idle:'idle', walk:'walk', run:'run', jump:'jump', attack1:'attack1', attack2:'attack2', attack3:'attack3', defend:'defend' };
+        const curState = knight.isDefending ? 'defend' : knight.isAttacking ? 'attack'+knight.currentAttack : (!knight.grounded?'jump':(Math.abs(knight.vx)>1?'run':'idle'));
+        if(!knight.isAttacking) knight.state = curState;
+        const anim = KNIGHT_ANIMS[knight.state] || KNIGHT_ANIMS.idle;
+        knight.frameTimer++;
+        if(knight.frameTimer>=anim.speed){ knight.frame++; knight.frameTimer=0;
+            if(knight.frame>=anim.frames){
+                if(knight.isAttacking){ knight.isAttacking=false; knight.state='idle'; knight.frame=0; }
+                else { knight.frame=0; }
+            }
+        }
+
+        // Attack hit detection vs boss
+        if(knight.isAttacking && !knight.attackHit && knight.frame>=2 && CH2.boss && !CH2.boss.dying) {
+            const b = CH2.boss;
+            const bScreenX = b.x - CH2.scrollX;
+            const dx = bScreenX - knight.x;
+            const inFront = knight.facing==='right'?(dx>-20&&dx<150):(dx<20&&dx>-150);
+            const dy = Math.abs((knight.y+knight.height)-(b.y+b.height));
+            if(inFront && dy<80) {
+                knight.attackHit = true;
+                let dmg = knight.attackDmg;
+                // Attack 3 does double damage
+                if(knight.currentAttack===3) dmg = Math.floor(dmg*1.8);
+                b.hp -= dmg;
+                b.hurtTimer=20; b.state='hit'; b.frame=0; b.frameTimer=0;
+                CH2.shakeT=10; CH2.shakeMag=6;
+                playSound('sword');
+                // White hit flash
+                _ch2BossWhiteHit = 8;
+                if(b.hp<=0 && !b.dying) startNinjaBossDeath();
+            }
+        }
+
+        // HP check
+        if(knight.hp<=0 && !knight.dead){ knight.dead=true; knight.state='idle'; }
+    }
+    let _ch2BossWhiteHit=0;
+
+    // ===== YELLOW NINJA BOSS AI =====
+    function updateNinjaBoss() {
+        const b = CH2.boss;
+        if(!b || !CH2.bossUnlocked) return;
+        if(b.dying){ b.frameTimer++; if(b.frameTimer>=6){b.frame++;b.frameTimer=0;} return; }
+
+        b.vy = (b.vy||0)+0.7; b.y+=b.vy; b.grounded=false;
+        const kt = CH2.timer;
+        for(let i=0;i<CH2.platforms.length;i++){
+            const p=CH2.platforms[i], py=getCh2PlatformY(i,kt);
+            if(b.x<p.x-CH2.scrollX+p.w && b.x+b.width>p.x-CH2.scrollX &&
+               b.y+b.height>py && b.y+b.height<py+p.h+20 && b.vy>=0){
+                b.y=py-b.height; b.vy=0; b.grounded=true;
+            }
+        }
+
+        // Phase 2 at 50% hp
+        if(b.hp<=b.maxHp*0.5 && b.phase===1){ b.phase=2; b.enraged=true;
+            CH2.shakeT=30; CH2.shakeMag=12;
+            // Spawn clones
+            spawnNinjaClones();
+            try { speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance("You call that a fight? Now witness my true form!"); u.pitch=0.4;u.rate=0.7;speechSynthesis.speak(u); }catch(e){}
+        }
+
+        if(b.hurtTimer>0) b.hurtTimer--;
+        if(b.attackCooldown>0) b.attackCooldown--;
+        if(b.dashCooldown>0) b.dashCooldown--;
+        if(b.throwStarCooldown>0) b.throwStarCooldown--;
+        if(b.teleportCooldown>0) b.teleportCooldown--;
+
+        const kScreenX = knight.x; // knight is already in screen space
+        const bScreenX = b.x - CH2.scrollX;
+        const dx = kScreenX - bScreenX;
+        const dist = Math.abs(dx);
+        b.facing = dx<0?'left':'right';
+
+        if(!b.isAttacking && b.hurtTimer===0) {
+            const speed = b.phase===2 ? 3.5 : 2.2;
+            if(dist>250) {
+                b.state='walk'; b.vx=(dx>0?1:-1)*speed;
+                // Throw shuriken
+                if(b.throwStarCooldown<=0){
+                    b.throwStarCooldown=b.phase===2?50:90;
+                    throwNinjaStar(bScreenX, b.y+b.height*0.3, dx>0?1:-1, b.phase===2?8:6);
+                }
+            } else {
+                b.state='idle'; b.vx=0;
+                if(b.attackCooldown<=0){
+                    b.state='attack'; b.isAttacking=true; b.frame=0; b.frameTimer=0;
+                    b.attackCooldown=b.phase===2?50:75; playSound('sword');
+                }
+            }
+            // Teleport in phase 2
+            if(b.phase===2 && b.teleportCooldown<=0){
+                b.teleportCooldown=200;
+                // Teleport to random platform edge near boss arena
+                const bossPlat=CH2.platforms[14];
+                b.x = bossPlat.x + 100 + Math.random()*600;
+                b.y = bossPlat.y - b.height - 5;
+                CH2.flashAlpha=0.4;
+                CH2.shakeT=8; CH2.shakeMag=5;
+            }
+            // Jump
+            if(b.grounded && Math.random()<0.004){b.vy=-12;b.state='walk';}
+        } else if(b.isAttacking){
+            b.vx=0;
+        }
+
+        b.x += (b.vx||0);
+
+        // Boss animation
+        b.frameTimer++;
+        const ba=NINJA_ANIMS[b.state]||NINJA_ANIMS.idle;
+        if(b.frameTimer>=ba.speed){
+            b.frame++;b.frameTimer=0;
+            if(b.frame>=ba.frames){
+                if(b.isAttacking){
+                    // Hit check
+                    const bsx=b.x-CH2.scrollX;
+                    const ddx=Math.abs(bsx-kScreenX);
+                    if(ddx<120&&Math.abs((knight.y+knight.height)-(b.y+b.height))<70&&knight.invincible===0){
+                        let dmg = b.phase===2?22:14;
+                        // If knight defending, reduce damage by 80%
+                        if(knight.isDefending) { dmg=Math.floor(dmg*0.2); }
+                        hurtKnight(dmg);
+                    }
+                    b.isAttacking=false; b.state='idle';
+                }
+                b.frame=0;
+            }
+        }
+    }
+
+    function throwNinjaStar(x, y, dir, speed) {
+        CH2.ninjaStars.push({ x:x+CH2.scrollX, y, vx:dir*speed, vy:-1+Math.random()*2, life:180 });
+    }
+
+    function updateNinjaStars() {
+        CH2.ninjaStars.forEach(s=>{
+            s.x+=s.vx; s.y+=s.vy; s.life--;
+            // Hit knight
+            const sx=s.x-CH2.scrollX;
+            if(Math.abs(sx-knight.x)<30&&Math.abs(s.y-(knight.y+knight.height/2))<30&&knight.invincible===0){
+                let dmg = CH2.boss&&CH2.boss.phase===2?12:8;
+                if(knight.isDefending) dmg=1;
+                hurtKnight(dmg);
+                s.life=0;
+            }
+        });
+        CH2.ninjaStars=CH2.ninjaStars.filter(s=>s.life>0);
+    }
+
+    function spawnNinjaClones() {
+        CH2.clones=[];
+        const bossPlat=CH2.platforms[14];
+        for(let i=0;i<3;i++){
+            CH2.clones.push({
+                x:bossPlat.x+150+i*200, y:bossPlat.y-80,
+                frame:0,frameTimer:0,life:300,alpha:0.6,
+                vx:(Math.random()-0.5)*1.5
+            });
+        }
+    }
+
+    function updateNinjaClones() {
+        CH2.clones.forEach(c=>{
+            c.life--;c.frame++;if(c.frame>=8)c.frame=0;
+            c.x+=c.vx;
+            // Clones can't damage player much — just distraction
+            const cx=c.x-CH2.scrollX;
+            if(Math.abs(cx-knight.x)<40&&Math.abs(c.y-(knight.y+knight.height/2))<50&&knight.invincible===0&&Math.random()<0.01){
+                hurtKnight(3);
+            }
+        });
+        CH2.clones=CH2.clones.filter(c=>c.life>0);
+    }
+
+    function hurtKnight(dmg) {
+        if(knight.invincible>0||knight.dead) return;
+        knight.hp=Math.max(0,knight.hp-dmg);
+        knight.invincible=60;
+        CH2.shakeT=8; CH2.shakeMag=4;
+        if(window.AQ) AQ.trackCh2DamageTaken && AQ.trackCh2DamageTaken(dmg);
+        if(knight.hp<=0 && !knight.dead){ knight.dead=true; }
+    }
+
+    function startNinjaBossDeath() {
+        const b = CH2.boss;
+        b.dying=true; b.state='death'; b.frame=0; b.frameTimer=0;
+        CH2.shakeT=40; CH2.shakeMag=14;
+        playBossRoar();
+        try {
+            speechSynthesis.cancel();
+            const u=new SpeechSynthesisUtterance("Impossible... A mere knight... cannot defeat a god... I will return... from the embers...");
+            u.pitch=0.3; u.rate=0.65; u.volume=1;
+            speechSynthesis.speak(u);
+        }catch(e){}
+        setTimeout(()=>{ finishCh2Chapter(); }, 5000);
+    }
+
+    function finishCh2Chapter() {
+        CH2.bossDefeated=true;
+        CH2.bossDeathPhase='whiteout';
+        // Save to leaderboard
+        if(window.AQ) AQ.finishCh2Run && AQ.finishCh2Run(true);
+        setTimeout(()=>{ showCh2Victory(); }, 3500);
+    }
+
+    function showCh2Victory() {
+        CH2.active=false;
+        window._gameLoopActive=false;
+        // Show home
+        const homeEl=document.getElementById('home-screen');
+        homeEl.classList.remove('fade-out');
+        homeEl.style.display='flex';
+        window.animateHome && window.animateHome();
+        // Small victory alert
+        setTimeout(()=>{
+            alert('⚔ CHAPTER II COMPLETE ⚔\n\nThe Yellow Ninja is vanquished. The embers fade... for now.\n\nYour time has been recorded.');
+        }, 400);
+        const defInd=document.getElementById('ch2-defend-indicator');
+        if(defInd) defInd.style.display='none';
+    }
+
+    function showCh2GameOver() {
+        if(!CH2.active) return;
+        CH2.active=false;
+        window._gameLoopActive=false;
+        if(window.AQ) AQ.finishCh2Run && AQ.finishCh2Run(false);
+        const homeEl=document.getElementById('home-screen');
+        homeEl.classList.remove('fade-out');
+        homeEl.style.display='flex';
+        window.animateHome && window.animateHome();
+        setTimeout(()=>{ alert('☠ THE KNIGHT FALLS ☠\n\nThe Yellow Ninja stands victorious.\nTry again — steel must be tested many times.'); },300);
+        const defInd=document.getElementById('ch2-defend-indicator');
+        if(defInd) defInd.style.display='none';
+    }
+
+    // ===== CHAPTER 2 DRAW =====
+    function drawChapter2() {
+        if(!CH2.active) return;
+        const C = ctx;
+        const W = GAME_WIDTH, H = GAME_HEIGHT;
+        const kt = CH2.timer;
+
+        // Screen shake
+        C.save();
+        if(CH2.shakeT>0){
+            C.translate(
+                (Math.random()-0.5)*CH2.shakeMag,
+                (Math.random()-0.5)*CH2.shakeMag*0.5
+            );
+        }
+
+        // --- BACKGROUND ---
+        // Dark volcanic sky
+        const skyG=C.createLinearGradient(0,0,0,H);
+        skyG.addColorStop(0,'#050010');
+        skyG.addColorStop(0.5,'#0e0520');
+        skyG.addColorStop(1,'#1a0800');
+        C.fillStyle=skyG; C.fillRect(0,0,W,H);
+
+        // Stars
+        CH2.stars.forEach(s=>{
+            C.save(); C.globalAlpha=s.alpha*(0.5+0.5*Math.sin(kt*0.03+s.x*0.05));
+            C.fillStyle='#ffffff'; C.beginPath(); C.arc(s.x,s.y*0.6,s.size,0,Math.PI*2); C.fill();
+            C.restore();
+        });
+
+        // Embers floating
+        CH2.embers.forEach(e=>{
+            C.save(); C.globalAlpha=Math.max(0,0.8-e.life/e.maxLife);
+            C.fillStyle=e.color; C.shadowColor=e.color; C.shadowBlur=6;
+            C.beginPath(); C.arc(e.x,e.y,e.size,0,Math.PI*2); C.fill();
+            C.restore();
+        });
+
+        // Far background glow (boss arena flame)
+        if(CH2.scrollX>2000){
+            const bp=(CH2.scrollX-2000)/2000;
+            C.save(); C.globalAlpha=bp*0.4;
+            const fgg=C.createRadialGradient(W,H,0,W,H,400);
+            fgg.addColorStop(0,'#ff4400'); fgg.addColorStop(1,'transparent');
+            C.fillStyle=fgg; C.fillRect(0,0,W,H);
+            C.restore();
+        }
+
+        // --- PLATFORMS ---
+        for(let i=0;i<CH2.platforms.length;i++){
+            const p=CH2.platforms[i];
+            const py=getCh2PlatformY(i,kt);
+            const px=p.x-CH2.scrollX;
+            if(px+p.w<-20||px>W+20) continue;
+
+            // Platform body
+            const platGrad=C.createLinearGradient(px,py,px,py+p.h);
+            platGrad.addColorStop(0,i===14?'#3a1800':'#2a1a10');
+            platGrad.addColorStop(1,i===14?'#1e0800':'#150c06');
+            C.fillStyle=platGrad;
+            C.fillRect(px,py,p.w,p.h);
+            // Glowing edge
+            C.strokeStyle=i===14?'#ff8800':'#7a4a20';
+            C.lineWidth=2; C.strokeRect(px,py,p.w,p.h);
+            // Surface glow for boss platform
+            if(i===14){
+                C.save(); C.globalAlpha=0.15+0.08*Math.sin(kt*0.05);
+                const platG=C.createLinearGradient(px,py-5,px,py+5);
+                platG.addColorStop(0,'#ff8800'); platG.addColorStop(1,'transparent');
+                C.fillStyle=platG; C.fillRect(px,py-5,p.w,10);
+                C.restore();
+            }
+        }
+
+        // --- DECORATIONS ---
+        CH2.arenaDecorations.forEach(d=>{
+            let worldX, worldY;
+            if(d.platIdx!==undefined){
+                const p=CH2.platforms[d.platIdx];
+                const py=getCh2PlatformY(d.platIdx,kt);
+                worldX=p.x+d.offX; worldY=py;
+            } else {
+                worldX=d.worldX; worldY=d.worldY;
+            }
+            const sx=worldX-CH2.scrollX;
+            if(sx+d.w<-20||sx>W+20) return;
+
+            if(d.type==='spike'){
+                C.fillStyle='#cc2200';
+                for(let s=0;s<3;s++){
+                    C.beginPath();
+                    C.moveTo(sx+s*10,worldY);
+                    C.lineTo(sx+s*10+5,worldY-d.h);
+                    C.lineTo(sx+s*10+10,worldY);
+                    C.closePath(); C.fill();
+                }
+                // Spike hit detection
+                if(knight.x+knight.width>sx&&knight.x<sx+d.w&&
+                   knight.y+knight.height>worldY-d.h&&knight.y+knight.height<worldY+10){
+                    if(!knight.isDefending) hurtKnight(8);
+                }
+            } else if(d.type==='crate'){
+                const img=images['arena_crate'];
+                if(img&&img.complete&&img.naturalWidth) C.drawImage(img,sx,worldY-d.h,d.w,d.h);
+                else { C.fillStyle='#7a4820'; C.fillRect(sx,worldY-d.h,d.w,d.h); }
+            } else if(d.type==='skull'){
+                const img=images['arena_skulls'];
+                if(img&&img.complete&&img.naturalWidth) C.drawImage(img,sx,worldY-d.h,d.w,d.h);
+                else { C.fillStyle='#ccc'; C.font='20px Arial'; C.fillText('💀',sx,worldY); }
+            } else if(d.type==='tree'){
+                const img=images['arena_tree'];
+                if(img&&img.complete&&img.naturalWidth) C.drawImage(img,sx,worldY,d.w,d.h);
+            } else if(d.type==='palm'){
+                const img=images['arena_palm'];
+                if(img&&img.complete&&img.naturalWidth) C.drawImage(img,sx,worldY,d.w,d.h);
+            } else if(d.type==='bush'){
+                const img=images['arena_bush'];
+                if(img&&img.complete&&img.naturalWidth) C.drawImage(img,sx,worldY,d.w,d.h);
+            }
+        });
+
+        // --- NINJA STARS ---
+        CH2.ninjaStars.forEach(s=>{
+            const sx=s.x-CH2.scrollX;
+            C.save(); C.translate(sx,s.y);
+            C.rotate(kt*0.3+s.x*0.1);
+            C.fillStyle='#ffcc00'; C.strokeStyle='#ff8800'; C.lineWidth=1;
+            // 8-point star
+            C.beginPath();
+            for(let p=0;p<8;p++){
+                const a=(p/8)*Math.PI*2;
+                const r=p%2===0?8:4;
+                p===0?C.moveTo(Math.cos(a)*r,Math.sin(a)*r):C.lineTo(Math.cos(a)*r,Math.sin(a)*r);
+            }
+            C.closePath(); C.fill(); C.stroke();
+            C.restore();
+        });
+
+        // --- NINJA CLONES ---
+        CH2.clones.forEach(c=>{
+            const ninjaImg=ch2Images['ninja_idle'];
+            if(!ninjaImg||!ninjaImg.complete) return;
+            const fw=ninjaImg.naturalWidth/8;
+            const cx=c.x-CH2.scrollX;
+            C.save(); C.globalAlpha=c.alpha*(0.3+0.2*Math.sin(kt*0.1+c.x));
+            C.shadowColor='#ffcc00'; C.shadowBlur=15;
+            C.imageSmoothingEnabled=false;
+            C.drawImage(ninjaImg,(c.frame%8)*fw,0,fw,ninjaImg.naturalHeight,cx-48,c.y-80,96,128);
+            C.restore();
+        });
+
+        // --- YELLOW NINJA BOSS ---
+        if(CH2.boss && CH2.scrollX>3000) {
+            const b=CH2.boss;
+            const bx=b.x-CH2.scrollX;
+            const ba=NINJA_ANIMS[b.state]||NINJA_ANIMS.idle;
+            const ninjaKey = _ch2BossWhiteHit>0 ? 'ninja_whitehit' : (b.hurtTimer>0?'ninja_hit':ba.key);
+            const ninjaImg=ch2Images[ninjaKey]||ch2Images['ninja_idle'];
+            if(_ch2BossWhiteHit>0) _ch2BossWhiteHit--;
+            if(ninjaImg&&ninjaImg.complete&&ninjaImg.naturalWidth){
+                C.save();
+                C.imageSmoothingEnabled=false;
+                if(b.dying) C.globalAlpha=Math.max(0.1,b.alpha||1);
+                C.shadowColor='#ffcc00'; C.shadowBlur=20+10*Math.sin(kt*0.05);
+                if(b.facing==='left'){
+                    C.translate(bx+b.drawWidth/2,0);
+                    C.scale(-1,1);
+                    C.drawImage(ninjaImg,b.frame%ba.frames*128,0,128,128,-b.drawWidth/2,b.y-b.height+10,b.drawWidth,b.drawHeight);
+                } else {
+                    C.drawImage(ninjaImg,b.frame%ba.frames*128,0,128,128,bx-b.drawWidth/2+b.width/2,b.y-b.height+10,b.drawWidth,b.drawHeight);
+                }
+                C.restore();
+            }
+            // Boss HP bar
+            if(!b.dying){
+                const bw=300, bh=14;
+                const bx2=W/2-bw/2, by2=20;
+                C.fillStyle='rgba(0,0,0,0.7)'; C.fillRect(bx2-4,by2-4,bw+8,bh+8);
+                C.fillStyle='#331100'; C.fillRect(bx2,by2,bw,bh);
+                const hpRat=Math.max(0,b.hp/b.maxHp);
+                const hpCol=hpRat>0.5?'#ffcc00':'#ff4400';
+                C.fillStyle=hpCol; C.fillRect(bx2,by2,bw*hpRat,bh);
+                C.strokeStyle='#aa6600'; C.lineWidth=2; C.strokeRect(bx2,by2,bw,bh);
+                C.font='bold 12px "Cinzel",serif'; C.fillStyle='#ffe8a0';
+                C.textAlign='center'; C.textBaseline='bottom';
+                C.fillText('⚡ YELLOW NINJA ⚡ — '+(b.phase===2?'CLONE FORM':'SHADOW FORM'), W/2, by2-2);
+                if(b.enraged){
+                    C.fillStyle='rgba(255,80,0,0.7+0.3*Math.sin(kt*0.2))';
+                    C.font='11px Arial'; C.fillText('☠ ENRAGED ☠', W/2, by2+bh+14);
+                }
+            }
+        }
+
+        // --- KNIGHT ---
+        const flash = knight.invincible>0 && Math.floor(knight.invincible/5)%2===0;
+        if(!flash && !knight.dead){
+            const kAnim=KNIGHT_ANIMS[knight.state]||KNIGHT_ANIMS.idle;
+            const kImg=ch2Images[kAnim.key];
+            if(kImg&&kImg.complete&&kImg.naturalWidth){
+                const fw=kImg.naturalWidth/kAnim.frames;
+                const dw=knight.drawWidth, dh=knight.drawHeight;
+                C.save();
+                C.imageSmoothingEnabled=false;
+                // Shield glow when defending
+                if(knight.isDefending){
+                    C.shadowColor='#44aaff'; C.shadowBlur=20+10*Math.sin(kt*0.2);
+                }
+                if(knight.facing==='left'){
+                    C.translate(knight.x+dw/2,0);
+                    C.scale(-1,1);
+                    C.drawImage(kImg,knight.frame%kAnim.frames*fw,0,fw,kImg.naturalHeight,-dw/2,knight.y-dh+knight.height,dw,dh);
+                } else {
+                    C.drawImage(kImg,knight.frame%kAnim.frames*fw,0,fw,kImg.naturalHeight,knight.x-dw/2+knight.width/2,knight.y-dh+knight.height,dw,dh);
+                }
+                C.restore();
+            }
+        }
+        if(knight.dead){
+            C.save(); C.globalAlpha=0.7;
+            C.fillStyle='#ff2200'; C.font='bold 48px "Cinzel Decorative",cursive';
+            C.textAlign='center'; C.textBaseline='middle'; C.shadowColor='#ff0000'; C.shadowBlur=30;
+            C.fillText('THE KNIGHT FALLS', W/2, H/2);
+            C.restore();
+        }
+
+        // --- KNIGHT HUD ---
+        // HP Bar
+        C.fillStyle='rgba(0,0,0,0.6)'; C.fillRect(10,H-50,200,20);
+        C.fillStyle='#331100'; C.fillRect(12,H-48,196,16);
+        C.fillStyle=knight.hp/knight.maxHp>0.5?'#44dd44':'#dd2200';
+        C.fillRect(12,H-48,196*(knight.hp/knight.maxHp),16);
+        C.strokeStyle='#8a5828'; C.lineWidth=1.5; C.strokeRect(12,H-48,196,16);
+        C.font='bold 11px "Cinzel",serif'; C.fillStyle='#ffe8a0';
+        C.textAlign='left'; C.textBaseline='middle';
+        C.fillText(`🛡 KNIGHT  ${knight.hp}/${knight.maxHp}`, 14, H-58);
+
+        // Timer
+        const secs=Math.floor(CH2.timer/60);
+        C.font='12px "Cinzel",serif'; C.fillStyle='#c0a060'; C.textAlign='right';
+        C.fillText(`⏱ ${Math.floor(secs/60)}m ${(secs%60).toString().padStart(2,'0')}s`, W-12, H-36);
+
+        // Controls reminder at bottom
+        C.font='11px "Cinzel",serif'; C.fillStyle='rgba(150,120,60,0.6)'; C.textAlign='center';
+        C.fillText('AD/Arrows Move · W/Space Jump · K/Z Attack (randomized 3-combo) · S/Down Defend (block with shield)', W/2, H-8);
+
+        C.restore(); // end shake
+
+        // Phase 2 flash overlay
+        if(CH2.flashAlpha>0){
+            C.save(); C.globalAlpha=CH2.flashAlpha*0.6;
+            C.fillStyle='#ffaa00'; C.fillRect(0,0,W,H);
+            C.restore();
+        }
+
+        // Boss death whiteout
+        if(CH2.bossDeathPhase==='whiteout'){
+            _ch2WhiteAlpha=(_ch2WhiteAlpha||0)+0.012;
+            C.save(); C.globalAlpha=Math.min(1,_ch2WhiteAlpha);
+            C.fillStyle='#ffffff'; C.fillRect(0,0,W,H);
+            C.restore();
+        }
+    }
+    let _ch2WhiteAlpha=0;
+
+    // Ch2 mode hooks are inside update() and draw() above
+
+    // ===== tryStartChapter2 (called from home button) =====
+    window.tryStartChapter2 = function() {
+        if(!window.AQ||AQ.isGuest()||!AQ.getSession()){
+            AQ.showAuth('login');
+            return;
+        }
+        _ch2GameOver=false;
+        _ch2BossIntroShown=false;
+        _ch2WhiteAlpha=0;
+        const homeEl=document.getElementById('home-screen');
+        homeEl.classList.add('fade-out');
+        setTimeout(()=>{
+            homeEl.style.display='none';
+            initChapter2();
+        },600);
+    };
+
+    // Update chapter 2 button state based on login
+    function updateCh2Button() {
+        const btn=document.getElementById('ch2-btn');
+        const notice=document.getElementById('ch2-locked-notice');
+        if(!btn) return;
+        const loggedIn = window.AQ && !AQ.isGuest() && AQ.getSession();
+        if(loggedIn){
+            btn.className='stone-btn ch2-ready';
+            btn.querySelector('.stone-btn-inner').innerHTML='🔥 EMBERS OF REBIRTH — CHAPTER II';
+            if(notice) notice.style.display='none';
+        } else {
+            btn.className='stone-btn ch2-locked';
+            btn.querySelector('.stone-btn-inner').innerHTML='🔒 EMBERS OF REBIRTH — CHAPTER II';
+            if(notice) notice.style.display='block';
+        }
+    }
+    // Call after home loads
+    setTimeout(updateCh2Button, 800);
+
+
     window.showView = function showView(id) {
         document.querySelectorAll('.home-view').forEach(v => v.classList.remove('active'));
         const el = document.getElementById(id);
@@ -5370,1076 +6675,6 @@
         }
         window.animateHome();
 
-        // ================================================================
-        // CHAPTER 2 — EMBERS OF REBIRTH
-        // ================================================================
-        // Knight frame config (all 96×83, sprite-sheet rows)
-        const KNIGHT_ANIMS = {
-            idle:    { frames:7, fw:96, fh:83, speed:8  },
-            walk:    { frames:8, fw:96, fh:83, speed:7  },
-            run:     { frames:8, fw:96, fh:83, speed:5  },
-            jump:    { frames:5, fw:96, fh:83, speed:7  },
-            atk1:    { frames:6, fw:96, fh:83, speed:5  },
-            atk2:    { frames:5, fw:96, fh:83, speed:5  },
-            atk3:    { frames:6, fw:96, fh:83, speed:5  },
-            defend:  { frames:6, fw:96, fh:83, speed:7  },
-        };
-        // Ninja frame config (all 128×128)
-        const NINJA_ANIMS = {
-            idle:   { frames:8,  fw:128, fh:128, speed:7  },
-            walk:   { frames:10, fw:128, fh:128, speed:6  },
-            attack: { frames:20, fw:128, fh:128, speed:4  },
-            death:  { frames:14, fw:128, fh:128, speed:5  },
-            hit:    { frames:4,  fw:128, fh:128, speed:5  },
-        };
-
-        const CH2 = {
-            active: false,
-            timer: 0,
-            phase: 'cinematic', // cinematic | entrance | fight | victory | gameover
-            // knight player
-            knight: null,
-            // ninja boss
-            ninja: null,
-            ninjaClones: [],
-            // platforms (moving)
-            platforms: [],
-            // traps
-            traps: [],
-            // decorations
-            decorations: [],
-            // camera
-            camX: 0, camY: 0,
-            // cinematic overlay
-            cinematic: null,
-            // run stats
-            runStartMs: 0,
-            kills: 0,
-            // entrance flag
-            knightEntranceDone: false,
-            // shield
-            shieldActive: false,
-            shieldTimer: 0,
-            // last attack variant
-            lastAtk: 0,
-            // clone spawn flags
-            clonesSpawned: false,
-            // victory overlay
-            victoryTimer: 0,
-        };
-
-        // Build the 15-platform fixed arena
-        function buildCh2Arena() {
-            // Arena is 3200px wide
-            CH2.platforms = [
-                // === GROUND FLOOR ===
-                { x: -200, y: 490, w: 3600, h: 80, moving: false, base: 490, amp: 0, freq: 0 },
-                // === LEVEL 1 — entry ramps ===
-                { x: 60,   y: 390, w: 180, h: 22, moving: true,  base: 390, amp: 18, freq: 0.025, t: 0   },
-                { x: 310,  y: 350, w: 160, h: 22, moving: true,  base: 350, amp: 22, freq: 0.030, t: 1   },
-                // === LEVEL 2 ===
-                { x: 530,  y: 310, w: 200, h: 22, moving: true,  base: 310, amp: 30, freq: 0.020, t: 0.5 },
-                { x: 790,  y: 280, w: 175, h: 22, moving: true,  base: 280, amp: 25, freq: 0.028, t: 1.5 },
-                // === LEVEL 3 ===
-                { x: 1020, y: 250, w: 190, h: 22, moving: true,  base: 250, amp: 35, freq: 0.022, t: 0.8 },
-                { x: 1270, y: 230, w: 160, h: 22, moving: true,  base: 230, amp: 28, freq: 0.032, t: 2   },
-                // === CENTER STAGE ===
-                { x: 1490, y: 200, w: 260, h: 26, moving: false, base: 200, amp: 0,  freq: 0     },
-                // === LEVEL 3 RETURN ===
-                { x: 1810, y: 230, w: 160, h: 22, moving: true,  base: 230, amp: 28, freq: 0.030, t: 1.2 },
-                { x: 2030, y: 255, w: 185, h: 22, moving: true,  base: 255, amp: 32, freq: 0.021, t: 0.3 },
-                // === LEVEL 2 RETURN ===
-                { x: 2280, y: 285, w: 175, h: 22, moving: true,  base: 285, amp: 26, freq: 0.027, t: 0.7 },
-                { x: 2510, y: 315, w: 195, h: 22, moving: true,  base: 315, amp: 20, freq: 0.033, t: 1.8 },
-                // === LEVEL 1 RETURN ===
-                { x: 2760, y: 355, w: 165, h: 22, moving: true,  base: 355, amp: 18, freq: 0.029, t: 0.9 },
-                { x: 2980, y: 390, w: 170, h: 22, moving: true,  base: 390, amp: 15, freq: 0.024, t: 1.4 },
-                // === BOSS PLATFORM — raised throne ===
-                { x: 3050, y: 340, w: 300, h: 30, moving: false, base: 340, amp: 0,  freq: 0     },
-            ];
-
-            CH2.decorations = [
-                // Spikes on some platforms
-                { key:'arena_spikes', x:370,  y:330, w:50, h:28 },
-                { key:'arena_spikes', x:870,  y:258, w:50, h:28 },
-                { key:'arena_spikes', x:1860, y:208, w:50, h:28 },
-                { key:'arena_spikes', x:2340, y:263, w:50, h:28 },
-                // Skulls ground
-                { key:'arena_skulls', x:200,  y:452, w:58, h:34 },
-                { key:'arena_skulls', x:680,  y:452, w:58, h:34 },
-                { key:'arena_skulls', x:1200, y:452, w:58, h:34 },
-                { key:'arena_skulls', x:1900, y:452, w:58, h:34 },
-                { key:'arena_skulls', x:2600, y:452, w:58, h:34 },
-                // Rocks
-                { key:'arena_rock1',  x:450,  y:455, w:60, h:46 },
-                { key:'arena_rock2',  x:1050, y:455, w:64, h:48 },
-                { key:'arena_rock1',  x:2200, y:455, w:60, h:46 },
-                { key:'arena_rock2',  x:2850, y:455, w:64, h:48 },
-                // Crates
-                { key:'arena_crate',  x:100,  y:453, w:50, h:50 },
-                { key:'arena_crate',  x:1700, y:453, w:50, h:50 },
-                { key:'arena_crate',  x:2950, y:453, w:50, h:50 },
-                // Trees flanking
-                { key:'arena_tree',   x:-60,  y:260, w:120, h:230 },
-                { key:'arena_palm',   x:-80,  y:270, w:80,  h:200 },
-                { key:'arena_palm',   x:3230, y:270, w:80,  h:200 },
-                { key:'arena_tree',   x:3260, y:255, w:120, h:230 },
-                // treehouse background
-                { key:'arena_treehouse', x:3060, y:180, w:200, h:240 },
-                // sign at entrance
-                { key:'arena_sign',   x:20,   y:443, w:44, h:52 },
-                // bush mid
-                { key:'arena_bush',   x:1360, y:460, w:58, h:34 },
-            ];
-
-            // Traps (fire + spike hazards on ground)
-            CH2.traps = [
-                { type:'fire',  x:560,  y:460, w:32, h:40, frame:0, ft:0 },
-                { type:'fire',  x:900,  y:460, w:32, h:40, frame:0, ft:0 },
-                { type:'fire',  x:1440, y:460, w:32, h:40, frame:0, ft:0 },
-                { type:'fire',  x:2050, y:460, w:32, h:40, frame:0, ft:0 },
-                { type:'fire',  x:2500, y:460, w:32, h:40, frame:0, ft:0 },
-                { type:'spike', x:750,  y:468, w:40, h:28 },
-                { type:'spike', x:1750, y:468, w:40, h:28 },
-                { type:'spike', x:2700, y:468, w:40, h:28 },
-            ];
-        }
-
-        function initKnight() {
-            CH2.knight = {
-                x: -120, y: 370,
-                vx: 0, vy: 0,
-                w: 60, h: 76,
-                drawW: 160, drawH: 140,
-                facing: 'right',
-                anim: 'idle', frame: 0, ft: 0,
-                hp: 200, maxHp: 200,
-                grounded: false,
-                isAttacking: false, attackFrame: 0, attackVariant: 1,
-                attackCooldown: 0, hurtTimer: 0,
-                isDefending: false,
-                coins: 0,
-            };
-        }
-
-        function initNinja() {
-            const hp = 500;
-            CH2.ninja = {
-                x: 3170, y: 250,
-                vx: 0, vy: 0,
-                w: 68, h: 90,
-                drawW: 180, drawH: 180,
-                facing: 'left',
-                anim: 'idle', frame: 0, ft: 0,
-                hp: hp, maxHp: hp,
-                grounded: true,
-                isAttacking: false, attackCooldown: 0,
-                hurtTimer: 0, dying: false, alpha: 1,
-                phase: 1, // 1=normal 2=enrage (50%) 3=clone (25%)
-                dashCooldown: 0,
-                jumpCooldown: 0,
-                projCooldown: 0,
-                projs: [],
-                teleportCooldown: 0,
-                enrageBlink: 0,
-                clone: false,
-                cloneIndex: 0,
-            };
-        }
-
-        // ---- Knight physics ----
-        function updateKnight(dt) {
-            const k = CH2.knight;
-            if (!k || CH2.phase !== 'fight') return;
-
-            const GRAVITY = 0.55, JUMP = -13, SPEED = 4.5, RUN = 7;
-            const keys = window._keys || {};
-
-            // Defending
-            k.isDefending = !!(keys['ArrowDown'] || keys['s'] || keys['S']) && k.grounded && !k.isAttacking;
-
-            // Horizontal
-            if (!k.isAttacking && !k.isDefending) {
-                if (keys['ArrowLeft'] || keys['a'] || keys['A']) { k.vx = -SPEED; k.facing = 'left'; }
-                else if (keys['ArrowRight'] || keys['d'] || keys['D']) { k.vx = RUN; k.facing = 'right'; }
-                else k.vx *= 0.75;
-            } else {
-                k.vx *= 0.6;
-            }
-
-            // Jump
-            if ((keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' '] || keys['k'] || keys['K']) && k.grounded && !k.isAttacking) {
-                k.vy = JUMP; k.grounded = false;
-                keys['ArrowUp'] = keys['w'] = keys['W'] = keys[' '] = keys['k'] = keys['K'] = false;
-            }
-
-            k.vy += GRAVITY;
-            k.x += k.vx;
-            k.y += k.vy;
-
-            // Platform collision
-            k.grounded = false;
-            for (const p of CH2.platforms) {
-                const py = p.moving ? p.base + Math.sin(p.t) * p.amp : p.y;
-                if (k.x + k.w > p.x && k.x < p.x + p.w) {
-                    if (k.vy >= 0 && k.y + k.h > py && k.y + k.h < py + p.h + 18) {
-                        k.y = py - k.h; k.vy = 0; k.grounded = true;
-                    }
-                }
-            }
-
-            // Boundary
-            if (k.x < 0) k.x = 0;
-            if (k.x > 3450) k.x = 3450;
-            if (k.y > 650) { k.hp -= 20; k.y = 370; k.vy = -8; } // fell off
-
-            // Attack cooldown
-            if (k.attackCooldown > 0) k.attackCooldown--;
-            if (k.hurtTimer > 0) k.hurtTimer--;
-
-            // Animation
-            if (k.isAttacking) {
-                const animKey = 'atk' + k.attackVariant;
-                const cfg = KNIGHT_ANIMS[animKey];
-                k.ft++;
-                if (k.ft >= cfg.speed) { k.ft = 0; k.frame++; }
-                if (k.frame >= cfg.frames) { k.frame = 0; k.isAttacking = false; k.anim = 'idle'; }
-            } else if (k.isDefending) {
-                k.anim = 'defend'; k.ft = 0;
-                if (k.frame >= KNIGHT_ANIMS.defend.frames) k.frame = 0;
-                k.ft++;
-                if (k.ft >= KNIGHT_ANIMS.defend.speed) { k.ft = 0; k.frame++; if (k.frame >= KNIGHT_ANIMS.defend.frames) k.frame = 0; }
-            } else if (!k.grounded) {
-                k.anim = 'jump';
-                k.ft++; if (k.ft >= KNIGHT_ANIMS.jump.speed) { k.ft = 0; k.frame++; if (k.frame >= KNIGHT_ANIMS.jump.frames) k.frame = KNIGHT_ANIMS.jump.frames - 1; }
-            } else if (Math.abs(k.vx) > 3) {
-                if (k.anim !== 'run') { k.anim = 'run'; k.frame = 0; }
-                k.ft++; if (k.ft >= KNIGHT_ANIMS.run.speed) { k.ft = 0; k.frame = (k.frame+1) % KNIGHT_ANIMS.run.frames; }
-            } else if (Math.abs(k.vx) > 0.5) {
-                if (k.anim !== 'walk') { k.anim = 'walk'; k.frame = 0; }
-                k.ft++; if (k.ft >= KNIGHT_ANIMS.walk.speed) { k.ft = 0; k.frame = (k.frame+1) % KNIGHT_ANIMS.walk.frames; }
-            } else {
-                if (k.anim !== 'idle') { k.anim = 'idle'; k.frame = 0; }
-                k.ft++; if (k.ft >= KNIGHT_ANIMS.idle.speed) { k.ft = 0; k.frame = (k.frame+1) % KNIGHT_ANIMS.idle.frames; }
-            }
-
-            // Hurt flash
-            if (k.hurtTimer > 0) k.anim = 'hurt';
-
-            // Trap damage
-            for (const tr of CH2.traps) {
-                if (tr.type === 'fire' || tr.type === 'spike') {
-                    if (k.x + k.w > tr.x && k.x < tr.x + tr.w && k.y + k.h > tr.y && k.y < tr.y + tr.w + 50) {
-                        if (k.hurtTimer <= 0) { k.hp -= 5; k.hurtTimer = 30; }
-                    }
-                }
-            }
-
-            // Knight attack input
-            if ((keys['j'] || keys['J'] || keys['z'] || keys['Z']) && k.attackCooldown <= 0 && !k.isAttacking && !k.isDefending) {
-                // Randomize between 3 attacks
-                k.attackVariant = (CH2.lastAtk % 3) + 1;
-                CH2.lastAtk++;
-                k.isAttacking = true; k.frame = 0; k.ft = 0;
-                k.attackCooldown = 25;
-                k.anim = 'atk' + k.attackVariant;
-                keys['j'] = keys['J'] = keys['z'] = keys['Z'] = false;
-                // Hit detection
-                checkKnightHit();
-            }
-
-            // Camera follow knight
-            CH2.camX = Math.max(0, Math.min(k.x - canvas.width/2 + 80, 3400 - canvas.width));
-
-            // Death
-            if (k.hp <= 0) { triggerCh2GameOver(); }
-        }
-
-        function checkKnightHit() {
-            const k = CH2.knight;
-            const hitRange = k.facing === 'right' ? { x: k.x + k.w, w: 90 } : { x: k.x - 90, w: 90 };
-            const dmg = [12, 18, 22][k.attackVariant - 1];
-
-            // Hit ninja
-            const n = CH2.ninja;
-            if (n && !n.dying && n.hp > 0) {
-                if (hitRange.x < n.x + n.w && hitRange.x + hitRange.w > n.x && k.y < n.y + n.h && k.y + k.h > n.y) {
-                    const actualDmg = k.isDefending ? 0 : dmg;
-                    n.hp = Math.max(0, n.hp - actualDmg);
-                    n.hurtTimer = 12; n.anim = 'hit'; n.frame = 0;
-                    if (n.hp <= 0) startNinjaDeath();
-                    checkNinjaPhase();
-                }
-            }
-
-            // Hit clones
-            for (const cl of CH2.ninjaClones) {
-                if (!cl.dying) {
-                    if (hitRange.x < cl.x + cl.w && hitRange.x + hitRange.w > cl.x && k.y < cl.y + cl.h && k.y + k.h > cl.y) {
-                        cl.hp -= dmg * 2; cl.hurtTimer = 12;
-                        if (cl.hp <= 0) { cl.dying = true; cl.frame = 0; cl.anim = 'death'; CH2.kills++; }
-                    }
-                }
-            }
-        }
-
-        function checkNinjaPhase() {
-            const n = CH2.ninja;
-            if (!n) return;
-            const pct = n.hp / n.maxHp;
-            if (pct <= 0.5 && n.phase === 1) {
-                n.phase = 2; n.enrageBlink = 60;
-                spawnNinjaClones(2);
-            }
-            if (pct <= 0.25 && n.phase === 2) {
-                n.phase = 3; n.enrageBlink = 90;
-                if (!CH2.clonesSpawned) { spawnNinjaClones(3); CH2.clonesSpawned = true; }
-            }
-        }
-
-        function spawnNinjaClones(count) {
-            for (let i = 0; i < count; i++) {
-                const offsetX = [-300, 300, -600, 600, -150][i] || 200;
-                CH2.ninjaClones.push({
-                    x: CH2.ninja.x + offsetX, y: 400,
-                    vx: 0, vy: 0,
-                    w: 68, h: 90, drawW: 160, drawH: 160,
-                    hp: 80, maxHp: 80,
-                    facing: 'left', anim: 'walk', frame: 0, ft: 0,
-                    grounded: false, attackCooldown: 0,
-                    hurtTimer: 0, dying: false, alpha: 1,
-                    isAttacking: false,
-                    clone: true, cloneIndex: i,
-                });
-            }
-        }
-
-        // ---- Ninja boss AI ----
-        function updateNinja() {
-            const n = CH2.ninja;
-            if (!n || n.dying || CH2.phase !== 'fight') return;
-
-            const k = CH2.knight;
-            const GRAVITY = 0.5;
-
-            n.vy += GRAVITY;
-
-            // Platform collision
-            n.grounded = false;
-            for (const p of CH2.platforms) {
-                const py = p.moving ? p.base + Math.sin(p.t) * p.amp : p.y;
-                if (n.x + n.w > p.x && n.x < p.x + p.w) {
-                    if (n.vy >= 0 && n.y + n.h > py && n.y + n.h < py + 25) {
-                        n.y = py - n.h; n.vy = 0; n.grounded = true;
-                    }
-                }
-            }
-
-            n.x += n.vx;
-            n.y += n.vy;
-            if (n.x < 0) n.x = 0;
-            if (n.x > 3350) n.x = 3350;
-            if (n.y > 600) { n.y = 200; n.vy = 0; }
-
-            // AI
-            if (n.hurtTimer > 0) { n.hurtTimer--; n.vx *= 0.7; }
-            if (n.attackCooldown > 0) n.attackCooldown--;
-            if (n.dashCooldown > 0) n.dashCooldown--;
-            if (n.projCooldown > 0) n.projCooldown--;
-            if (n.teleportCooldown > 0) n.teleportCooldown--;
-
-            const dx = k.x - n.x;
-            const dist = Math.abs(dx);
-            n.facing = dx < 0 ? 'left' : 'right';
-            const speed = n.phase === 3 ? 4.5 : n.phase === 2 ? 3.5 : 2.5;
-
-            if (!n.isAttacking && n.hurtTimer <= 0) {
-                if (dist > 200) {
-                    n.vx = (dx > 0 ? 1 : -1) * speed;
-                    n.anim = dist > 350 ? 'walk' : 'walk';
-                } else {
-                    n.vx *= 0.5;
-                }
-
-                // Jump towards knight
-                if (dist > 250 && n.grounded && n.jumpCooldown <= 0) {
-                    n.vy = -12; n.grounded = false; n.jumpCooldown = 90;
-                }
-                if (n.jumpCooldown > 0) n.jumpCooldown--;
-
-                // Melee attack
-                if (dist < 120 && n.attackCooldown <= 0) {
-                    n.isAttacking = true; n.frame = 0; n.ft = 0;
-                    n.anim = 'attack';
-                    n.attackCooldown = n.phase === 3 ? 50 : n.phase === 2 ? 65 : 80;
-                }
-
-                // Projectile — throw shuriken
-                if (dist > 150 && dist < 500 && n.projCooldown <= 0) {
-                    n.projs.push({
-                        x: n.x + n.w/2, y: n.y + n.h/2,
-                        vx: (dx > 0 ? 1 : -1) * (n.phase === 3 ? 9 : 7),
-                        vy: -2, life: 80,
-                    });
-                    n.projCooldown = n.phase === 3 ? 60 : n.phase === 2 ? 90 : 130;
-                }
-
-                // Dash
-                if (dist > 300 && n.dashCooldown <= 0 && n.phase >= 2) {
-                    n.vx = (dx > 0 ? 1 : -1) * 12;
-                    n.dashCooldown = 120;
-                }
-
-                // Teleport in phase 3
-                if (n.phase === 3 && n.teleportCooldown <= 0) {
-                    n.x = k.x + (Math.random() > 0.5 ? 180 : -180);
-                    n.y = k.y - 100;
-                    n.teleportCooldown = 200 + Math.random() * 100;
-                }
-            } else if (n.isAttacking) {
-                n.vx *= 0.4;
-                const cfg = NINJA_ANIMS.attack;
-                n.ft++;
-                if (n.ft >= cfg.speed) { n.ft = 0; n.frame++; }
-                // Hit on frame 8-12
-                if (n.frame >= 8 && n.frame <= 12) {
-                    if (Math.abs(dx) < 130) {
-                        if (k.hurtTimer <= 0) {
-                            const baseDmg = n.phase === 3 ? 20 : n.phase === 2 ? 15 : 10;
-                            const dmg = k.isDefending ? Math.floor(baseDmg * 0.2) : baseDmg;
-                            k.hp -= dmg; k.hurtTimer = 20;
-                        }
-                    }
-                }
-                if (n.frame >= cfg.frames) { n.frame = 0; n.isAttacking = false; n.anim = 'idle'; }
-            }
-
-            // Idle/walk anim
-            if (!n.isAttacking && n.hurtTimer <= 0) {
-                if (Math.abs(n.vx) > 0.5) { if (n.anim !== 'walk') { n.anim = 'walk'; n.frame = 0; } }
-                else { if (n.anim === 'walk') { n.anim = 'idle'; n.frame = 0; } }
-                n.ft++;
-                const cfg = NINJA_ANIMS[n.anim] || NINJA_ANIMS.idle;
-                if (n.ft >= cfg.speed) { n.ft = 0; n.frame = (n.frame + 1) % cfg.frames; }
-            } else if (n.hurtTimer > 0 && !n.isAttacking) {
-                n.anim = 'hit';
-                const cfg = NINJA_ANIMS.hit;
-                n.ft++;
-                if (n.ft >= cfg.speed) { n.ft = 0; n.frame = (n.frame + 1) % cfg.frames; }
-            }
-
-            // Update projs
-            for (let i = n.projs.length - 1; i >= 0; i--) {
-                const pr = n.projs[i];
-                pr.x += pr.vx; pr.y += pr.vy; pr.vy += 0.15; pr.life--;
-                if (pr.life <= 0) { n.projs.splice(i, 1); continue; }
-                // Hit knight
-                if (k.hurtTimer <= 0 && pr.x > k.x && pr.x < k.x + k.w && pr.y > k.y && pr.y < k.y + k.h) {
-                    const dmg = k.isDefending ? 2 : 12;
-                    k.hp -= dmg; k.hurtTimer = 20;
-                    n.projs.splice(i, 1);
-                }
-            }
-
-            // Enrage blink
-            if (n.enrageBlink > 0) n.enrageBlink--;
-        }
-
-        function updateNinjaClones() {
-            if (CH2.phase !== 'fight') return;
-            const k = CH2.knight;
-            for (let ci = CH2.ninjaClones.length - 1; ci >= 0; ci--) {
-                const cl = CH2.ninjaClones[ci];
-                if (cl.dying) {
-                    const cfg = NINJA_ANIMS.death;
-                    cl.ft++;
-                    if (cl.ft >= cfg.speed) { cl.ft = 0; cl.frame++; }
-                    cl.alpha = Math.max(0, 1 - cl.frame / cfg.frames);
-                    if (cl.frame >= cfg.frames) { CH2.ninjaClones.splice(ci, 1); }
-                    continue;
-                }
-                cl.vy = (cl.vy || 0) + 0.5;
-                cl.grounded = false;
-                for (const p of CH2.platforms) {
-                    const py = p.moving ? p.base + Math.sin(p.t) * p.amp : p.y;
-                    if (cl.x + cl.w > p.x && cl.x < p.x + p.w && cl.vy >= 0 && cl.y + cl.h > py && cl.y + cl.h < py + 25) {
-                        cl.y = py - cl.h; cl.vy = 0; cl.grounded = true;
-                    }
-                }
-                const dx = k.x - cl.x;
-                cl.vx = (dx > 0 ? 1 : -1) * 2.5;
-                cl.facing = dx < 0 ? 'left' : 'right';
-                cl.x += cl.vx; cl.y += cl.vy;
-                if (cl.attackCooldown > 0) cl.attackCooldown--;
-                if (cl.hurtTimer > 0) { cl.hurtTimer--; }
-                if (Math.abs(dx) < 80 && cl.attackCooldown <= 0) {
-                    cl.isAttacking = true; cl.attackCooldown = 70; cl.frame = 0;
-                    if (k.hurtTimer <= 0) { const dmg = k.isDefending ? 2 : 8; k.hp -= dmg; k.hurtTimer = 20; }
-                }
-                cl.ft++;
-                const animKey = cl.isAttacking ? 'attack' : (Math.abs(cl.vx) > 0.3 ? 'walk' : 'idle');
-                cl.anim = animKey;
-                const cfg2 = NINJA_ANIMS[animKey] || NINJA_ANIMS.idle;
-                if (cl.ft >= cfg2.speed) { cl.ft = 0; cl.frame = (cl.frame+1) % cfg2.frames; if (cl.isAttacking && cl.frame === 0) cl.isAttacking = false; }
-            }
-        }
-
-        function updateMovingPlatforms() {
-            for (const p of CH2.platforms) {
-                if (p.moving) p.t += p.freq;
-            }
-        }
-
-        function startNinjaDeath() {
-            const n = CH2.ninja;
-            n.dying = true; n.anim = 'death'; n.frame = 0; n.ft = 0; n.alpha = 1;
-            CH2.kills++;
-            setTimeout(() => { startCh2Victory(); }, 3500);
-        }
-
-        function startCh2Victory() {
-            CH2.phase = 'victory';
-            CH2.victoryTimer = 0;
-            startCh2Cinematic('victory');
-            if (window.AQ) AQ.finishCh2Run(true, CH2.knight ? CH2.knight.hp : 0, CH2.kills);
-        }
-
-        function triggerCh2GameOver() {
-            if (CH2.phase === 'gameover') return;
-            CH2.phase = 'gameover';
-            if (window.AQ) AQ.finishCh2Run(false, 0, CH2.kills);
-            const geo = document.getElementById('game-over');
-            geo.style.display = 'flex';
-        }
-
-        // ---- Drawing Chapter 2 ----
-        function drawCh2(C) {
-            if (!CH2.active) return;
-            const W = canvas.width, H = canvas.height;
-            const camX = CH2.camX;
-
-            // Background — arena_back
-            if (images.arena_back && images.arena_back.complete) {
-                C.drawImage(images.arena_back, 0, 0, W, H);
-            } else {
-                const bg = C.createLinearGradient(0, 0, 0, H);
-                bg.addColorStop(0, '#0d0005'); bg.addColorStop(1, '#1a0008');
-                C.fillStyle = bg; C.fillRect(0, 0, W, H);
-                // ember particles
-                for (let i = 0; i < 20; i++) {
-                    const px = ((i * 173 + CH2.timer * 0.4) % W);
-                    const py = ((i * 97 + CH2.timer * 0.3) % H);
-                    C.fillStyle = `rgba(255,${80+i*5},0,0.4)`;
-                    C.fillRect(px, py, 2, 3);
-                }
-            }
-
-            C.save();
-            C.translate(-camX, 0);
-
-            // Decorations (behind platforms)
-            for (const d of CH2.decorations) {
-                const img = images[d.key];
-                if (img && img.complete) C.drawImage(img, d.x, d.y, d.w, d.h);
-            }
-
-            // Platforms
-            const platImg = images.arena_platform;
-            for (const p of CH2.platforms) {
-                const py = p.moving ? p.base + Math.sin(p.t) * p.amp : p.y;
-                if (platImg && platImg.complete) {
-                    C.drawImage(platImg, p.x, py, p.w, p.h);
-                } else {
-                    C.fillStyle = p.w > 300 ? '#331111' : '#222';
-                    C.fillRect(p.x, py, p.w, p.h);
-                }
-                // Moving indicator glow
-                if (p.moving) {
-                    C.strokeStyle = `rgba(255,${80+Math.sin(p.t*8)*40},0,0.5)`;
-                    C.lineWidth = 2;
-                    C.strokeRect(p.x, py, p.w, p.h);
-                }
-            }
-
-            // Traps
-            for (const tr of CH2.traps) {
-                if (tr.type === 'fire') {
-                    const fi = images.trap_fire;
-                    if (fi && fi.complete) {
-                        tr.ft++;
-                        if (tr.ft >= 6) { tr.ft = 0; tr.frame = (tr.frame + 1) % 8; }
-                        C.drawImage(fi, tr.frame * 32, 0, 32, 40, tr.x, tr.y, tr.w, tr.h);
-                    } else {
-                        C.fillStyle = '#ff4400'; C.fillRect(tr.x, tr.y, tr.w, tr.h);
-                    }
-                } else if (tr.type === 'spike') {
-                    const sp = images.trap_spike;
-                    if (sp && sp.complete) C.drawImage(sp, 0, 0, 40, 28, tr.x, tr.y, tr.w, tr.h);
-                    else { C.fillStyle = '#888'; C.fillRect(tr.x, tr.y, tr.w, tr.h); }
-                }
-            }
-
-            // Ninja clones
-            for (const cl of CH2.ninjaClones) {
-                drawNinjaSprite(C, cl);
-            }
-
-            // Ninja boss
-            if (CH2.ninja) drawNinjaSprite(C, CH2.ninja);
-
-            // Knight
-            if (CH2.knight) drawKnightSprite(C, CH2.knight);
-
-            // Ninja projectiles
-            if (CH2.ninja) {
-                for (const pr of CH2.ninja.projs) {
-                    C.save();
-                    C.fillStyle = '#ffdd00';
-                    C.beginPath();
-                    C.arc(pr.x - camX + camX, pr.y, 7, 0, Math.PI*2); // offset by camX already in translate
-                    C.fill();
-                    C.fillStyle = '#fff';
-                    C.beginPath();
-                    C.arc(pr.x, pr.y, 3, 0, Math.PI*2);
-                    C.fill();
-                    C.restore();
-                }
-            }
-
-            C.restore();
-
-            // HUD — only show during fight, not during cinematic
-            if (CH2.phase === 'fight' || CH2.phase === 'entrance') drawCh2HUD(C, W, H);
-        }
-
-        function drawNinjaSprite(C, n) {
-            const animKey = n.anim || 'idle';
-            const cfg = NINJA_ANIMS[animKey] || NINJA_ANIMS.idle;
-            const assetKey = animKey === 'attack' ? 'ninja_attack' :
-                             animKey === 'death'  ? 'ninja_death'  :
-                             animKey === 'hit'    ? 'ninja_hit'    :
-                             animKey === 'walk'   ? 'ninja_walk'   : 'ninja_idle';
-            const img = images[assetKey];
-            const frame = Math.min(n.frame, cfg.frames - 1);
-
-            C.save();
-            C.globalAlpha = n.alpha !== undefined ? n.alpha : 1;
-
-            // Enrage blink effect
-            if (n.enrageBlink > 0 && Math.floor(n.enrageBlink / 4) % 2 === 0) {
-                C.globalAlpha = 0.3;
-            }
-
-            const cx = n.x + n.w / 2;
-            C.translate(cx, n.y);
-            if (n.facing === 'right') C.scale(-1, 1);
-
-            if (img && img.complete) {
-                C.drawImage(img, frame * cfg.fw, 0, cfg.fw, cfg.fh,
-                    -n.drawW / 2, n.h - n.drawH, n.drawW, n.drawH);
-            } else {
-                C.fillStyle = n.clone ? '#ffaa00' : '#ffcc00';
-                C.fillRect(-n.w/2, 0, n.w, n.h);
-            }
-            C.restore();
-
-            // Hurt flash
-            if (n.hurtTimer > 0 && Math.floor(n.hurtTimer / 3) % 2 === 0) {
-                C.save();
-                C.globalAlpha = 0.6;
-                C.fillStyle = '#ffffff';
-                C.fillRect(n.x, n.y, n.w, n.h);
-                C.restore();
-            }
-        }
-
-        function drawKnightSprite(C, k) {
-            const animKey = k.isAttacking ? ('atk' + k.attackVariant) : (k.hurtTimer > 0 ? 'idle' : k.anim);
-            const assetKey = animKey === 'atk1'   ? 'knight_atk1'   :
-                             animKey === 'atk2'   ? 'knight_atk2'   :
-                             animKey === 'atk3'   ? 'knight_atk3'   :
-                             animKey === 'defend' ? 'knight_defend'  :
-                             animKey === 'jump'   ? 'knight_jump'    :
-                             animKey === 'run'    ? 'knight_run'     :
-                             animKey === 'walk'   ? 'knight_walk'    : 'knight_idle';
-            const cfg = KNIGHT_ANIMS[animKey.replace('atk', 'atk')] ||
-                        KNIGHT_ANIMS[animKey] || KNIGHT_ANIMS.idle;
-            const img = images[assetKey];
-            const frame = Math.min(k.frame, cfg.frames - 1);
-
-            C.save();
-            // Hurt blink
-            if (k.hurtTimer > 0 && Math.floor(k.hurtTimer/3)%2===0) C.globalAlpha = 0.4;
-
-            const cx = k.x + k.w / 2;
-            C.translate(cx, k.y);
-            if (k.facing === 'left') C.scale(-1, 1);
-
-            if (img && img.complete) {
-                C.drawImage(img, frame * cfg.fw, 0, cfg.fw, cfg.fh,
-                    -k.drawW / 2, k.h - k.drawH, k.drawW, k.drawH);
-            } else {
-                C.fillStyle = '#aaaaff';
-                C.fillRect(-k.w/2, 0, k.w, k.h);
-            }
-            C.restore();
-
-            // Defend shield glow
-            if (k.isDefending) {
-                C.save();
-                C.globalAlpha = 0.5;
-                C.fillStyle = '#4488ff';
-                C.beginPath();
-                C.arc(k.x + (k.facing==='right'?k.w+10:-10), k.y + k.h/2, 30, 0, Math.PI*2);
-                C.fill();
-                C.restore();
-            }
-        }
-
-        function drawCh2HUD(C, W, H) {
-            const k = CH2.knight;
-            const n = CH2.ninja;
-
-            // Knight HP bar
-            if (k) {
-                C.fillStyle = 'rgba(0,0,0,0.6)'; C.fillRect(16, 16, 224, 28);
-                C.fillStyle = '#660000'; C.fillRect(18, 18, 220, 24);
-                const hpW = (k.hp / k.maxHp) * 220;
-                const hpColor = k.hp > k.maxHp*0.5 ? '#44ff66' : k.hp > k.maxHp*0.25 ? '#ffaa00' : '#ff2200';
-                C.fillStyle = hpColor; C.fillRect(18, 18, hpW, 24);
-                C.strokeStyle = '#888'; C.lineWidth = 2; C.strokeRect(16, 16, 224, 28);
-                C.fillStyle = '#fff'; C.font = 'bold 13px Cinzel, serif';
-                C.fillText(`⚔ Knight  ${k.hp} / ${k.maxHp}`, 22, 35);
-            }
-
-            // Ninja HP bar
-            if (n && !n.dying) {
-                const bw = 280, bh = 28;
-                const bx = W/2 - bw/2, by = 16;
-                C.fillStyle = 'rgba(0,0,0,0.6)'; C.fillRect(bx-2, by-2, bw+4, bh+4);
-                C.fillStyle = '#550000'; C.fillRect(bx, by, bw, bh);
-                const nHpW = (n.hp / n.maxHp) * bw;
-                C.fillStyle = n.enrageBlink > 0 ? '#ff8800' : '#ff3300';
-                C.fillRect(bx, by, nHpW, bh);
-                C.strokeStyle = '#cc4400'; C.lineWidth = 2; C.strokeRect(bx, by, bw, bh);
-                C.fillStyle = '#ffddaa'; C.font = 'bold 12px Cinzel, serif';
-                const phaseLabel = n.phase === 3 ? '【PHANTOM】' : n.phase === 2 ? '【ENRAGED】' : '';
-                C.textAlign = 'center';
-                C.fillText(`🔥 KAGE — Ninja Reborn  ${phaseLabel}`, W/2, by + 20);
-                C.textAlign = 'left';
-            }
-
-            // Phase announcements
-            if (n && n.enrageBlink > 30) {
-                C.save();
-                C.globalAlpha = (n.enrageBlink - 30) / 60;
-                C.fillStyle = n.phase === 3 ? '#ff00ff' : '#ff6600';
-                C.font = 'bold 36px Cinzel Decorative, cursive';
-                C.textAlign = 'center';
-                C.shadowColor = C.fillStyle; C.shadowBlur = 30;
-                C.fillText(n.phase === 3 ? '⚡ PHANTOM CLONES UNLEASHED' : '🔥 KAGE ENRAGED — PHASE 2', W/2, H/2 - 30);
-                C.restore();
-                C.textAlign = 'left';
-            }
-
-            // Timer
-            const elapsed = Math.floor(CH2.timer / 60);
-            const m = Math.floor(elapsed / 60), s = elapsed % 60;
-            C.fillStyle = 'rgba(0,0,0,0.5)'; C.fillRect(W - 120, 16, 104, 28);
-            C.fillStyle = '#ffcc88'; C.font = '14px Cinzel, serif';
-            C.textAlign = 'right'; C.fillText(`⏱ ${m}:${s < 10 ? '0'+s : s}`, W - 20, 35); C.textAlign = 'left';
-
-            // Defend hint
-            if (k && !k.isDefending) {
-                C.fillStyle = 'rgba(80,80,200,0.55)'; C.fillRect(16, 56, 190, 20);
-                C.fillStyle = '#aaccff'; C.font = '11px Cinzel, serif';
-                C.fillText('↓ / S  =  Shield Block', 22, 70);
-            }
-
-            // Kills
-            C.fillStyle = '#ff8866'; C.font = '13px Cinzel, serif';
-            C.fillText(`☠ Kills: ${CH2.kills}`, 16, 96);
-
-            // Clone count
-            const aliveCl = CH2.ninjaClones.filter(c=>!c.dying).length;
-            if (aliveCl > 0) {
-                C.fillStyle = '#ffaa00'; C.font = '12px Cinzel, serif';
-                C.fillText(`👥 Clones: ${aliveCl}`, 16, 116);
-            }
-        }
-
-        // ---- Chapter 2 Cinematic System ----
-        let _ch2CinCanvas = null, _ch2CinCtx = null, _ch2CinId = null;
-
-        function startCh2Cinematic(type) {
-            let slides = [];
-            if (type === 'intro') {
-                slides = [
-                    { dur: 220, scene: 'ch2_black',   caption: '' },
-                    { dur: 260, scene: 'ch2_lore1',   caption: 'After the fall of the Void-Warden, peace returned... for a time.' },
-                    { dur: 260, scene: 'ch2_lore2',   caption: 'But from its ashes, a new evil stirred in the embers.' },
-                    { dur: 260, scene: 'ch2_lore3',   caption: 'KAGE — a Yellow Ninja resurrected by shadow energy — has returned.' },
-                    { dur: 260, scene: 'ch2_lore4',   caption: 'He split his soul into clones... each one deadlier than the last.' },
-                    { dur: 260, scene: 'ch2_lore5',   caption: 'One warrior answered the call. A Knight bound by ancient oath.' },
-                    { dur: 240, scene: 'ch2_title',   caption: '' },
-                    { dur: 200, scene: 'ch2_begin',   caption: 'The Knight enters the Ember Sanctum...' },
-                ];
-            } else if (type === 'entrance') {
-                slides = [
-                    { dur: 120, scene: 'ch2_entrance', caption: 'The Knight steps forward — shield raised, blade ready.' },
-                    { dur: 120, scene: 'ch2_entrance2', caption: 'KAGE watches from the shadows — amused.' },
-                ];
-            } else if (type === 'victory') {
-                slides = [
-                    { dur: 200, scene: 'ch2_vic_flash',   caption: '' },
-                    { dur: 260, scene: 'ch2_vic_hero',    caption: 'The Ember Sanctum falls silent. KAGE is defeated.' },
-                    { dur: 260, scene: 'ch2_vic_lore',    caption: 'The Knight sheathes his blade. The clones dissolve like smoke.' },
-                    { dur: 260, scene: 'ch2_vic_realm',   caption: 'Ardenmoor is saved — twice. The legend grows.' },
-                    { dur: 280, scene: 'ch2_vic_stats',   caption: '' },
-                ];
-            }
-
-            CH2.cinematic = { type, slides, slideIdx: 0, t: 0 };
-            _startCh2CinLoop();
-        }
-
-        function _startCh2CinLoop() {
-            if (_ch2CinCanvas) { _ch2CinCanvas.remove(); }
-            _ch2CinCanvas = document.createElement('canvas');
-            _ch2CinCanvas.style.cssText = 'position:fixed;inset:0;z-index:100;pointer-events:none;';
-            _ch2CinCanvas.width = canvas.width || 960;
-            _ch2CinCanvas.height = canvas.height || 540;
-            document.getElementById('game-container').appendChild(_ch2CinCanvas);
-            _ch2CinCtx = _ch2CinCanvas.getContext('2d');
-
-            function loop() {
-                if (!CH2.cinematic) { _ch2CinCanvas && _ch2CinCanvas.remove(); return; }
-                const cin = CH2.cinematic;
-                const C2 = _ch2CinCtx;
-                const W = _ch2CinCanvas.width, H = _ch2CinCanvas.height;
-                cin.t++;
-                const slide = cin.slides[cin.slideIdx];
-                if (!slide) { endCh2Cinematic(); return; }
-                if (cin.t >= slide.dur) { cin.t = 0; cin.slideIdx++; if (cin.slideIdx >= cin.slides.length) { endCh2Cinematic(); return; } }
-                drawCh2CinSlide(C2, W, H, cin, cin.slides[cin.slideIdx] || slide);
-                _ch2CinId = requestAnimationFrame(loop);
-            }
-            _ch2CinId = requestAnimationFrame(loop);
-        }
-
-        function drawCh2CinSlide(C, W, H, cin, slide) {
-            C.clearRect(0, 0, W, H);
-            const t = cin.t;
-            const prog = t / slide.dur;
-            const fadeIn = Math.min(1, t / 30);
-            const fadeOut = t > slide.dur - 30 ? Math.max(0, 1 - (slide.dur - t) / 30) : 0;
-            const alpha = fadeIn * (1 - fadeOut);
-
-            // Background per scene
-            const bgMap = {
-                ch2_black:    ['#000000', '#000000'],
-                ch2_lore1:    ['#060003', '#110008'],
-                ch2_lore2:    ['#110005', '#200008'],
-                ch2_lore3:    ['#1a0a00', '#300500'],
-                ch2_lore4:    ['#0d0010', '#1a0025'],
-                ch2_lore5:    ['#001010', '#002020'],
-                ch2_title:    ['#1a0000', '#300000'],
-                ch2_begin:    ['#050005', '#0f000f'],
-                ch2_entrance: ['#080000', '#180400'],
-                ch2_entrance2:['#000808', '#001818'],
-                ch2_vic_flash:['#fff', '#fff'],
-                ch2_vic_hero: ['#001000', '#003000'],
-                ch2_vic_lore: ['#000010', '#000030'],
-                ch2_vic_realm:['#0a0800', '#201600'],
-                ch2_vic_stats:['#050005', '#0f000f'],
-            };
-            const colors = bgMap[slide.scene] || ['#000', '#111'];
-            const bg = C.createLinearGradient(0, 0, 0, H);
-            bg.addColorStop(0, colors[0]); bg.addColorStop(1, colors[1]);
-            C.globalAlpha = alpha;
-            C.fillStyle = bg; C.fillRect(0, 0, W, H);
-
-            // Scene-specific drawings
-            if (slide.scene === 'ch2_title') {
-                // Dramatic chapter title
-                C.fillStyle = `rgba(255,80,0,${alpha})`;
-                C.font = `bold ${Math.floor(W * 0.08)}px Cinzel Decorative, cursive`;
-                C.textAlign = 'center';
-                C.shadowColor = '#ff3300'; C.shadowBlur = 40;
-                C.fillText('CHAPTER II', W/2, H/2 - 30);
-                C.shadowBlur = 20;
-                C.font = `bold ${Math.floor(W * 0.045)}px Cinzel, serif`;
-                C.fillStyle = `rgba(255,180,80,${alpha})`;
-                C.fillText('EMBERS OF REBIRTH', W/2, H/2 + 30);
-                C.shadowBlur = 0; C.textAlign = 'left';
-            } else if (slide.scene === 'ch2_lore3' || slide.scene === 'ch2_lore4') {
-                // Ninja silhouette hint
-                const pulse = 0.5 + Math.sin(t * 0.1) * 0.3;
-                C.fillStyle = `rgba(255,${100+Math.sin(t*0.08)*50},0,${alpha * pulse})`;
-                // Draw shuriken shape
-                for (let i = 0; i < 4; i++) {
-                    C.save();
-                    C.translate(W * 0.75, H * 0.4);
-                    C.rotate(t * 0.03 + i * Math.PI/2);
-                    C.fillRect(-6, -40, 12, 80);
-                    C.restore();
-                }
-            } else if (slide.scene === 'ch2_lore5' || slide.scene === 'ch2_begin') {
-                // Knight silhouette
-                C.fillStyle = `rgba(140,180,255,${alpha * 0.8})`;
-                C.fillRect(W*0.22 - 14, H*0.25, 28, 80); // body
-                C.beginPath(); C.arc(W*0.22, H*0.25 - 20, 22, 0, Math.PI*2); C.fill(); // head
-                // sword
-                C.fillStyle = `rgba(200,220,255,${alpha})`;
-                C.fillRect(W*0.22 + 14, H*0.3, 6, 80);
-            } else if (slide.scene === 'ch2_vic_flash') {
-                C.globalAlpha = Math.max(0, 1 - prog * 3);
-                C.fillStyle = '#ffffff'; C.fillRect(0, 0, W, H);
-            } else if (slide.scene === 'ch2_vic_stats') {
-                // Stats screen
-                const elapsed = Math.floor(CH2.timer / 60);
-                const m = Math.floor(elapsed / 60), s = elapsed % 60;
-                C.fillStyle = `rgba(255,200,80,${alpha})`;
-                C.font = 'bold 32px Cinzel Decorative, cursive';
-                C.textAlign = 'center';
-                C.fillText('⚔ VICTORY ⚔', W/2, H/2 - 120);
-                C.font = '18px Cinzel, serif';
-                C.fillStyle = `rgba(255,220,150,${alpha})`;
-                C.fillText(`Chapter II: Embers of Rebirth`, W/2, H/2 - 75);
-                C.fillStyle = `rgba(200,200,200,${alpha})`;
-                C.font = '16px Cinzel, serif';
-                C.fillText(`Time: ${m}m ${s < 10 ? '0'+s : s}s`, W/2, H/2 - 30);
-                C.fillText(`Enemies Slain: ${CH2.kills}`, W/2, H/2);
-                C.fillText(`Knight HP Remaining: ${CH2.knight ? CH2.knight.hp : 0}`, W/2, H/2 + 30);
-                C.fillStyle = `rgba(255,150,50,${alpha * 0.8})`;
-                C.font = '13px Cinzel, serif';
-                C.fillText('Press ESC to return home', W/2, H/2 + 80);
-                C.textAlign = 'left';
-            }
-
-            // Particle embers on all slides
-            if (slide.scene !== 'ch2_vic_flash') {
-                for (let i = 0; i < 15; i++) {
-                    const px = ((i * 137 + t * 1.1) % W);
-                    const py = H - ((i * 89 + t * 0.9) % H);
-                    const ps = 1 + (i % 3);
-                    C.fillStyle = `rgba(255,${60+i*10},0,${alpha * 0.6})`;
-                    C.fillRect(px, py, ps, ps*2);
-                }
-            }
-
-            // Caption
-            if (slide.caption) {
-                C.globalAlpha = alpha;
-                const capY = H * 0.82;
-                C.fillStyle = 'rgba(0,0,0,0.7)'; C.fillRect(40, capY - 22, W - 80, 44);
-                C.fillStyle = '#ffe8cc';
-                C.font = `${Math.floor(W * 0.022)}px Cinzel, serif`;
-                C.textAlign = 'center';
-                C.fillText(slide.caption, W/2, capY + 8);
-                C.textAlign = 'left';
-            }
-
-            // Letterbox
-            C.globalAlpha = alpha * 0.9;
-            C.fillStyle = '#000';
-            C.fillRect(0, 0, W, H * 0.1);
-            C.fillRect(0, H * 0.9, W, H * 0.1);
-            C.globalAlpha = 1;
-        }
-
-        function endCh2Cinematic() {
-            cancelAnimationFrame(_ch2CinId);
-            if (_ch2CinCanvas) { _ch2CinCanvas.remove(); _ch2CinCanvas = null; }
-            const prevType = CH2.cinematic ? CH2.cinematic.type : null;
-            CH2.cinematic = null;
-
-            if (prevType === 'intro') {
-                // Knight entrance walk-in
-                CH2.phase = 'entrance';
-                CH2.knightEntranceDone = false;
-                setTimeout(() => { CH2.phase = 'fight'; }, 2200);
-            } else if (prevType === 'entrance') {
-                CH2.phase = 'fight';
-            } else if (prevType === 'victory') {
-                CH2.phase = 'gameover'; // show final screen reusing game-over overlay with special text
-                const geo = document.getElementById('game-over');
-                geo.querySelector('h1').textContent = '⚔ CHAPTER II COMPLETE';
-                geo.querySelector('p').textContent = 'Embers of Rebirth — You defeated KAGE!';
-                geo.style.display = 'flex';
-            }
-        }
-
-        // ---- Chapter 2 game loop hook ----
-        window._ch2GameLoop = function(dt) {
-            if (!CH2.active) return;
-            CH2.timer++;
-            updateMovingPlatforms();
-            if (CH2.phase === 'fight' || CH2.phase === 'entrance') {
-                updateKnight(dt);
-                updateNinja();
-                updateNinjaClones();
-            }
-        };
-
-        // ---- Start Chapter 2 ----
-        window.startChapter2 = function() {
-            // Must be logged in (not guest) and have completed Shadow Chronicle
-            if (!window.AQ) { alert('Auth module not loaded.'); return; }
-            const sess = AQ.getSession();
-            if (!sess || AQ.isGuest()) {
-                AQ.showAuth('login');
-                alert('You must be signed in to play Chapter II.\nComplete Shadow Chronicle first!');
-                return;
-            }
-            // Check SC completion in Supabase
-            AQ.checkSCCompleted().then(done => {
-                if (!done) {
-                    alert('You must complete Shadow Chronicle first to unlock Chapter II: Embers of Rebirth!');
-                    return;
-                }
-                _launchCh2();
-            });
-        };
-
-        function _launchCh2() {
-            const homeEl = document.getElementById('home-screen');
-            homeEl.classList.add('fade-out');
-            cancelAnimationFrame(window.homeAnimId);
-            setTimeout(() => {
-                homeEl.style.display = 'none';
-                // Stop existing game loop
-                window._gameLoopActive = false;
-                CH2.active = true;
-                CH2.timer = 0; CH2.kills = 0; CH2.phase = 'cinematic';
-                CH2.ninjaClones = []; CH2.clonesSpawned = false;
-                CH2.victoryTimer = 0; CH2.camX = 0;
-                buildCh2Arena();
-                initKnight();
-                initNinja();
-                if (window.AQ) AQ.startCh2Run();
-                startCh2Cinematic('intro');
-                // Run the ch2 loop
-                let _ch2LoopId = null;
-                function ch2Loop() {
-                    if (!CH2.active) return;
-                    const C = canvas.getContext('2d');
-                    // During cinematic intro, just clear to black — cinematic runs on overlay canvas
-                    if (CH2.phase === 'cinematic') {
-                        C.fillStyle = '#000';
-                        C.fillRect(0, 0, canvas.width, canvas.height);
-                        _ch2LoopId = requestAnimationFrame(ch2Loop);
-                        return;
-                    }
-                    C.clearRect(0, 0, canvas.width, canvas.height);
-                    window._ch2GameLoop(1);
-                    drawCh2(C);
-                    _ch2LoopId = requestAnimationFrame(ch2Loop);
-                }
-                _ch2LoopId = requestAnimationFrame(ch2Loop);
-            }, 600);
-        }
-
         window.startGame = function(mode) {
             window._gameMode = mode || 'endless';
             if(mode !== 'story' && window.AQ) AQ.startEndlessRun();
@@ -6494,7 +6729,8 @@ function saveSession(s) {
 // ---- Run stats accumulated this session ----
 const _runStats = {
     sc: { kills:0, damageDone:0, damageTaken:0, deaths:0, coinsEarned:0, coinsSpent:0, distance:0, startMs:0 },
-    endless: { kills:0, coinsEarned:0, distance:0, startMs:0 }
+    endless: { kills:0, coinsEarned:0, distance:0, startMs:0 },
+    ch2: { kills:0, damageTaken:0, distance:0, startMs:0 }
 };
 
 // ---- ACHIEVEMENTS catalog (mirrors DB) ----
@@ -6539,19 +6775,11 @@ function updateHomeBar() {
         // In-game bank display
         show('aq-game-coins-display', 'block');
         el('aq-bank-val').textContent = (_session.total_coins||0).toLocaleString();
-        // Check if SC is completed — show Chapter 2 button
-        (async () => {
-            const done = await checkSCCompleted();
-            const ch2Btn = document.getElementById('ch2-btn');
-            if (ch2Btn) ch2Btn.style.display = done ? 'block' : 'none';
-        })();
     } else {
         show('aq-home-auth', 'flex');
         hide('aq-home-user');
         hide('aq-topbar');
         hide('aq-game-coins-display');
-        const ch2Btn = document.getElementById('ch2-btn');
-        if (ch2Btn) ch2Btn.style.display = 'none';
     }
 }
 
@@ -6606,6 +6834,7 @@ async function doRegister() {
     _isGuest = false;
     closeAllOverlays();
     updateHomeBar();
+    if(window.updateCh2Button) updateCh2Button();
 }
 
 async function doLogin() {
@@ -6633,6 +6862,48 @@ function closeAllOverlays() {
 function startSCRun() {
     if (!_session || _isGuest) return;
     _runStats.sc = { kills:0, damageDone:0, damageTaken:0, deaths:0, coinsEarned:0, coinsSpent:0, distance:0, startMs: Date.now() };
+}
+
+// ===== CHAPTER 2 RUN TRACKING =====
+function startCh2Run() {
+    if (!_session || _isGuest) return;
+    _runStats.ch2 = { kills:0, damageTaken:0, distance:0, startMs: Date.now() };
+}
+function trackCh2DamageTaken(d) { if(_runStats.ch2) _runStats.ch2.damageTaken += (d||0); }
+function trackCh2Dist(d)        { if(_runStats.ch2) _runStats.ch2.distance = Math.max(_runStats.ch2.distance||0, d||0); }
+
+async function finishCh2Run(completed) {
+    if (!_session || _isGuest) return;
+    const s = _runStats.ch2 || {};
+    const time_ms = completed ? (Date.now() - (s.startMs||Date.now())) : null;
+    try {
+        await db.from('chapter2_runs').insert({
+            user_id:       _session.id,
+            completed:     !!completed,
+            time_taken_ms: time_ms,
+            enemies_killed: s.kills||0,
+            coins_earned:  0,
+            distance:      s.distance||0,
+        });
+        // Update leaderboard
+        if (completed && time_ms) {
+            const uname = _session.username;
+            const { data: existing } = await db.from('leaderboard_chapter2').select('best_time_ms, total_completions').eq('user_id', _session.id).maybeSingle();
+            if (existing) {
+                const newBest = Math.min(existing.best_time_ms||Infinity, time_ms);
+                await db.from('leaderboard_chapter2').update({
+                    best_time_ms: newBest,
+                    total_completions: (existing.total_completions||0)+1,
+                    updated_at: new Date().toISOString()
+                }).eq('user_id', _session.id);
+            } else {
+                await db.from('leaderboard_chapter2').insert({
+                    user_id: _session.id, username: uname,
+                    best_time_ms: time_ms, total_completions: 1
+                });
+            }
+        }
+    } catch(e) { console.warn('Ch2 run save error', e); }
 }
 
 function startEndlessRun() {
@@ -6846,7 +7117,7 @@ async function renderLB() {
         <div class="aq-lb-tabs">
             <div class="aq-lb-tab ${_lbMode==='shadow'?'active':''}" onclick="AQ._lbMode='shadow';AQ._lbPage=0;AQ.renderLB()">✦ Shadow Chronicle</div>
             <div class="aq-lb-tab ${_lbMode==='endless'?'active':''}" onclick="AQ._lbMode='endless';AQ._lbPage=0;AQ.renderLB()">⚔ Endless Mode</div>
-            <div class=\"aq-lb-tab ${_lbMode==='ch2'?'active':''}\" onclick=\"AQ._lbMode='ch2';AQ._lbPage=0;AQ.renderLB()\">\U0001F525 Embers of Rebirth</div>
+            <div class="aq-lb-tab ${_lbMode==='chapter2'?'active':''}" onclick="AQ._lbMode='chapter2';AQ._lbPage=0;AQ.renderLB()">🔥 Chapter II</div>
         </div>
         <div id="aq-lb-content" style="width:100%;"><div style="color:#7a5830;font-family:Cinzel,serif;font-size:12px;text-align:center;padding:20px;">Loading...</div></div>
         <button class="aq-btn secondary" style="margin-top:8px;" onclick="document.getElementById('aq-lb-overlay').style.display='none'">Close</button>
@@ -6858,12 +7129,12 @@ async function renderLB() {
             const { data } = await db.from('leaderboard_shadow').select('*');
             rows  = (data||[]).slice(_lbPage*PAGE_SIZE, (_lbPage+1)*PAGE_SIZE);
             total = (data||[]).length;
-        } else if (_lbMode === 'ch2') {
-            const { data } = await db.from('leaderboard_chapter2').select('*').order('best_time_ms', { ascending: true });
+        } else if (_lbMode === 'endless') {
+            const { data } = await db.from('leaderboard_endless').select('*');
             rows  = (data||[]).slice(_lbPage*PAGE_SIZE, (_lbPage+1)*PAGE_SIZE);
             total = (data||[]).length;
-        } else {
-            const { data } = await db.from('leaderboard_endless').select('*');
+        } else if (_lbMode === 'chapter2') {
+            const { data } = await db.from('leaderboard_chapter2').select('*').order('best_time_ms', {ascending:true});
             rows  = (data||[]).slice(_lbPage*PAGE_SIZE, (_lbPage+1)*PAGE_SIZE);
             total = (data||[]).length;
         }
@@ -6874,12 +7145,22 @@ async function renderLB() {
             return `${m}m ${s<10?'0'+s:s}s`;
         }
 
-        const tableHTML = _lbMode === 'ch2' ? `<table class='aq-lb-table'><tr><th>#</th><th>Player</th><th>Best Time</th><th>Completions</th></tr>${rows.map((r,i)=>`<tr class='${r.username===(_session&&_session.username)?'me':''}'><td>${_lbPage*PAGE_SIZE+i+1}</td><td>🔥 ${r.username}</td><td>${fmtMs(r.best_time_ms)}</td><td>${r.total_completions||0}</td></tr>`).join('')}</table>` : _lbMode === 'shadow' ? `
+        const tableHTML = _lbMode === 'shadow' ? `
             <table class="aq-lb-table">
                 <tr><th>#</th><th>Player</th><th>Best Time</th><th>Completions</th></tr>
                 ${rows.map(r=>`<tr class="${r.username===(_session&&_session.username)?'me':''}">
                     <td class="aq-lb-rank">${r.rank}</td>
                     <td>${r.username}</td>
+                    <td>${fmtMs(r.best_time_ms)}</td>
+                    <td>${r.total_completions||0}</td>
+                </tr>`).join('')}
+            </table>
+        ` : _lbMode === 'chapter2' ? `
+            <table class="aq-lb-table">
+                <tr><th>#</th><th>Player</th><th>Best Time</th><th>Clears</th></tr>
+                ${rows.map((r,i)=>`<tr class="${r.username===(_session&&_session.username)?'me':''}">
+                    <td class="aq-lb-rank">${_lbPage*PAGE_SIZE+i+1}</td>
+                    <td>🔥 ${r.username}</td>
                     <td>${fmtMs(r.best_time_ms)}</td>
                     <td>${r.total_completions||0}</td>
                 </tr>`).join('')}
@@ -6908,54 +7189,6 @@ async function renderLB() {
     } catch(e) {
         el('aq-lb-content').innerHTML = `<div class="aq-err">Error loading leaderboard.</div>`;
     }
-}
-
-// ---- CHAPTER 2 SUPABASE ----
-let _ch2RunStats = { startMs: 0 };
-
-function startCh2Run() {
-    if (!_session || _isGuest) return;
-    _ch2RunStats = { startMs: Date.now() };
-}
-
-async function finishCh2Run(completed, knightHpLeft, kills) {
-    if (!_session || _isGuest) return;
-    const time_ms = completed ? (Date.now() - _ch2RunStats.startMs) : null;
-    await db.from('chapter2_runs').insert({
-        user_id: _session.id,
-        completed: !!completed,
-        time_taken_ms: time_ms,
-        enemies_killed: kills || 0,
-        coins_earned: 0,
-        distance: 0,
-    });
-    if (completed) {
-        // Upsert leaderboard
-        const { data: existing } = await db.from('leaderboard_chapter2').select('id,best_time_ms,total_completions').eq('user_id', _session.id).single();
-        if (existing) {
-            const better = !existing.best_time_ms || time_ms < existing.best_time_ms;
-            await db.from('leaderboard_chapter2').update({
-                best_time_ms: better ? time_ms : existing.best_time_ms,
-                total_completions: (existing.total_completions||0) + 1,
-                updated_at: new Date().toISOString(),
-            }).eq('id', existing.id);
-        } else {
-            await db.from('leaderboard_chapter2').insert({
-                user_id: _session.id,
-                username: _session.username,
-                best_time_ms: time_ms,
-                total_completions: 1,
-            });
-        }
-    }
-}
-
-async function checkSCCompleted() {
-    if (!_session) return false;
-    try {
-        const { data } = await db.from('shadow_chronicle_runs').select('completed').eq('user_id', _session.id).eq('completed', true).limit(1);
-        return (data && data.length > 0);
-    } catch(e) { return false; }
 }
 
 // ---- PUBLIC API ----
@@ -6990,9 +7223,8 @@ window.AQ = {
     trackSCKill, trackSCDamageDealt, trackSCDamageTaken, trackSCDeath,
     trackSCCoin, trackSCSpend, trackSCDist,
     trackEndlessKill, trackEndlessCoin, trackEndlessDist,
-
     // Chapter 2
-    startCh2Run, finishCh2Run, checkSCCompleted,
+    startCh2Run, finishCh2Run, trackCh2DamageTaken, trackCh2Dist,
 
     getSession() { return _session; },
     isGuest()    { return _isGuest; },
