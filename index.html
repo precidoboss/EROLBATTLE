@@ -1026,7 +1026,6 @@
         x: 100, y: 300,
         width: 50, height: 70,
         drawWidth: 130, drawHeight: 120,
-        footOffset: 35, // px of transparent padding at bottom of hero sprite
         vy: 0, vx: 0,
         speed: 6, jumpForce: -14, gravity: 0.7,
         grounded: false, wasGrounded: false,
@@ -4176,13 +4175,11 @@
         // ---- PLAYER PLATFORM COLLISION ----
         player.grounded = false;
         for (let p of platforms) {
-            const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 22);
-            // footOffset compensates for transparent padding at the bottom of the hero sprite
-            const foot = player.footOffset || 0;
+            const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 12);
             if (player.x < p.x + p.w && player.x + player.width > p.x &&
-                player.y + player.height + foot > surfaceY && player.y + player.height + foot < surfaceY + p.h + 20 &&
+                player.y + player.height > surfaceY && player.y + player.height < surfaceY + p.h + 20 &&
                 player.vy >= 0) {
-                player.y = surfaceY - player.height - foot;
+                player.y = surfaceY - player.height;
                 player.vy = 0;
                 player.grounded = true;
             }
@@ -4267,7 +4264,7 @@
             // Enemy platform collision
             e.grounded = false;
             for (let p of platforms) {
-                const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 22);
+                const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 12);
                 if (e.x < p.x + p.w && e.x + e.width > p.x &&
                     e.y + e.height > surfaceY && e.y + e.height < surfaceY + p.h + 20 &&
                     e.vy >= 0) {
@@ -4420,7 +4417,7 @@
                 npc.y += npc.vy;
                 npc.grounded = false;
                 for (let p of platforms) {
-                    const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 22);
+                    const surfaceY = p.y + (PLAT_SURFACE_OFFSET[p.type] || 12);
                     if (npc.x < p.x + p.w && npc.x + npc.width > p.x &&
                         npc.y + npc.height > surfaceY && npc.y + npc.height < surfaceY + p.h + 20 && npc.vy >= 0) {
                         npc.y = surfaceY - npc.height;
