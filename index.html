@@ -57,57 +57,150 @@
             display: none;
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.78);
+            background: rgba(0,0,0,0.85);
             flex-direction: column;
             justify-content: center;
             align-items: center;
             color: #ffcccc;
             z-index: 20;
         }
-        #game-over h1 { font-size: 56px; text-shadow: 0 0 18px #f00; margin-bottom: 16px; }
-        #game-over p  { font-size: 22px; margin-bottom: 28px; }
-        #game-over button {
-            font-family: 'AntiquityPrint', serif;
-            font-size: 20px; padding: 10px 30px;
-            background: #3d1c1c; color: #ffcccc;
-            border: 2px solid #884444; border-radius: 6px; cursor: pointer;
-        }
-        #game-over button:hover { background: #5a2020; }
-
-        /* ===== PAUSE MENU ===== */
-        .pause-box {
-            background: linear-gradient(160deg,#1a0c04,#0e0805);
-            border: 2px solid #8a5c28;
-            border-radius: 10px;
-            padding: 36px 52px;
+        #game-over .death-box {
+            background: linear-gradient(160deg, #1a0505, #0e0505);
+            border: 2px solid #7a2020;
+            border-radius: 4px;
+            padding: 48px 64px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 16px;
-            box-shadow: 0 0 60px rgba(200,120,0,0.25);
+            gap: 0;
+            box-shadow: 0 0 80px rgba(200,0,0,0.3), inset 0 0 40px rgba(0,0,0,0.5);
+            position: relative;
+            min-width: 340px;
         }
+        #game-over .death-knot {
+            position: absolute;
+            width: 28px; height: 28px;
+            background-image: url('https://raw.githubusercontent.com/precidoboss/adventurer/main/CornerKnot_14x14.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            image-rendering: pixelated;
+        }
+        #game-over .death-knot.tl { top: -6px; left: -6px; }
+        #game-over .death-knot.tr { top: -6px; right: -6px; transform: scaleX(-1); }
+        #game-over .death-knot.bl { bottom: -6px; left: -6px; transform: scaleY(-1); }
+        #game-over .death-knot.br { bottom: -6px; right: -6px; transform: scale(-1,-1); }
+        #game-over h1 {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 52px;
+            color: #cc2222;
+            text-shadow: 0 0 30px rgba(255,0,0,0.6), 0 0 8px #000;
+            margin: 0 0 10px 0;
+            letter-spacing: 6px;
+        }
+        #game-over .death-divider {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #7a2020, transparent);
+            margin: 12px 0 18px 0;
+        }
+        #game-over p {
+            font-family: 'AntiquityPrint', serif;
+            font-size: 14px;
+            color: #cc9988;
+            margin: 0 0 28px 0;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        #game-over .death-btns {
+            display: flex;
+            gap: 16px;
+        }
+        #game-over .death-btn {
+            font-family: 'AntiquityPrint', serif;
+            font-size: 14px;
+            padding: 11px 32px;
+            background: #1e0808;
+            color: #ffe8a0;
+            border: 1.5px solid #7a2020;
+            border-radius: 3px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+            min-width: 140px;
+            text-align: center;
+        }
+        #game-over .death-btn:hover {
+            background: #3a1010;
+            border-color: #cc4444;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(200,50,50,0.4);
+        }
+        #game-over .death-btn.home {
+            background: #0e0c04;
+            border-color: #7a5a18;
+            color: #ffe8a0;
+        }
+        #game-over .death-btn.home:hover {
+            background: #2a1e06;
+            border-color: #ffd700;
+            box-shadow: 0 0 12px rgba(200,150,0,0.4);
+        }
+
+        /* ===== PAUSE MENU ===== */
+        .pause-box {
+            background: linear-gradient(160deg, #1a0c04, #0e0805);
+            border: 2px solid #8a5c28;
+            border-radius: 4px;
+            padding: 44px 64px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 0 80px rgba(200,120,0,0.2), inset 0 0 40px rgba(0,0,0,0.4);
+            position: relative;
+            min-width: 300px;
+        }
+        .pause-knot {
+            position: absolute;
+            width: 28px; height: 28px;
+            background-image: url('https://raw.githubusercontent.com/precidoboss/adventurer/main/CornerKnot_14x14.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            image-rendering: pixelated;
+        }
+        .pause-knot.tl { top: -6px; left: -6px; }
+        .pause-knot.tr { top: -6px; right: -6px; transform: scaleX(-1); }
+        .pause-knot.bl { bottom: -6px; left: -6px; transform: scaleY(-1); }
+        .pause-knot.br { bottom: -6px; right: -6px; transform: scale(-1,-1); }
         .pause-title {
             font-family: 'Cinzel Decorative', cursive;
-            font-size: 32px;
+            font-size: 30px;
             color: #ffd700;
-            letter-spacing: 6px;
-            text-shadow: 0 0 20px rgba(255,200,0,0.5);
+            letter-spacing: 8px;
+            text-shadow: 0 0 20px rgba(255,200,0,0.45);
+            margin-bottom: 4px;
+        }
+        .pause-divider {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #8a5c28, transparent);
             margin-bottom: 8px;
         }
         .pause-btn {
-            font-family: 'Cinzel', serif;
-            font-size: 16px;
-            padding: 11px 44px;
-            width: 200px;
+            font-family: 'AntiquityPrint', serif;
+            font-size: 14px;
+            padding: 11px 0;
+            width: 210px;
             background: #1e0e04;
             color: #ffe8a0;
             border: 1.5px solid #7a4a18;
-            border-radius: 4px;
+            border-radius: 3px;
             cursor: pointer;
             letter-spacing: 3px;
             transition: all 0.2s;
+            text-align: center;
         }
-        .pause-btn:hover { background: #3a1e08; border-color: #ffd700; color: #fff; }
+        .pause-btn:hover { background: #3a1e08; border-color: #ffd700; color: #fff; box-shadow: 0 0 12px rgba(200,150,0,0.3); }
 
         /* ===== HOME PAGE — ROCK / STONE THEME ===== */
         @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
@@ -690,13 +783,28 @@
     <div id="controls-hint">AD / Arrows to Move | W / ↑ to Jump | Space or K to Attack | Shift to Dash | 1–5 Use Artifact</div>
     <!-- HP drawn on canvas -->
     <div id="game-over">
-        <h1>YOU DIED</h1>
-        <p id="go-score"></p>
-        <button onclick="restartGame()">Try Again</button>
+        <div class="death-box">
+            <div class="death-knot tl"></div>
+            <div class="death-knot tr"></div>
+            <div class="death-knot bl"></div>
+            <div class="death-knot br"></div>
+            <h1>YOU DIED</h1>
+            <div class="death-divider"></div>
+            <p id="go-score"></p>
+            <div class="death-btns">
+                <button class="death-btn" onclick="restartGame()">↺ Try Again</button>
+                <button class="death-btn home" onclick="goHome()">⌂ Home</button>
+            </div>
+        </div>
     </div>
-    <div id="pause-menu" style="display:none;position:absolute;inset:0;z-index:25;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.72);">
+    <div id="pause-menu" style="display:none;position:absolute;inset:0;z-index:25;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);">
         <div class="pause-box">
+            <div class="pause-knot tl"></div>
+            <div class="pause-knot tr"></div>
+            <div class="pause-knot bl"></div>
+            <div class="pause-knot br"></div>
             <div class="pause-title">PAUSED</div>
+            <div class="pause-divider"></div>
             <button class="pause-btn" onclick="resumeGame()">▶ Resume</button>
             <button class="pause-btn" onclick="goHome()">⌂ Home</button>
         </div>
