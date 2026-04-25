@@ -5172,35 +5172,28 @@
         drawUI_img('ui_titlebox', dashPanelX, dashPanelY, dashPanelW, dashPanelH);
         drawUI_img('ui_cornerknot', dashPanelX - 3, dashPanelY - 3, knotSz, knotSz);
         drawUI_img('ui_cornerknot', dashPanelX + dashPanelW - knotSz + 3, dashPanelY - 3, knotSz, knotSz);
-        ctx.save();
         if (player.dashCooldown > 0) {
-            // Cooldown bar fill
+            // Progress bar track
             const progress = 1 - player.dashCooldown / player.dashCooldownMax;
             const dashBarX = dashPanelX + 8;
-            const dashBarY = dashPanelY + 18;
+            const dashBarY = dashPanelY + 20;
             const dashBarW = dashPanelW - 16;
-            const dashBarH = 4;
-            // Track
-            ctx.globalAlpha = 0.35;
+            const dashBarH = 3;
+            ctx.save();
+            ctx.globalAlpha = 0.3;
             ctx.fillStyle = '#224466';
             ctx.fillRect(dashBarX, dashBarY, dashBarW, dashBarH);
-            // Fill
             ctx.globalAlpha = 1;
             ctx.fillStyle = '#44ddff';
-            ctx.shadowColor = '#44ddff';
-            ctx.shadowBlur = 6;
             ctx.fillRect(dashBarX, dashBarY, dashBarW * progress, dashBarH);
-            ctx.shadowBlur = 0;
-            // Label + countdown
+            ctx.restore();
+            // Text via game font — matches distance/coin panels
             const secsLeft = Math.ceil(player.dashCooldown / 60);
-            drawUI_text('⚡ DASH  ' + secsLeft + 's', dashPanelX + dashPanelW / 2, dashPanelY + 9, 10, '#7abbcc', 'center');
+            drawUI_text('⚡ DASH  ' + secsLeft + 's', dashPanelX + dashPanelW / 2, dashPanelY + 11, 11, '#7abbcc', 'center');
         } else {
-            // Ready — glow cyan
-            ctx.shadowColor = '#44ddff';
-            ctx.shadowBlur = 10;
-            drawUI_text('⚡ DASH  READY', dashPanelX + dashPanelW / 2, dashPanelY + dashPanelH / 2, 10, '#44ffdd', 'center');
+            // Ready — same font, brighter gold like coin/score panels
+            drawUI_text('⚡ DASH  READY', dashPanelX + dashPanelW / 2, dashPanelY + dashPanelH / 2, 11, '#ffe8a0', 'center');
         }
-        ctx.restore();
 
         // ==== ARTIFACT INVENTORY BAR (bottom center) ====
         const slotSize = 38, slotGap = 6, slotCount = 5;
