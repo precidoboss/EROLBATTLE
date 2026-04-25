@@ -1054,8 +1054,8 @@
         dashing: false,
         dashTimer: 0,
         dashDir: 1,
-        dashSpeed: 15,
-        dashDuration: 10,   // frames the dash lasts
+        dashSpeed: 18,
+        dashDuration: 13,   // frames the dash lasts
         dashCooldown: 0,    // frames remaining on cooldown
         dashCooldownMax: 300, // 5s at 60fps
     };
@@ -3918,7 +3918,7 @@
         player.dashTimer = player.dashDuration;
         player.dashDir = dir;
         player.facing = dir === 1 ? 'right' : 'left';
-        player.invincible = player.dashDuration + 2; // brief i-frames during dash
+        player.invincible = player.dashDuration + 8; // full i-frames through dash — invincible vs traps AND enemies
         // Burst of dash particles
         spawnDashParticles();
     }
@@ -5166,7 +5166,7 @@
         window._pauseBtnBounds = { x: pauseX, y: pauseY, w: pauseW, h: pauseH };
 
         // ==== DASH COOLDOWN — top bar, left of coins ====
-        const dashPanelW = 110, dashPanelH = 28;
+        const dashPanelW = 130, dashPanelH = 28;
         const dashPanelX = GAME_WIDTH - coinPanelW - PAD - dashPanelW - 8;
         const dashPanelY = PAD;
         drawUI_img('ui_titlebox', dashPanelX, dashPanelY, dashPanelW, dashPanelH);
@@ -5189,10 +5189,10 @@
             ctx.restore();
             // Text via game font — matches distance/coin panels
             const secsLeft = Math.ceil(player.dashCooldown / 60);
-            drawUI_text('⚡ DASH  ' + secsLeft + 's', dashPanelX + dashPanelW / 2, dashPanelY + 11, 11, '#7abbcc', 'center');
+            drawUI_text('⚡ ' + secsLeft + 's', dashPanelX + dashPanelW / 2, dashPanelY + 11, 11, '#7abbcc', 'center');
         } else {
             // Ready — same font, brighter gold like coin/score panels
-            drawUI_text('⚡ DASH  READY', dashPanelX + dashPanelW / 2, dashPanelY + dashPanelH / 2, 11, '#ffe8a0', 'center');
+            drawUI_text('⚡ READY', dashPanelX + dashPanelW / 2, dashPanelY + dashPanelH / 2, 11, '#ffe8a0', 'center');
         }
 
         // ==== ARTIFACT INVENTORY BAR (bottom center) ====
